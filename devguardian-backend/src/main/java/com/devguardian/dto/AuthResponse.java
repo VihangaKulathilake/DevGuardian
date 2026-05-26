@@ -1,5 +1,6 @@
 package com.devguardian.dto;
 
+import com.devguardian.entity.enums.Role;
 import lombok.*;
 
 @Data
@@ -12,5 +13,9 @@ public class AuthResponse {
 
     private Long userId;
 
-    private String role;
+    private Role role;
+
+    private String email;
+
+    private String name;
 }
