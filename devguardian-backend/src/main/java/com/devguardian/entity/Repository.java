@@ -1,7 +1,6 @@
 package com.devguardian.entity;
 
-import com.devguardian.entity.enums.RepositoryStatus;
-import com.devguardian.entity.enums.Visibility;
+import com.devguardian.entity.enums.*;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -26,13 +25,21 @@ public class Repository {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String url;
 
     @Column(length = 1000)
     private String description;
 
+    // Free-form (do NOT enum this)
     private String language;
+
+    // Free-form (user-defined Git branch names)
+    private String branch;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RepositoryProvider provider;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -42,6 +49,12 @@ public class Repository {
     @Column(nullable = false)
     private RepositoryStatus status;
 
+    @Enumerated(EnumType.STRING)
+    private RepositoryType type;
+
+    @Enumerated(EnumType.STRING)
+    private ScanFrequency scanFrequency;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -50,10 +63,12 @@ public class Repository {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    // Future: analysis history
     @Builder.Default
     @OneToMany(mappedBy = "repository", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Analysis> analyses = new ArrayList<>();
 
+    // Future: repository file snapshots or scanned files
     @Builder.Default
     @OneToMany(mappedBy = "repository", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<File> files = new ArrayList<>();
