@@ -1,5 +1,6 @@
 package com.devguardian.controller;
 
+import com.devguardian.constants.ApiEndpoints;
 import com.devguardian.dto.AuthResponse;
 import com.devguardian.dto.LoginRequest;
 import com.devguardian.dto.RegisterRequest;
@@ -9,14 +10,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping(ApiEndpoints.AUTH)
 @RequiredArgsConstructor
 public class AuthController {
 
     private final AuthService authService;
 
     // REGISTER
-    @PostMapping("/register")
+    @PostMapping(ApiEndpoints.REGISTER)
     public ResponseEntity<AuthResponse> register(
             @RequestBody RegisterRequest request
     ) {
@@ -24,7 +25,7 @@ public class AuthController {
     }
 
     // LOGIN
-    @PostMapping("/login")
+    @PostMapping(ApiEndpoints.LOGIN)
     public ResponseEntity<AuthResponse> login(
             @RequestBody LoginRequest request
     ) {

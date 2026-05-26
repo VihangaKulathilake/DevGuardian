@@ -1,5 +1,6 @@
 package com.devguardian.service.impl;
 
+import com.devguardian.constants.Messages;
 import com.devguardian.dto.AuthResponse;
 import com.devguardian.dto.LoginRequest;
 import com.devguardian.dto.RegisterRequest;
@@ -26,7 +27,7 @@ public class AuthServiceImpl implements AuthService {
 
         // 1. Check if user already exists
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("User already exists with this email");
+            throw new RuntimeException(Messages.USER_ALREADY_EXISTS);
         }
 
         // 2. Create new user
@@ -59,11 +60,11 @@ public class AuthServiceImpl implements AuthService {
 
         // 1. Find user
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+                .orElseThrow(() -> new RuntimeException(Messages.INVALID_CREDENTIALS));
 
         // 2. Check password
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid email or password");
+            throw new RuntimeException(Messages.INVALID_CREDENTIALS);
         }
 
         // 3. Generate JWT

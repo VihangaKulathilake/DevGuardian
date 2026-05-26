@@ -6,5 +6,10 @@ public class Messages {
 
     public static final String LOGIN_SUCCESS = "Login successful";
 
-    private Messages(){}
+    public static final String USER_ALREADY_EXISTS = "User already exists with this email";
+
+    public static final String INVALID_CREDENTIALS = "Invalid email or password";
+
+    private Messages() {
+    }
 }
