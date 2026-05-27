@@ -1,4 +1,4 @@
-package com.devguardian.dto;
+package com.devguardian.dto.auth;
 
 import com.devguardian.entity.enums.Role;
 import lombok.*;

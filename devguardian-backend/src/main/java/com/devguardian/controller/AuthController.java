@@ -1,9 +1,9 @@
 package com.devguardian.controller;
 
 import com.devguardian.constants.ApiEndpoints;
-import com.devguardian.dto.AuthResponse;
-import com.devguardian.dto.LoginRequest;
-import com.devguardian.dto.RegisterRequest;
+import com.devguardian.dto.auth.AuthResponse;
+import com.devguardian.dto.auth.LoginRequest;
+import com.devguardian.dto.auth.RegisterRequest;
 import com.devguardian.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

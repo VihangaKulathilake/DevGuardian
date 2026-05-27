@@ -1,9 +1,9 @@
 package com.devguardian.service.impl;
 
 import com.devguardian.constants.Messages;
-import com.devguardian.dto.AuthResponse;
-import com.devguardian.dto.LoginRequest;
-import com.devguardian.dto.RegisterRequest;
+import com.devguardian.dto.auth.AuthResponse;
+import com.devguardian.dto.auth.LoginRequest;
+import com.devguardian.dto.auth.RegisterRequest;
 import com.devguardian.entity.User;
 import com.devguardian.entity.enums.ProviderType;
 import com.devguardian.entity.enums.Role;
