@@ -13,6 +13,7 @@ import com.devguardian.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.devguardian.mapper.AuthMapper;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +22,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final AuthMapper authMapper;
 
     @Override
     public AuthResponse register(RegisterRequest request) {
@@ -31,13 +33,10 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // 2. Create new user
-        User user = User.builder()
-                .name(request.getName())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.USER)
-                .provider(ProviderType.LOCAL)
-                .build();
+        User user = authMapper.toEntity(request);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole(Role.USER);
+        user.setProvider(ProviderType.LOCAL);
 
         // 3. Save user
         user = userRepository.save(user);
@@ -45,14 +44,11 @@ public class AuthServiceImpl implements AuthService {
         // 4. Generate JWT
         String token = jwtService.generateToken(user);
 
+        AuthResponse response = authMapper.toResponse(user);
+        response.setToken(token);
+
         // 5. Return response
-        return AuthResponse.builder()
-                .token(token)
-                .userId(user.getId())
-                .role(user.getRole())
-                .email(user.getEmail())
-                .name(user.getName())
-                .build();
+        return response;
     }
 
     @Override
@@ -70,13 +66,10 @@ public class AuthServiceImpl implements AuthService {
         // 3. Generate JWT
         String token = jwtService.generateToken(user);
 
+        AuthResponse response = authMapper.toResponse(user);
+        response.setToken(token);
+
         // 4. Return response
-        return AuthResponse.builder()
-                .token(token)
-                .userId(user.getId())
-                .role(user.getRole())
-                .email(user.getEmail())
-                .name(user.getName())
-                .build();
+        return response;
     }
 }
