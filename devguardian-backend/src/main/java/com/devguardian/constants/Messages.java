@@ -10,6 +10,10 @@ public class Messages {
 
     public static final String INVALID_CREDENTIALS = "Invalid email or password";
 
+    public static final String REPOSITORY_NOT_FOUND = "Repository not found";
+
+    public static final String USER_NOT_FOUND = "User not found";
+
     private Messages() {
     }
 }

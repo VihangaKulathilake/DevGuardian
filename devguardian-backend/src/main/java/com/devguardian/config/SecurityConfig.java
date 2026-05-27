@@ -1,5 +1,6 @@
 package com.devguardian.config;
 
+import com.devguardian.constants.ApiEndpoints;
 import com.devguardian.security.CustomUserDetailsService;
 import com.devguardian.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
@@ -52,7 +53,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
 
                         // Public endpoints
-                        .requestMatchers("/api/auth/**", "/error")
+                        .requestMatchers(ApiEndpoints.AUTH + "/**", "/error")
                         .permitAll()
 
                         // Everything else protected

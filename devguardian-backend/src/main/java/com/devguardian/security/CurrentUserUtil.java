@@ -1,5 +1,6 @@
 package com.devguardian.security;
 
+import com.devguardian.constants.Messages;
 import com.devguardian.entity.User;
 import com.devguardian.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,6 @@ public class CurrentUserUtil {
 
         return userRepository.findByEmail(email)
                 .orElseThrow(() ->
-                        new RuntimeException("User not found"));
+                        new RuntimeException(Messages.USER_NOT_FOUND));
     }
 }
