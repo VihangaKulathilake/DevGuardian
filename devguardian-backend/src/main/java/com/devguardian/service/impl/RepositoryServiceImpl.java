@@ -1,0 +1,99 @@
+package com.devguardian.service.impl;
+
+import com.devguardian.constants.Messages;
+import com.devguardian.dto.repository.CreateRepositoryRequest;
+import com.devguardian.dto.repository.RepositoryResponse;
+import com.devguardian.dto.repository.UpdateRepositoryRequest;
+import com.devguardian.entity.Repository;
+import com.devguardian.entity.User;
+import com.devguardian.entity.enums.RepositoryStatus;
+import com.devguardian.mapper.RepositoryMapper;
+import com.devguardian.repository.RepositoryRepository;
+import com.devguardian.service.RepositoryService;
+import com.devguardian.security.CurrentUserUtil;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class RepositoryServiceImpl implements RepositoryService {
+
+    private final RepositoryRepository repositoryRepository;
+    private final RepositoryMapper repositoryMapper;
+    private final CurrentUserUtil currentUserUtil;
+
+    // CREATE REPOSITORY
+    @Override
+    public RepositoryResponse createRepository(CreateRepositoryRequest request) {
+
+        User user = currentUserUtil.getCurrentUser();
+
+        Repository repository = repositoryMapper.toEntity(request);
+
+        repository.setUser(user);
+        repository.setStatus(RepositoryStatus.ACTIVE);
+
+        Repository saved = repositoryRepository.save(repository);
+
+        return repositoryMapper.toResponse(saved);
+    }
+
+    // GET ALL USER REPOSITORIES
+    @Override
+    public List<RepositoryResponse> getUserRepositories() {
+
+        User user = currentUserUtil.getCurrentUser();
+
+        List<Repository> repositories = repositoryRepository.findByUserId(user.getId());
+
+        return repositoryMapper.toResponse(repositories);
+    }
+
+    // GET REPOSITORY BY ID
+    @Override
+    public RepositoryResponse getRepositoryById(Long id) {
+
+        User user = currentUserUtil.getCurrentUser();
+
+        Repository repository = repositoryRepository.findByIdAndUserId(id, user.getId())
+                .orElseThrow(() -> new RuntimeException(Messages.REPOSITORY_NOT_FOUND));
+
+        return repositoryMapper.toResponse(repository);
+    }
+
+    // UPDATE REPOSITORY
+    @Override
+    public RepositoryResponse updateRepository(Long id, UpdateRepositoryRequest request) {
+
+        User user = currentUserUtil.getCurrentUser();
+
+        Repository repository = repositoryRepository.findByIdAndUserId(id, user.getId())
+                .orElseThrow(() -> new RuntimeException(Messages.REPOSITORY_NOT_FOUND));
+
+        repository.setName(request.getName());
+        repository.setDescription(request.getDescription());
+        repository.setBranch(request.getBranch());
+        repository.setLanguage(request.getLanguage());
+        repository.setVisibility(request.getVisibility());
+        repository.setType(request.getType());
+        repository.setScanFrequency(request.getScanFrequency());
+
+        Repository updated = repositoryRepository.save(repository);
+
+        return repositoryMapper.toResponse(updated);
+    }
+
+    // DELETE REPOSITORY
+    @Override
+    public void deleteRepository(Long id) {
+
+        User user = currentUserUtil.getCurrentUser();
+
+        Repository repository = repositoryRepository.findByIdAndUserId(id, user.getId())
+                .orElseThrow(() -> new RuntimeException(Messages.REPOSITORY_NOT_FOUND));
+
+        repositoryRepository.delete(repository);
+    }
+}

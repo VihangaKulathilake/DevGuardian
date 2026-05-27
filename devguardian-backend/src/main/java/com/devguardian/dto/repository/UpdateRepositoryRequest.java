@@ -3,6 +3,7 @@ package com.devguardian.dto.repository;
 import com.devguardian.entity.enums.RepositoryType;
 import com.devguardian.entity.enums.ScanFrequency;
 import com.devguardian.entity.enums.Visibility;
+
 import lombok.*;
 
 @Getter
