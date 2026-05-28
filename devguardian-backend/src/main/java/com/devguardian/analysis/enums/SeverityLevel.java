@@ -1,6 +1,6 @@
 package com.devguardian.analysis.enums;
 
-public enum Severity {
+public enum SeverityLevel {
     LOW,
     MEDIUM,
     HIGH,
