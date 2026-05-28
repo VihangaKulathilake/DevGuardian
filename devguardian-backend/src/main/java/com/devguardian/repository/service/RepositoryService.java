@@ -1,0 +1,19 @@
+package com.devguardian.repository.service;
+
+import java.util.List;
+import com.devguardian.repository.dto.CreateRepositoryRequest;
+import com.devguardian.repository.dto.RepositoryResponse;
+import com.devguardian.repository.dto.UpdateRepositoryRequest;
+
+public interface RepositoryService {
+    RepositoryResponse createRepository(CreateRepositoryRequest request);
+
+    List<RepositoryResponse> getUserRepositories();
+
+    RepositoryResponse getRepositoryById(Long id);
+
+    RepositoryResponse updateRepository(Long id, UpdateRepositoryRequest request);
+
+    void deleteRepository(Long id);
+}
+

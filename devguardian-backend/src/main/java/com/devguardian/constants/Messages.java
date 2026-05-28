@@ -17,3 +17,4 @@ public class Messages {
     private Messages() {
     }
 }
+

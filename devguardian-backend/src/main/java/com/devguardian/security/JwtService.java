@@ -1,6 +1,6 @@
 package com.devguardian.security;
 
-import com.devguardian.entity.User;
+import com.devguardian.auth.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;

@@ -1,8 +1,8 @@
 package com.devguardian.security;
 
 import com.devguardian.constants.Messages;
-import com.devguardian.entity.User;
-import com.devguardian.repository.UserRepository;
+import com.devguardian.auth.entity.User;
+import com.devguardian.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

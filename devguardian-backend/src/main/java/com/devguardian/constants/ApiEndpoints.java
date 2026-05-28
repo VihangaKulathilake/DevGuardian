@@ -11,3 +11,4 @@ public class ApiEndpoints {
     private ApiEndpoints() {
     }
 }
+

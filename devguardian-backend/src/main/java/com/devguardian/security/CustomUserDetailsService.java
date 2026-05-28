@@ -1,7 +1,7 @@
 package com.devguardian.security;
 
-import com.devguardian.entity.User;
-import com.devguardian.repository.UserRepository;
+import com.devguardian.auth.entity.User;
+import com.devguardian.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
