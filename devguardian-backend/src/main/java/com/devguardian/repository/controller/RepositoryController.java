@@ -4,7 +4,7 @@ import com.devguardian.constants.ApiEndpoints;
 import com.devguardian.repository.dto.CreateRepositoryRequest;
 import com.devguardian.repository.dto.RepositoryResponse;
 import com.devguardian.repository.dto.UpdateRepositoryRequest;
-import com.devguardian.repository.service.RepositoryService;
+import com.devguardian.repository.service.interfaces.RepositoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;

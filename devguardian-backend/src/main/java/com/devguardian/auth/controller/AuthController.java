@@ -4,7 +4,7 @@ import com.devguardian.constants.ApiEndpoints;
 import com.devguardian.auth.dto.AuthResponse;
 import com.devguardian.auth.dto.LoginRequest;
 import com.devguardian.auth.dto.RegisterRequest;
-import com.devguardian.auth.service.AuthService;
+import com.devguardian.auth.service.interfaces.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

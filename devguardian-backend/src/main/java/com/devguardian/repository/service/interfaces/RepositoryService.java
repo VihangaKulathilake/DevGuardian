@@ -1,4 +1,4 @@
-package com.devguardian.repository.service;
+package com.devguardian.repository.service.interfaces;
 
 import java.util.List;
 import com.devguardian.repository.dto.CreateRepositoryRequest;

@@ -1,4 +1,4 @@
-package com.devguardian.auth.service;
+package com.devguardian.auth.service.interfaces;
 
 import com.devguardian.auth.dto.AuthResponse;
 import com.devguardian.auth.dto.LoginRequest;

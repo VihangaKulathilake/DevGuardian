@@ -9,7 +9,7 @@ import com.devguardian.auth.entity.User;
 import com.devguardian.repository.enums.RepositoryStatus;
 import com.devguardian.repository.mapper.RepositoryMapper;
 import com.devguardian.repository.repository.RepositoryRepository;
-import com.devguardian.repository.service.RepositoryService;
+import com.devguardian.repository.service.interfaces.RepositoryService;
 import com.devguardian.security.CurrentUserUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

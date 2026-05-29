@@ -9,7 +9,7 @@ import com.devguardian.auth.enums.ProviderType;
 import com.devguardian.auth.enums.Role;
 import com.devguardian.auth.repository.UserRepository;
 import com.devguardian.security.JwtService;
-import com.devguardian.auth.service.AuthService;
+import com.devguardian.auth.service.interfaces.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
