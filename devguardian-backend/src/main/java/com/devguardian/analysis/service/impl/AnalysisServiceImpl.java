@@ -99,4 +99,35 @@ public class AnalysisServiceImpl implements AnalysisService {
          */
         return analysisRepository.save(analysis);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Analysis getAnalysisById(Long analysisId) {
+
+        return analysisRepository.findById(analysisId)
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Analysis not found"));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Analysis> getRepositoryAnalyses(Long repositoryId) {
+
+        Repository repository = repositoryRepository.findById(repositoryId)
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Repository not found"));
+
+        return analysisRepository.findByRepositoryOrderByCreatedAtDesc(repository);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Issue> getAnalysisIssues(Long analysisId) {
+
+        if (!analysisRepository.existsById(analysisId)) {
+            throw new EntityNotFoundException("Analysis not found");
+        }
+
+        return issueRepository.findByAnalysisId(analysisId);
+    }
 }
