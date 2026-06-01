@@ -1,8 +1,6 @@
 package com.devguardian.analysis.scoring.impl;
 
 import com.devguardian.analysis.entity.Issue;
-import com.devguardian.analysis.enums.IssueCategory;
-import com.devguardian.analysis.enums.SeverityLevel;
 import com.devguardian.analysis.scoring.interfaces.ScoreCalculator;
 import com.devguardian.analysis.scoring.model.ScoreResult;
 import org.springframework.stereotype.Component;
@@ -23,7 +21,7 @@ public class DefaultScoreCalculator implements ScoreCalculator {
 
         for (Issue issue : issues) {
 
-            int penalty = issue.getCategory().getDefaultWeight();
+            int penalty = issue.getCategory().getDefaultWeight()*issue.getSeverity().getWeight();
 
             switch (issue.getCategory()) {
 
