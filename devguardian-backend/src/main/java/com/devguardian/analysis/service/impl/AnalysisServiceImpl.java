@@ -1,13 +1,21 @@
 package com.devguardian.analysis.service.impl;
 
 import com.devguardian.analysis.entity.Analysis;
+import com.devguardian.analysis.entity.AnalysisReport;
 import com.devguardian.analysis.entity.Issue;
 import com.devguardian.analysis.enums.AnalysisStatus;
+import com.devguardian.analysis.enums.ReportFormat;
+import com.devguardian.analysis.enums.ReportType;
+import com.devguardian.analysis.report.interfaces.ReportGenerator;
+import com.devguardian.analysis.report.model.AnalysisReportSummary;
+import com.devguardian.analysis.repository.AnalysisReportRepository;
 import com.devguardian.analysis.repository.AnalysisRepository;
 import com.devguardian.analysis.repository.IssueRepository;
 import com.devguardian.analysis.rules.context.ScanContext;
 import com.devguardian.analysis.rules.engine.RuleEngine;
 import com.devguardian.analysis.scanner.interfaces.RepositoryScanner;
+import com.devguardian.analysis.scoring.interfaces.ScoreCalculator;
+import com.devguardian.analysis.scoring.model.ScoreResult;
 import com.devguardian.analysis.service.interfaces.AnalysisService;
 import com.devguardian.repository.entity.Repository;
 import com.devguardian.repository.repository.RepositoryRepository;
@@ -24,110 +32,166 @@ import java.util.List;
 @Transactional
 public class AnalysisServiceImpl implements AnalysisService {
 
-    private final RepositoryRepository repositoryRepository;
-    private final AnalysisRepository analysisRepository;
-    private final IssueRepository issueRepository;
+        private final RepositoryRepository repositoryRepository;
+        private final AnalysisRepository analysisRepository;
+        private final IssueRepository issueRepository;
 
-    private final RepositoryScanner repositoryScanner;
-    private final RuleEngine ruleEngine;
+        private final RepositoryScanner repositoryScanner;
+        private final RuleEngine ruleEngine;
 
-    @Override
-    public Analysis startAnalysis(Long repositoryId) {
+        private final ScoreCalculator scoreCalculator;
 
-        /*
-         * STEP 1
-         * Fetch repository
-         */
-        Repository repository = repositoryRepository.findById(repositoryId)
-                .orElseThrow(() ->
-                        new EntityNotFoundException("Repository not found")
-                );
+        private final ReportGenerator reportGenerator;
+        private final AnalysisReportRepository analysisReportRepository;
 
-        /*
-         * STEP 2
-         * Create analysis record
-         */
-        Analysis analysis = Analysis.builder()
-                .repository(repository)
-                .status(AnalysisStatus.RUNNING)
-                .startedAt(LocalDateTime.now())
-                .build();
+        @Override
+        public Analysis startAnalysis(Long repositoryId) {
 
-        Analysis savedAnalysis = analysisRepository.save(analysis);
+                /*
+                 * STEP 1
+                 * Fetch repository
+                 */
+                Repository repository = repositoryRepository.findById(repositoryId)
+                                .orElseThrow(() -> new EntityNotFoundException("Repository not found"));
 
-        /*
-         * STEP 3
-         * Scan repository files
-         */
-        ScanContext context = repositoryScanner.scan(repository);
+                /*
+                 * STEP 2
+                 * Create analysis record
+                 */
+                Analysis analysis = analysisRepository.save(
+                                Analysis.builder()
+                                                .repository(repository)
+                                                .status(AnalysisStatus.RUNNING)
+                                                .startedAt(LocalDateTime.now())
+                                                .build());
 
-        /*
-         * STEP 4
-         * Run rule engine
-         */
-        List<Issue> issues = ruleEngine.runAllRules(context);
+                /*
+                 * STEP 3
+                 * Scan repository files
+                 */
+                ScanContext context = repositoryScanner.scan(repository);
 
-        /*
-         * STEP 5
-         * Attach analysis to issues
-         */
-        issues.forEach(issue -> issue.setAnalysis(savedAnalysis));
+                /*
+                 * STEP 4
+                 * Run rule engine
+                 */
+                List<Issue> issues = ruleEngine.runAllRules(context);
 
-        /*
-         * STEP 6
-         * Save issues
-         */
-        issueRepository.saveAll(issues);
+                /*
+                 * STEP 5
+                 * Attach analysis to issues
+                 */
+                issues.forEach(issue -> issue.setAnalysis(analysis));
 
-        /*
-         * STEP 7
-         * Update analysis statistics
-         */
-        analysis.setIssues(issues);
+                analysis.setIssues(issues);
 
-        analysis.setSecurityScore(
-                Math.max(0, 100 - (issues.size() * 10))
-        );
+                /*
+                 * STEP 6
+                 * Save issues
+                 */
+                issueRepository.saveAll(issues);
 
-        analysis.setCompletedAt(LocalDateTime.now());
+                /*
+                 * STEP 7
+                 * Calculate scores
+                 */
+                ScoreResult scoreResult = scoreCalculator.calculateScores(issues);
 
-        analysis.setStatus(AnalysisStatus.COMPLETED);
+                analysis.setSecurityScore(
+                                scoreResult.getSecurityScore());
 
-        /*
-         * STEP 8
-         * Save final analysis
-         */
-        return analysisRepository.save(analysis);
-    }
+                analysis.setQualityScore(
+                                scoreResult.getQualityScore());
 
-    @Override
-    @Transactional(readOnly = true)
-    public Analysis getAnalysisById(Long analysisId) {
+                analysis.setArchitectureScore(
+                                scoreResult.getArchitectureScore());
 
-        return analysisRepository.findById(analysisId)
-                .orElseThrow(() ->
-                        new EntityNotFoundException("Analysis not found"));
-    }
+                /*
+                 * STEP 8
+                 * Generate report summary
+                 */
+                AnalysisReportSummary summary = reportGenerator.generate(analysis);
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<Analysis> getRepositoryAnalyses(Long repositoryId) {
+                /*
+                 * STEP 9
+                 * Build report data
+                 */
+                String reportData = """
+                                {
+                                  "totalIssues": %d,
+                                  "criticalIssues": %d,
+                                  "highIssues": %d,
+                                  "mediumIssues": %d,
+                                  "lowIssues": %d,
+                                  "securityScore": %d,
+                                  "qualityScore": %d,
+                                  "architectureScore": %d
+                                }
+                                """.formatted(
+                                summary.getTotalIssues(),
+                                summary.getCriticalIssues(),
+                                summary.getHighIssues(),
+                                summary.getMediumIssues(),
+                                summary.getLowIssues(),
+                                summary.getSecurityScore(),
+                                summary.getQualityScore(),
+                                summary.getArchitectureScore());
 
-        Repository repository = repositoryRepository.findById(repositoryId)
-                .orElseThrow(() ->
-                        new EntityNotFoundException("Repository not found"));
+                /*
+                 * STEP 10
+                 * Create analysis report
+                 */
+                AnalysisReport report = AnalysisReport.builder()
+                                .analysis(analysis)
+                                .reportType(ReportType.SUMMARY)
+                                .format(ReportFormat.JSON)
+                                .content(reportData)
+                                .build();
 
-        return analysisRepository.findByRepositoryOrderByCreatedAtDesc(repository);
-    }
+                analysisReportRepository.save(report);
+                analysis.setReport(report);
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<Issue> getAnalysisIssues(Long analysisId) {
+                /*
+                 * STEP 11
+                 * Complete analysis
+                 */
+                analysis.setCompletedAt(LocalDateTime.now());
 
-        if (!analysisRepository.existsById(analysisId)) {
-            throw new EntityNotFoundException("Analysis not found");
+                analysis.setStatus(AnalysisStatus.COMPLETED);
+
+                /*
+                 * STEP 12
+                 * Save final analysis
+                 */
+                return analysisRepository.save(analysis);
         }
 
-        return issueRepository.findByAnalysisId(analysisId);
-    }
+        @Override
+        @Transactional(readOnly = true)
+        public Analysis getAnalysisById(Long analysisId) {
+
+                return analysisRepository.findById(analysisId)
+                                .orElseThrow(() -> new EntityNotFoundException("Analysis not found"));
+        }
+
+        @Override
+        @Transactional(readOnly = true)
+        public List<Analysis> getRepositoryAnalyses(Long repositoryId) {
+
+                Repository repository = repositoryRepository.findById(repositoryId)
+                                .orElseThrow(() -> new EntityNotFoundException("Repository not found"));
+
+                return analysisRepository.findByRepositoryOrderByCreatedAtDesc(repository);
+        }
+
+        @Override
+        @Transactional(readOnly = true)
+        public List<Issue> getAnalysisIssues(Long analysisId) {
+
+                if (!analysisRepository.existsById(analysisId)) {
+                        throw new EntityNotFoundException("Analysis not found");
+                }
+
+                return issueRepository.findByAnalysisId(analysisId);
+        }
 }
