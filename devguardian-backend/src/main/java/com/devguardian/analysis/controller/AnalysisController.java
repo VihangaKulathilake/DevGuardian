@@ -4,6 +4,7 @@ import com.devguardian.analysis.dto.response.AnalysisResponse;
 import com.devguardian.analysis.dto.response.IssueResponse;
 import com.devguardian.analysis.entity.Analysis;
 import com.devguardian.analysis.mapper.AnalysisMapper;
+import com.devguardian.analysis.mapper.IssueMapper;
 import com.devguardian.analysis.service.interfaces.AnalysisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,7 @@ public class AnalysisController {
 
     private final AnalysisService analysisService;
     private final AnalysisMapper analysisMapper;
+    private final IssueMapper issueMapper;
 
     /*
      * Start repository analysis
@@ -61,7 +63,7 @@ public class AnalysisController {
 
         return analysisService.getAnalysisIssues(analysisId)
                 .stream()
-                .map(analysisMapper::toIssueResponse)
+                .map(issueMapper::toIssueResponse)
                 .toList();
     }
 }
