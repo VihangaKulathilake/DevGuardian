@@ -6,6 +6,7 @@ import com.devguardian.analysis.entity.Issue;
 import com.devguardian.analysis.enums.AnalysisStatus;
 import com.devguardian.analysis.enums.ReportFormat;
 import com.devguardian.analysis.enums.ReportType;
+import com.devguardian.analysis.events.AnalysisCompletedEvent;
 import com.devguardian.analysis.report.interfaces.ReportGenerator;
 import com.devguardian.analysis.report.model.AnalysisReportSummary;
 import com.devguardian.analysis.repository.AnalysisReportRepository;
@@ -21,6 +22,7 @@ import com.devguardian.repository.entity.Repository;
 import com.devguardian.repository.repository.RepositoryRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +45,8 @@ public class AnalysisServiceImpl implements AnalysisService {
 
         private final ReportGenerator reportGenerator;
         private final AnalysisReportRepository analysisReportRepository;
+
+        private final ApplicationEventPublisher eventPublisher;
 
         @Override
         public Analysis startAnalysis(Long repositoryId) {
@@ -158,12 +162,15 @@ public class AnalysisServiceImpl implements AnalysisService {
                 analysis.setCompletedAt(LocalDateTime.now());
 
                 analysis.setStatus(AnalysisStatus.COMPLETED);
+                Analysis completedAnalysis = analysisRepository.save(analysis);
+
+                eventPublisher.publishEvent(new AnalysisCompletedEvent(completedAnalysis.getId(), repository.getId()));
 
                 /*
                  * STEP 12
                  * Save final analysis
                  */
-                return analysisRepository.save(analysis);
+                return completedAnalysis;
         }
 
         @Override
