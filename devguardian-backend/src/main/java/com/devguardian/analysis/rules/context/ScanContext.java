@@ -22,5 +22,6 @@ public class ScanContext {
      * value = file content
      */
     private Map<String, String> files;
+    private Map<String, Long> fileSizes;
 
 }
