@@ -1,5 +1,6 @@
 package com.devguardian.config;
 
+import com.devguardian.security.handler.JwtAuthenticationEntryPoint;
 import com.devguardian.constants.ApiEndpoints;
 import com.devguardian.security.CustomUserDetailsService;
 import com.devguardian.security.JwtAuthenticationFilter;
@@ -21,6 +22,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomUserDetailsService customUserDetailsService;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -47,6 +49,12 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
+                        )
+                )
+
+                .exceptionHandling(exception ->
+                        exception.authenticationEntryPoint(
+                                jwtAuthenticationEntryPoint
                         )
                 )
 
