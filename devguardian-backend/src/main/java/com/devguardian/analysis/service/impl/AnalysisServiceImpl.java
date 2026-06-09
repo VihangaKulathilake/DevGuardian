@@ -18,8 +18,11 @@ import com.devguardian.analysis.scanner.interfaces.RepositoryScanner;
 import com.devguardian.analysis.scoring.interfaces.ScoreCalculator;
 import com.devguardian.analysis.scoring.model.ScoreResult;
 import com.devguardian.analysis.service.interfaces.AnalysisService;
+import com.devguardian.analysis.util.AnalysisAccessValidator;
 import com.devguardian.repository.entity.Repository;
 import com.devguardian.repository.repository.RepositoryRepository;
+import com.devguardian.repository.util.RepositoryAccessValidator;
+import com.devguardian.security.CurrentUserUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -48,6 +51,10 @@ public class AnalysisServiceImpl implements AnalysisService {
 
         private final ApplicationEventPublisher eventPublisher;
 
+        private final AnalysisAccessValidator analysisAccessValidator;
+        private final RepositoryAccessValidator repositoryAccessValidator;
+        private final CurrentUserUtil currentUserUtil;
+
         @Override
         public Analysis startAnalysis(Long repositoryId) {
 
@@ -57,6 +64,8 @@ public class AnalysisServiceImpl implements AnalysisService {
                  */
                 Repository repository = repositoryRepository.findById(repositoryId)
                                 .orElseThrow(() -> new EntityNotFoundException("Repository not found"));
+
+                repositoryAccessValidator.validateOwnership(repository, currentUserUtil.getCurrentUser());
 
                 /*
                  * STEP 2
@@ -177,8 +186,12 @@ public class AnalysisServiceImpl implements AnalysisService {
         @Transactional(readOnly = true)
         public Analysis getAnalysisById(Long analysisId) {
 
-                return analysisRepository.findById(analysisId)
-                                .orElseThrow(() -> new EntityNotFoundException("Analysis not found"));
+            Analysis analysis = analysisRepository.findById(analysisId)
+                    .orElseThrow(() -> new EntityNotFoundException("Analysis not found"));
+
+            analysisAccessValidator.validateOwnership(analysis, currentUserUtil.getCurrentUser());
+
+            return analysis;
         }
 
         @Override
@@ -188,6 +201,8 @@ public class AnalysisServiceImpl implements AnalysisService {
                 Repository repository = repositoryRepository.findById(repositoryId)
                                 .orElseThrow(() -> new EntityNotFoundException("Repository not found"));
 
+                repositoryAccessValidator.validateOwnership(repository,currentUserUtil.getCurrentUser());
+
                 return analysisRepository.findByRepositoryOrderByCreatedAtDesc(repository);
         }
 
@@ -195,10 +210,11 @@ public class AnalysisServiceImpl implements AnalysisService {
         @Transactional(readOnly = true)
         public List<Issue> getAnalysisIssues(Long analysisId) {
 
-                if (!analysisRepository.existsById(analysisId)) {
-                        throw new EntityNotFoundException("Analysis not found");
-                }
+                Analysis analysis = analysisRepository.findById(analysisId)
+                        .orElseThrow(() -> new EntityNotFoundException("Analysis not found"));
 
-                return issueRepository.findByAnalysisId(analysisId);
+                analysisAccessValidator.validateOwnership(analysis, currentUserUtil.getCurrentUser());
+
+                return issueRepository.findByAnalysisId(analysis.getId());
         }
 }
