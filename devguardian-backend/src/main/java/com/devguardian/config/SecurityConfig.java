@@ -61,7 +61,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
 
                         // Public endpoints
-                        .requestMatchers(ApiEndpoints.AUTH + "/**", "/error")
+                        .requestMatchers(
+                                ApiEndpoints.AUTH + "/**",
+                                "/error",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**"
+                        )
                         .permitAll()
 
                         // Everything else protected

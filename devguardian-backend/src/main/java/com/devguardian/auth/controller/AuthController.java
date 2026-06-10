@@ -5,10 +5,18 @@ import com.devguardian.auth.dto.AuthResponse;
 import com.devguardian.auth.dto.LoginRequest;
 import com.devguardian.auth.dto.RegisterRequest;
 import com.devguardian.auth.service.interfaces.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(
+        name = "Authentication",
+        description = "Authentication APIs"
+)
 @RestController
 @RequestMapping(ApiEndpoints.AUTH)
 @RequiredArgsConstructor
@@ -25,6 +33,20 @@ public class AuthController {
     }
 
     // LOGIN
+    @Operation(
+            summary = "Login User",
+            description = "Authenticates a user and returns JWT token"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Login Successful"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Invalid Credentials"
+            )
+    })
     @PostMapping(ApiEndpoints.LOGIN)
     public ResponseEntity<AuthResponse> login(
             @RequestBody LoginRequest request
