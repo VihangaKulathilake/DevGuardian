@@ -3,6 +3,9 @@ package com.devguardian.analysis.mapper;
 import com.devguardian.analysis.dto.response.IssueResponse;
 import com.devguardian.analysis.entity.Issue;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class IssueMapper {
     public IssueResponse toIssueResponse(Issue issue) {
 

@@ -31,9 +31,9 @@ public class GlobalExceptionHandler {
                         request
                 ));
     }
-    @ExceptionHandler(ResourceNotFoundException.class)
+    @ExceptionHandler({ResourceNotFoundException.class, jakarta.persistence.EntityNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleNotFound(
-            ResourceNotFoundException ex,
+            Exception ex,
             HttpServletRequest request
     ) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)

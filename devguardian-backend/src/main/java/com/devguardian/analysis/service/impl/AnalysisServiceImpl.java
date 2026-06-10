@@ -23,7 +23,7 @@ import com.devguardian.repository.entity.Repository;
 import com.devguardian.repository.repository.RepositoryRepository;
 import com.devguardian.repository.util.RepositoryAccessValidator;
 import com.devguardian.security.CurrentUserUtil;
-import jakarta.persistence.EntityNotFoundException;
+import com.devguardian.common.exception.custom.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -41,7 +41,8 @@ public class AnalysisServiceImpl implements AnalysisService {
         private final AnalysisRepository analysisRepository;
         private final IssueRepository issueRepository;
 
-        private final RepositoryScanner repositoryScanner;
+        // private final RepositoryScanner repositoryScanner;
+        private final RepositoryScanner mockRepositoryScanner;
         private final RuleEngine ruleEngine;
 
         private final ScoreCalculator scoreCalculator;
@@ -63,7 +64,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                  * Fetch repository
                  */
                 Repository repository = repositoryRepository.findById(repositoryId)
-                                .orElseThrow(() -> new EntityNotFoundException("Repository not found"));
+                                .orElseThrow(() -> new ResourceNotFoundException("Repository not found"));
 
                 repositoryAccessValidator.validateOwnership(repository, currentUserUtil.getCurrentUser());
 
@@ -82,7 +83,8 @@ public class AnalysisServiceImpl implements AnalysisService {
                  * STEP 3
                  * Scan repository files
                  */
-                ScanContext context = repositoryScanner.scan(repository);
+                // ScanContext context = repositoryScanner.scan(repository);
+                ScanContext context = mockRepositoryScanner.scan(repository);
 
                 /*
                  * STEP 4
@@ -96,7 +98,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                  */
                 issues.forEach(issue -> issue.setAnalysis(analysis));
 
-                analysis.setIssues(issues);
+                analysis.getIssues().addAll(issues);
 
                 /*
                  * STEP 6
@@ -186,12 +188,12 @@ public class AnalysisServiceImpl implements AnalysisService {
         @Transactional(readOnly = true)
         public Analysis getAnalysisById(Long analysisId) {
 
-            Analysis analysis = analysisRepository.findById(analysisId)
-                    .orElseThrow(() -> new EntityNotFoundException("Analysis not found"));
+                Analysis analysis = analysisRepository.findById(analysisId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Analysis not found"));
 
-            analysisAccessValidator.validateOwnership(analysis, currentUserUtil.getCurrentUser());
+                analysisAccessValidator.validateOwnership(analysis, currentUserUtil.getCurrentUser());
 
-            return analysis;
+                return analysis;
         }
 
         @Override
@@ -199,9 +201,9 @@ public class AnalysisServiceImpl implements AnalysisService {
         public List<Analysis> getRepositoryAnalyses(Long repositoryId) {
 
                 Repository repository = repositoryRepository.findById(repositoryId)
-                                .orElseThrow(() -> new EntityNotFoundException("Repository not found"));
+                                .orElseThrow(() -> new ResourceNotFoundException("Repository not found"));
 
-                repositoryAccessValidator.validateOwnership(repository,currentUserUtil.getCurrentUser());
+                repositoryAccessValidator.validateOwnership(repository, currentUserUtil.getCurrentUser());
 
                 return analysisRepository.findByRepositoryOrderByCreatedAtDesc(repository);
         }
@@ -211,7 +213,7 @@ public class AnalysisServiceImpl implements AnalysisService {
         public List<Issue> getAnalysisIssues(Long analysisId) {
 
                 Analysis analysis = analysisRepository.findById(analysisId)
-                        .orElseThrow(() -> new EntityNotFoundException("Analysis not found"));
+                                .orElseThrow(() -> new ResourceNotFoundException("Analysis not found"));
 
                 analysisAccessValidator.validateOwnership(analysis, currentUserUtil.getCurrentUser());
 

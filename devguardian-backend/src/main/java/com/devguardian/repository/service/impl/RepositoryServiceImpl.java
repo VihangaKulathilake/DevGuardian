@@ -11,6 +11,7 @@ import com.devguardian.repository.mapper.RepositoryMapper;
 import com.devguardian.repository.repository.RepositoryRepository;
 import com.devguardian.repository.service.interfaces.RepositoryService;
 import com.devguardian.security.CurrentUserUtil;
+import com.devguardian.common.exception.custom.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -58,7 +59,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         User user = currentUserUtil.getCurrentUser();
 
         Repository repository = repositoryRepository.findByIdAndUserId(id, user.getId())
-                .orElseThrow(() -> new RuntimeException(Messages.REPOSITORY_NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException(Messages.REPOSITORY_NOT_FOUND));
 
         return repositoryMapper.toResponse(repository);
     }
@@ -70,7 +71,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         User user = currentUserUtil.getCurrentUser();
 
         Repository repository = repositoryRepository.findByIdAndUserId(id, user.getId())
-                .orElseThrow(() -> new RuntimeException(Messages.REPOSITORY_NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException(Messages.REPOSITORY_NOT_FOUND));
 
         repository.setName(request.getName());
         repository.setDescription(request.getDescription());
@@ -92,7 +93,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         User user = currentUserUtil.getCurrentUser();
 
         Repository repository = repositoryRepository.findByIdAndUserId(id, user.getId())
-                .orElseThrow(() -> new RuntimeException(Messages.REPOSITORY_NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException(Messages.REPOSITORY_NOT_FOUND));
 
         repositoryRepository.delete(repository);
     }
