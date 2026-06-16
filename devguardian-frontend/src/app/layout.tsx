@@ -1,5 +1,6 @@
 import "@/styles/globals.css";
 import type { Metadata } from "next";
+import { StoreProvider } from "@/store/Provider";
 
 export const metadata: Metadata = {
   title: "DevGuardian - AI Security & Code Analysis",
@@ -14,8 +15,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="bg-background text-foreground antialiased min-h-screen">
-        {children}
+        <StoreProvider>{children}</StoreProvider>
       </body>
     </html>
   );
 }
+

@@ -7,21 +7,45 @@ import RepositoryList from "@/components/dashboard/RepositoryList";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
-import { Plus, GitBranch, Shield, Sparkles } from "lucide-react";
+import { Plus, GitBranch, Sparkles } from "lucide-react";
+import { useAppDispatch } from "@/hooks/useRedux";
+import { addRepository } from "@/store/repoSlice";
 
 export default function RepositoriesPage() {
   const [isAddModalOpen, setIsAddModalOpen] = React.useState(false);
   const [repoUrl, setRepoUrl] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const dispatch = useAppDispatch();
 
-  const handleAddRepoSubmit = (e: React.FormEvent) => {
+  const handleAddRepoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => {
+    try {
+      const urlParts = repoUrl.trim().split("/");
+      const extractedName = urlParts[urlParts.length - 1]?.replace(".git", "") || "repo";
+
+      const resultAction = await dispatch(
+        addRepository({
+          name: extractedName,
+          url: repoUrl,
+          provider: "GITHUB",
+          visibility: "PRIVATE",
+          branch: "main",
+          language: "TypeScript",
+          type: "BACKEND",
+          scanFrequency: "DAILY",
+        })
+      );
+
+      if (addRepository.fulfilled.match(resultAction)) {
+        setIsAddModalOpen(false);
+        setRepoUrl("");
+      }
+    } catch (err) {
+      console.error("Failed to add repository:", err);
+    } finally {
       setIsSubmitting(false);
-      setIsAddModalOpen(false);
-      setRepoUrl("");
-    }, 1200);
+    }
   };
 
   return (

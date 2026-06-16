@@ -6,19 +6,24 @@ import { ShieldCheck, GitFork } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Card from "@/components/ui/Card";
+import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
+import { loginUser } from "@/store/authSlice";
 
 export default function LoginPage() {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [loading, setLoading] = React.useState(false);
+  const dispatch = useAppDispatch();
+  const { loading, error, isAuthenticated } = useAppSelector((state) => state.auth);
+
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      window.location.href = "/dashboard";
+    }
+  }, [isAuthenticated]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      window.location.href = "/dashboard";
-    }, 1000);
+    dispatch(loginUser({ email, password }));
   };
 
   return (
@@ -35,6 +40,11 @@ export default function LoginPage() {
 
       <Card className="p-6">
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {error && (
+            <div className="p-3 text-xs bg-destructive/10 border border-destructive/20 rounded-xl text-destructive text-center">
+              {error}
+            </div>
+          )}
           <Input
             label="Email Address"
             type="email"
