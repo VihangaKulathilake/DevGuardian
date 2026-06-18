@@ -1,25 +1,7 @@
-import api from "./api";
+import api from "@/api/axios";
+import { LoginCredentials, RegisterData, AuthResponse } from "./authTypes";
 
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-export interface RegisterData {
-  name: string;
-  email: string;
-  password: string;
-}
-
-export interface AuthResponse {
-  token: string;
-  userId: number;
-  role: string;
-  email: string;
-  name: string;
-}
-
-export const authService = {
+export const authApi = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     const response = await api.post<AuthResponse>("/api/auth/login", credentials);
     if (response.data?.token) {

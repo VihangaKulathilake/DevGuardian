@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import StatCard from "./StatCard";
 import { Shield, Bug, AlertTriangle, ShieldCheck } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
-import { fetchRepositories } from "@/store/repoSlice";
+import { fetchRepositories } from "@/features/repository/repositorySlice";
 
 export const DashboardCards: React.FC = () => {
   const dispatch = useAppDispatch();

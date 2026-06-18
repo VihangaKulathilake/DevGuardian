@@ -11,12 +11,12 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import { Play, Sparkles, GitPullRequest } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
-import { fetchRepositoryById } from "@/store/repoSlice";
+import { fetchRepositoryById } from "@/features/repository/repositorySlice";
 import {
   triggerAnalysis,
   fetchRepositoryAnalyses,
   fetchAnalysisIssues,
-} from "@/store/analysisSlice";
+} from "@/features/analysis/analysisSlice";
 
 function AnalysisPageContent() {
   const searchParams = useSearchParams();

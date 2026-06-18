@@ -1,6 +1,6 @@
 import "@/styles/globals.css";
 import type { Metadata } from "next";
-import { StoreProvider } from "@/store/Provider";
+import { StoreProvider } from "@/app/Provider";
 
 export const metadata: Metadata = {
   title: "DevGuardian - AI Security & Code Analysis",

@@ -7,7 +7,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Card from "@/components/ui/Card";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
-import { loginUser } from "@/store/authSlice";
+import { loginUser } from "@/features/auth/authSlice";
 
 export default function LoginPage() {
   const [email, setEmail] = React.useState("");

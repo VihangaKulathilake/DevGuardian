@@ -1,20 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { authService, RegisterData, LoginCredentials } from "@/services/authService";
-
-interface UserProfile {
-  userId: number;
-  email: string;
-  name: string;
-  role: string;
-}
-
-interface AuthState {
-  user: UserProfile | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  loading: boolean;
-  error: string | null;
-}
+import { authApi } from "./authApi";
+import { AuthState, LoginCredentials, RegisterData } from "./authTypes";
 
 const initialState: AuthState = {
   user: null,
@@ -28,7 +14,7 @@ export const loginUser = createAsyncThunk(
   "auth/login",
   async (credentials: LoginCredentials, { rejectWithValue }) => {
     try {
-      return await authService.login(credentials);
+      return await authApi.login(credentials);
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Login failed");
     }
@@ -39,7 +25,7 @@ export const registerUser = createAsyncThunk(
   "auth/register",
   async (data: RegisterData, { rejectWithValue }) => {
     try {
-      return await authService.register(data);
+      return await authApi.register(data);
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Registration failed");
     }
@@ -51,7 +37,7 @@ export const authSlice = createSlice({
   initialState,
   reducers: {
     logout: (state) => {
-      authService.logout();
+      authApi.logout();
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
@@ -67,7 +53,7 @@ export const authSlice = createSlice({
             state.user = JSON.parse(userStr);
             state.isAuthenticated = true;
           } catch {
-            authService.logout();
+            authApi.logout();
           }
         }
       }

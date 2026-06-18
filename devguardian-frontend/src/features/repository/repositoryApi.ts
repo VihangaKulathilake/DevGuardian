@@ -1,21 +1,7 @@
-import api from "./api";
+import api from "@/api/axios";
+import { RepositoryResponse } from "./repositoryTypes";
 
-export interface RepositoryResponse {
-  id: number;
-  name: string;
-  url: string;
-  description?: string;
-  language?: string;
-  branch?: string;
-  provider: string;
-  visibility: string;
-  status: string;
-  type?: string;
-  scanFrequency?: string;
-  createdAt: string;
-}
-
-export const repoService = {
+export const repositoryApi = {
   async getRepositories(): Promise<RepositoryResponse[]> {
     const response = await api.get<RepositoryResponse[]>("/api/repositories");
     return response.data;

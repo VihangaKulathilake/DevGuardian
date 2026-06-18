@@ -9,7 +9,7 @@ import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
 import { Plus, GitBranch, Sparkles } from "lucide-react";
 import { useAppDispatch } from "@/hooks/useRedux";
-import { addRepository } from "@/store/repoSlice";
+import { addRepository } from "@/features/repository/repositorySlice";
 
 export default function RepositoriesPage() {
   const [isAddModalOpen, setIsAddModalOpen] = React.useState(false);

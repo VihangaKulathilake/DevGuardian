@@ -1,30 +1,7 @@
-import api from "./api";
+import api from "@/api/axios";
+import { AnalysisResponse, IssueResponse } from "./analysisTypes";
 
-export interface AnalysisResponse {
-  id: number;
-  repositoryId: number;
-  status: string;
-  securityScore: number;
-  qualityScore: number;
-  architectureScore: number;
-  totalIssues: number;
-  startedAt: string;
-  completedAt?: string;
-}
-
-export interface IssueResponse {
-  id: number;
-  ruleCode: string;
-  category: string;
-  severity: string;
-  title: string;
-  description: string;
-  filePath: string;
-  lineNumber: number;
-  recommendation: string;
-}
-
-export const analysisService = {
+export const analysisApi = {
   async startAnalysis(repositoryId: number): Promise<AnalysisResponse> {
     const response = await api.post<AnalysisResponse>(`/api/analyses/${repositoryId}/start`);
     return response.data;

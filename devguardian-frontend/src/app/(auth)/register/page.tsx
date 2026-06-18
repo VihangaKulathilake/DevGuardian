@@ -7,7 +7,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Card from "@/components/ui/Card";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
-import { registerUser } from "@/store/authSlice";
+import { registerUser } from "@/features/auth/authSlice";
 
 export default function RegisterPage() {
   const [name, setName] = React.useState("");

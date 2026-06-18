@@ -1,12 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { repoService, RepositoryResponse } from "@/services/repoService";
-
-interface RepoState {
-  repositories: RepositoryResponse[];
-  currentRepository: RepositoryResponse | null;
-  loading: boolean;
-  error: string | null;
-}
+import { repositoryApi } from "./repositoryApi";
+import { RepoState } from "./repositoryTypes";
 
 const initialState: RepoState = {
   repositories: [],
@@ -19,7 +13,7 @@ export const fetchRepositories = createAsyncThunk(
   "repo/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      return await repoService.getRepositories();
+      return await repositoryApi.getRepositories();
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Failed to fetch repositories");
     }
@@ -30,7 +24,7 @@ export const fetchRepositoryById = createAsyncThunk(
   "repo/fetchById",
   async (id: number, { rejectWithValue }) => {
     try {
-      return await repoService.getRepository(id);
+      return await repositoryApi.getRepository(id);
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Failed to fetch repository details");
     }
@@ -41,7 +35,7 @@ export const addRepository = createAsyncThunk(
   "repo/add",
   async (repoData: any, { rejectWithValue }) => {
     try {
-      return await repoService.createRepository(repoData);
+      return await repositoryApi.createRepository(repoData);
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Failed to add repository");
     }
@@ -52,7 +46,7 @@ export const removeRepository = createAsyncThunk(
   "repo/remove",
   async (id: number, { rejectWithValue }) => {
     try {
-      await repoService.deleteRepository(id);
+      await repositoryApi.deleteRepository(id);
       return id;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Failed to delete repository");
@@ -60,7 +54,7 @@ export const removeRepository = createAsyncThunk(
   }
 );
 
-export const repoSlice = createSlice({
+export const repositorySlice = createSlice({
   name: "repo",
   initialState,
   reducers: {
@@ -115,5 +109,5 @@ export const repoSlice = createSlice({
   },
 });
 
-export const { clearCurrentRepository } = repoSlice.actions;
-export default repoSlice.reducer;
+export const { clearCurrentRepository } = repositorySlice.actions;
+export default repositorySlice.reducer;

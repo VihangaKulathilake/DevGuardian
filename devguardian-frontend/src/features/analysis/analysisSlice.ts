@@ -1,13 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { analysisService, AnalysisResponse, IssueResponse } from "@/services/analysisService";
-
-interface AnalysisState {
-  analyses: AnalysisResponse[];
-  issues: IssueResponse[];
-  currentAnalysis: AnalysisResponse | null;
-  loading: boolean;
-  error: string | null;
-}
+import { analysisApi } from "./analysisApi";
+import { AnalysisState } from "./analysisTypes";
 
 const initialState: AnalysisState = {
   analyses: [],
@@ -21,7 +14,7 @@ export const triggerAnalysis = createAsyncThunk(
   "analysis/trigger",
   async (repoId: number, { rejectWithValue }) => {
     try {
-      return await analysisService.startAnalysis(repoId);
+      return await analysisApi.startAnalysis(repoId);
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Failed to trigger scan");
     }
@@ -32,7 +25,7 @@ export const fetchRepositoryAnalyses = createAsyncThunk(
   "analysis/fetchByRepo",
   async (repoId: number, { rejectWithValue }) => {
     try {
-      return await analysisService.getRepositoryAnalyses(repoId);
+      return await analysisApi.getRepositoryAnalyses(repoId);
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Failed to fetch scans history");
     }
@@ -43,7 +36,7 @@ export const fetchAnalysisIssues = createAsyncThunk(
   "analysis/fetchIssues",
   async (analysisId: number, { rejectWithValue }) => {
     try {
-      return await analysisService.getAnalysisIssues(analysisId);
+      return await analysisApi.getAnalysisIssues(analysisId);
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Failed to fetch scan issues");
     }

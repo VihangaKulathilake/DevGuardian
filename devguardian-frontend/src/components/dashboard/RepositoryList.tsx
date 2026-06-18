@@ -2,8 +2,8 @@ import * as React from "react";
 import { useEffect } from "react";
 import RepoCard from "./RepoCard";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
-import { fetchRepositories } from "@/store/repoSlice";
-import { triggerAnalysis } from "@/store/analysisSlice";
+import { fetchRepositories } from "@/features/repository/repositorySlice";
+import { triggerAnalysis } from "@/features/analysis/analysisSlice";
 
 export const RepositoryList: React.FC = () => {
   const dispatch = useAppDispatch();
