@@ -23,6 +23,6 @@ public class CurrentUserUtil {
 
         return userRepository.findByEmail(email)
                 .orElseThrow(() ->
-                        new RuntimeException(Messages.USER_NOT_FOUND));
+                        new org.springframework.security.core.userdetails.UsernameNotFoundException(Messages.USER_NOT_FOUND));
     }
 }

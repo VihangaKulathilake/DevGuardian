@@ -15,6 +15,8 @@ import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import io.swagger.v3.core.converter.ModelConverters;
+import com.devguardian.common.exception.response.ErrorResponse;
 import java.util.List;
 
 @Configuration
@@ -48,6 +50,23 @@ public class OpenApiConfig {
                 .description("Internal Server Error - An unexpected error occurred on the server")
                 .content(errorContent);
 
+        var errorSchemas = ModelConverters.getInstance().read(ErrorResponse.class);
+
+        Components components = new Components()
+                .addSecuritySchemes("bearerAuth", new SecurityScheme()
+                        .name("bearerAuth")
+                        .type(SecurityScheme.Type.HTTP)
+                        .scheme("bearer")
+                        .bearerFormat("JWT")
+                        .description("JWT Authentication Token. Format: Bearer &lt;token&gt;"))
+                .addResponses("400BadRequest", badRequestResponse)
+                .addResponses("401Unauthorized", unauthorizedResponse)
+                .addResponses("403Forbidden", forbiddenResponse)
+                .addResponses("404NotFound", notFoundResponse)
+                .addResponses("500InternalServerError", internalErrorResponse);
+
+        errorSchemas.forEach(components::addSchemas);
+
         return new OpenAPI()
                 .info(new Info()
                         .title("DevGuardian API")
@@ -60,24 +79,13 @@ public class OpenApiConfig {
                         .license(new License()
                                 .name("Apache 2.0")
                                 .url("https://www.apache.org/licenses/LICENSE-2.0")))
-                .components(new Components()
-                        .addSecuritySchemes("bearerAuth", new SecurityScheme()
-                                .name("bearerAuth")
-                                .type(SecurityScheme.Type.HTTP)
-                                .scheme("bearer")
-                                .bearerFormat("JWT")
-                                .description("JWT Authentication Token. Format: Bearer &lt;token&gt;"))
-                        .addResponses("400BadRequest", badRequestResponse)
-                        .addResponses("401Unauthorized", unauthorizedResponse)
-                        .addResponses("403Forbidden", forbiddenResponse)
-                        .addResponses("404NotFound", notFoundResponse)
-                        .addResponses("500InternalServerError", internalErrorResponse));
+                .components(components);
     }
 
     @Bean
     public GroupedOpenApi authApi() {
         return GroupedOpenApi.builder()
-                .group("Authentication APIs")
+                .group("authentication")
                 .pathsToMatch("/api/auth/**", "/api/v1/auth/**")
                 .build();
     }
@@ -85,7 +93,7 @@ public class OpenApiConfig {
     @Bean
     public GroupedOpenApi repositoryApi() {
         return GroupedOpenApi.builder()
-                .group("Repository APIs")
+                .group("repositories")
                 .pathsToMatch("/api/repositories/**", "/api/v1/repositories/**")
                 .build();
     }
@@ -93,8 +101,16 @@ public class OpenApiConfig {
     @Bean
     public GroupedOpenApi analysisApi() {
         return GroupedOpenApi.builder()
-                .group("Analysis APIs")
+                .group("analyses")
                 .pathsToMatch("/api/analyses/**", "/api/v1/analyses/**", "/api/analysis/**", "/api/v1/analysis/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi githubApi() {
+        return GroupedOpenApi.builder()
+                .group("github")
+                .pathsToMatch("/api/github/**", "/api/v1/github/**")
                 .build();
     }
 }

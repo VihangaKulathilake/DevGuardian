@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.devguardian.auth.mapper.AuthMapper;
+import com.devguardian.common.exception.custom.BusinessException;
+import org.springframework.security.authentication.BadCredentialsException;
 
 @Service
 @RequiredArgsConstructor
@@ -29,7 +31,7 @@ public class AuthServiceImpl implements AuthService {
 
         // 1. Check if user already exists
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException(Messages.USER_ALREADY_EXISTS);
+            throw new BusinessException(Messages.USER_ALREADY_EXISTS);
         }
 
         // 2. Create new user
@@ -56,11 +58,11 @@ public class AuthServiceImpl implements AuthService {
 
         // 1. Find user
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException(Messages.INVALID_CREDENTIALS));
+                .orElseThrow(() -> new BadCredentialsException(Messages.INVALID_CREDENTIALS));
 
         // 2. Check password
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException(Messages.INVALID_CREDENTIALS);
+            throw new BadCredentialsException(Messages.INVALID_CREDENTIALS);
         }
 
         // 3. Generate JWT
