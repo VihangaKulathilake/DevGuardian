@@ -1,9 +1,13 @@
 package com.devguardian.github.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class GithubAccessTokenResponse {
 
     @JsonProperty("access_token")

@@ -3,6 +3,7 @@ package com.devguardian.repository.controller;
 import com.devguardian.common.exception.response.ErrorResponse;
 import com.devguardian.constants.ApiEndpoints;
 import com.devguardian.repository.dto.CreateRepositoryRequest;
+import com.devguardian.repository.dto.ImportRepositoryRequest;
 import com.devguardian.repository.dto.RepositoryResponse;
 import com.devguardian.repository.dto.UpdateRepositoryRequest;
 import com.devguardian.repository.service.interfaces.RepositoryService;
@@ -43,6 +44,21 @@ public class RepositoryController {
             @Valid @RequestBody CreateRepositoryRequest request
     ) {
         return repositoryService.createRepository(request);
+    }
+
+    @Operation(
+            summary = "Import a GitHub repository",
+            description = "Imports a repository directly from the authenticated user's GitHub account"
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Repository imported successfully"
+    )
+    @PostMapping("/import")
+    public RepositoryResponse importRepository(
+            @Valid @RequestBody ImportRepositoryRequest request
+    ) {
+        return repositoryService.importRepository(request);
     }
 
     @Operation(

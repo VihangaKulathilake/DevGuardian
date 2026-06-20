@@ -1,5 +1,6 @@
 package com.devguardian.repository.repository;
 
+import com.devguardian.auth.entity.User;
 import com.devguardian.repository.entity.Repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -14,5 +15,6 @@ public interface RepositoryRepository extends JpaRepository<Repository, Long> {
             Long userId
     );
 
-    boolean existsByUrl(String url);
+    boolean existsByCloneUrl(String cloneUrl);
+    Optional<Repository> findByUserAndGithubRepoId(User user, Long githubRepoId);
 }

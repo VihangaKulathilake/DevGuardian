@@ -12,7 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "repositories")
+@Table(name = "repositories", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"user_id", "github_repo_id"})
+        })
 @Getter
 @Setter
 @Builder
@@ -27,11 +29,17 @@ public class Repository {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false, unique = true)
-    private String url;
+    @Column(name = "full_name", nullable = false)
+    private String fullName;
+
+    @Column(name = "github_repo_id", nullable = false)
+    private Long githubRepoId;
 
     @Column(length = 1000)
     private String description;
+
+    @Column(name = "clone_url", length = 500, nullable = false)
+    private String cloneUrl;
 
     // Free-form (do NOT enum this)
     private String language;
@@ -64,6 +72,10 @@ public class Repository {
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @CreationTimestamp
+    @Column(name = "imported_at")
+    private LocalDateTime importedAt;
 
     // Future: analysis history
     @Builder.Default

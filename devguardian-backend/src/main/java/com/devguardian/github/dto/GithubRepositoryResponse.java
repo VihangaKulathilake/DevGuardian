@@ -1,9 +1,13 @@
 package com.devguardian.github.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class GithubRepositoryResponse {
 
     private Long id;
@@ -15,7 +19,8 @@ public class GithubRepositoryResponse {
 
     private Owner owner;
 
-    private boolean _private;
+    @JsonProperty("private")
+    private boolean isPrivate;
 
     @JsonProperty("html_url")
     private String htmlUrl;
@@ -25,7 +30,6 @@ public class GithubRepositoryResponse {
 
     @JsonProperty("default_branch")
     private String defaultBranch;
-
     @Data
     public static class Owner {
         private String login;
