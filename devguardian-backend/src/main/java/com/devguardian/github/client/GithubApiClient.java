@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Component
@@ -74,6 +75,10 @@ public class GithubApiClient {
                 .retrieve()
                 .body(GithubRepositoryResponse[].class);
 
-        return response != null ? List.of(response) : List.of();
+        if (response == null || response.length == 0) {
+            return List.of();
+        }
+
+        return Arrays.asList(response);
     }
 }

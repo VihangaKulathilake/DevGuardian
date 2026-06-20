@@ -4,6 +4,7 @@ import com.devguardian.auth.entity.User;
 import com.devguardian.github.client.GithubApiClient;
 import com.devguardian.github.config.GithubProperties;
 import com.devguardian.github.dto.GithubAccessTokenResponse;
+import com.devguardian.github.dto.GithubRepositoryResponse;
 import com.devguardian.github.dto.GithubUserResponse;
 import com.devguardian.github.entity.GithubConnection;
 import com.devguardian.github.service.GithubConnectionService;
@@ -13,6 +14,9 @@ import com.devguardian.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -81,5 +85,27 @@ public class GithubOAuthServiceImpl implements GithubOAuthService {
 
         // 4. Save connection
         githubConnectionService.saveConnection(connection);
+    }
+
+    @Override
+    public List<GithubRepositoryResponse> getRepositories() {
+
+        // 1. Get logged-in user (JWT user)
+        User currentUser = currentUserUtil.getCurrentUser();
+
+        // 2. Get GitHub connection from DB
+        GithubConnection connection =
+                githubConnectionService.getCurrentUserConnection();
+
+        // 3. Call GitHub API using stored token
+        List<GithubRepositoryResponse> response =
+                githubApiClient.getUserRepositories(connection.getAccessToken());
+
+        // 4. Convert to list safely
+        if (response == null || response.isEmpty()) {
+            return List.of();
+        }
+
+        return response;
     }
 }

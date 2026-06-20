@@ -1,7 +1,7 @@
 package com.devguardian.github.controller;
 
 import com.devguardian.github.client.GithubApiClient;
-import com.devguardian.github.entity.GithubConnection;
+import com.devguardian.github.dto.GithubRepositoryResponse;
 import com.devguardian.github.service.GithubConnectionService;
 import com.devguardian.github.service.GithubOAuthService;
 import com.devguardian.security.CurrentUserUtil;
@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 
 @Tag(
         name = "GitHub Integration APIs",
@@ -29,7 +30,6 @@ public class GithubController {
 
     private final GithubOAuthService githubOAuthService;
     private final GithubConnectionService githubConnectionService;
-    private final GithubApiClient githubApiClient;
     private final CurrentUserUtil currentUserUtil;
 
     @Operation(
@@ -81,15 +81,10 @@ public class GithubController {
     )
     @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/repositories")
-    public ResponseEntity<?> getRepositories() {
-
-        GithubConnection connection =
-                githubConnectionService.getCurrentUserConnection();
+    public ResponseEntity<List<GithubRepositoryResponse>> getRepositories() {
 
         return ResponseEntity.ok(
-                githubApiClient.getUserRepositories(
-                        connection.getAccessToken()
-                )
+                githubOAuthService.getRepositories()
         );
     }
 
