@@ -1,6 +1,5 @@
-package com.devguardian.github.service;
+package com.devguardian.github.service.interfaces;
 
-import com.devguardian.auth.entity.User;
 import com.devguardian.github.dto.GithubRepositoryResponse;
 
 import java.util.List;

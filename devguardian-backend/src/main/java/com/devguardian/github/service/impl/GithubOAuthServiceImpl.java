@@ -7,15 +7,14 @@ import com.devguardian.github.dto.GithubAccessTokenResponse;
 import com.devguardian.github.dto.GithubRepositoryResponse;
 import com.devguardian.github.dto.GithubUserResponse;
 import com.devguardian.github.entity.GithubConnection;
-import com.devguardian.github.service.GithubConnectionService;
-import com.devguardian.github.service.GithubOAuthService;
+import com.devguardian.github.service.interfaces.GithubConnectionService;
+import com.devguardian.github.service.interfaces.GithubOAuthService;
 import com.devguardian.security.CurrentUserUtil;
 import com.devguardian.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Service

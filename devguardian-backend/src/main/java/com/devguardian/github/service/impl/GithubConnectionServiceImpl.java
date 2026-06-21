@@ -4,7 +4,7 @@ import com.devguardian.auth.entity.User;
 import com.devguardian.security.CurrentUserUtil;
 import com.devguardian.github.entity.GithubConnection;
 import com.devguardian.github.repository.GithubConnectionRepository;
-import com.devguardian.github.service.GithubConnectionService;
+import com.devguardian.github.service.interfaces.GithubConnectionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

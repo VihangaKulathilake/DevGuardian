@@ -1,9 +1,8 @@
 package com.devguardian.github.controller;
 
-import com.devguardian.github.client.GithubApiClient;
 import com.devguardian.github.dto.GithubRepositoryResponse;
-import com.devguardian.github.service.GithubConnectionService;
-import com.devguardian.github.service.GithubOAuthService;
+import com.devguardian.github.service.interfaces.GithubConnectionService;
+import com.devguardian.github.service.interfaces.GithubOAuthService;
 import com.devguardian.security.CurrentUserUtil;
 import com.devguardian.config.StandardErrorResponses;
 import io.swagger.v3.oas.annotations.Operation;

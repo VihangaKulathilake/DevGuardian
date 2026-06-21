@@ -1,4 +1,4 @@
-package com.devguardian.github.service;
+package com.devguardian.github.service.interfaces;
 
 import com.devguardian.github.entity.GithubConnection;
 
