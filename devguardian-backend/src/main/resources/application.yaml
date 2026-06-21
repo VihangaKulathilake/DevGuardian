@@ -27,3 +27,7 @@ github:
   client-id: ${GITHUB_CLIENT_ID}
   client-secret: ${GITHUB_CLIENT_SECRET}
   redirect-uri: http://localhost:8080/api/github/callback
+
+devguardian:
+  workspace:
+    base-path: workspace/repos
