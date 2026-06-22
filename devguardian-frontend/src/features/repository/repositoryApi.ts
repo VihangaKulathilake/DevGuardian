@@ -25,4 +25,26 @@ export const repositoryApi = {
   async deleteRepository(id: number): Promise<void> {
     await api.delete(`/api/repositories/${id}`);
   },
+
+  // GitHub connection API calls
+  async getGithubRepositories(): Promise<any[]> {
+    const response = await api.get<any[]>("/api/github/repositories");
+    return response.data;
+  },
+
+  async connectGithub(): Promise<string> {
+    const response = await api.get<string>("/api/github/connect");
+    return response.data;
+  },
+
+  async importRepository(githubRepoId: number): Promise<RepositoryResponse> {
+    const response = await api.post<RepositoryResponse>("/api/repositories/import", { githubRepoId });
+    return response.data;
+  },
+
+  async disconnectGithub(): Promise<void> {
+    await api.delete("/api/github/disconnect");
+  },
 };
+
+export default repositoryApi;

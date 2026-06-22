@@ -8,13 +8,22 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import { User, Shield, Key, Sliders, CheckCircle } from "lucide-react";
+import { useAppSelector } from "@/hooks/useRedux";
 
 export default function SettingsPage() {
-  const [name, setName] = React.useState("Dev Guardian");
-  const [email, setEmail] = React.useState("admin@devguardian.io");
+  const { user } = useAppSelector((state) => state.auth);
+  const [name, setName] = React.useState("");
+  const [email, setEmail] = React.useState("");
   const [apiKey, setApiKey] = React.useState("dg_live_83a1f9e2d3b45a6c7e8f90a1b2c3d4e5");
   const [showKey, setShowKey] = React.useState(false);
   const [isSaved, setIsSaved] = React.useState(false);
+
+  React.useEffect(() => {
+    if (user) {
+      setName(user.name || "Dev Guardian");
+      setEmail(user.email || "admin@devguardian.io");
+    }
+  }, [user]);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();

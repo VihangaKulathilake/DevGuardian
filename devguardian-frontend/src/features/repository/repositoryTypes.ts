@@ -18,4 +18,8 @@ export interface RepoState {
   currentRepository: RepositoryResponse | null;
   loading: boolean;
   error: string | null;
+  githubRepositories: any[];
+  isGithubConnected: boolean;
+  githubLoading: boolean;
+  githubError: string | null;
 }

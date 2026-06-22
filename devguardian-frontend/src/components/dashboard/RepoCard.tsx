@@ -13,6 +13,7 @@ export interface RepoCardProps {
   warningIssues: number;
   infoIssues: number;
   onRunAnalysis?: () => void;
+  onViewAnalysis?: () => void;
 }
 
 export const RepoCard: React.FC<RepoCardProps> = ({
@@ -24,12 +25,16 @@ export const RepoCard: React.FC<RepoCardProps> = ({
   warningIssues,
   infoIssues,
   onRunAnalysis,
+  onViewAnalysis,
 }) => {
   return (
-    <Card className="hover:border-primary/40 transition-colors duration-200 p-6 flex flex-col justify-between h-full">
+    <Card
+      onClick={onViewAnalysis}
+      className="hover:border-primary/45 cursor-pointer transition-all duration-200 p-6 flex flex-col justify-between h-full group"
+    >
       <div>
         <div className="flex items-center justify-between gap-3 mb-2">
-          <h4 className="text-base font-bold truncate text-foreground flex items-center gap-2">
+          <h4 className="text-base font-bold truncate text-foreground flex items-center gap-2 group-hover:text-primary transition-colors">
             <GitBranch className="h-4 w-4 text-primary" />
             {repoName}
           </h4>
@@ -65,9 +70,31 @@ export const RepoCard: React.FC<RepoCardProps> = ({
           </Badge>
         </div>
 
-        <Button variant="secondary" size="sm" className="w-full" onClick={onRunAnalysis}>
-          Run Analysis
-        </Button>
+        <div className="flex gap-2.5">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="flex-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewAnalysis?.();
+            }}
+          >
+            View Report
+          </Button>
+          {onRunAnalysis && (
+            <Button
+              size="sm"
+              className="px-4"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRunAnalysis();
+              }}
+            >
+              Scan
+            </Button>
+          )}
+        </div>
       </div>
     </Card>
   );

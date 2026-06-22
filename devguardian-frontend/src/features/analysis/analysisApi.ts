@@ -3,7 +3,7 @@ import { AnalysisResponse, IssueResponse } from "./analysisTypes";
 
 export const analysisApi = {
   async startAnalysis(repositoryId: number): Promise<AnalysisResponse> {
-    const response = await api.post<AnalysisResponse>(`/api/analyses/repositories/${repositoryId}`);
+    const response = await api.post<AnalysisResponse>(`/api/analyses/${repositoryId}/start`);
     return response.data;
   },
 
