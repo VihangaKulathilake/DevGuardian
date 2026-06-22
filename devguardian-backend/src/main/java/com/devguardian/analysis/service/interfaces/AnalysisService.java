@@ -11,4 +11,5 @@ public interface AnalysisService {
     Analysis getAnalysisById(Long analysisId);
     List<Analysis> getRepositoryAnalyses(Long repositoryId);
     List<Issue> getAnalysisIssues(Long analysisId);
+    void executeAnalysis(Long analysisId);
 }

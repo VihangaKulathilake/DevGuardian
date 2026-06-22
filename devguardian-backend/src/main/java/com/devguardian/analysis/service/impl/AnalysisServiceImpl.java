@@ -7,6 +7,7 @@ import com.devguardian.analysis.enums.AnalysisStatus;
 import com.devguardian.analysis.enums.ReportFormat;
 import com.devguardian.analysis.enums.ReportType;
 import com.devguardian.analysis.events.AnalysisCompletedEvent;
+import com.devguardian.analysis.events.AnalysisStartedEvent;
 import com.devguardian.analysis.report.interfaces.ReportGenerator;
 import com.devguardian.analysis.report.model.AnalysisReportSummary;
 import com.devguardian.analysis.repository.AnalysisReportRepository;
@@ -14,17 +15,22 @@ import com.devguardian.analysis.repository.AnalysisRepository;
 import com.devguardian.analysis.repository.IssueRepository;
 import com.devguardian.analysis.rules.context.ScanContext;
 import com.devguardian.analysis.rules.engine.RuleEngine;
+import com.devguardian.analysis.scanner.impl.GitRepositoryScanner;
 import com.devguardian.analysis.scanner.interfaces.RepositoryScanner;
 import com.devguardian.analysis.scoring.interfaces.ScoreCalculator;
 import com.devguardian.analysis.scoring.model.ScoreResult;
 import com.devguardian.analysis.service.interfaces.AnalysisService;
 import com.devguardian.analysis.util.AnalysisAccessValidator;
+import com.devguardian.github.entity.GithubConnection;
+import com.devguardian.github.service.interfaces.GithubConnectionService;
 import com.devguardian.repository.entity.Repository;
 import com.devguardian.repository.repository.RepositoryRepository;
+import com.devguardian.repository.service.interfaces.CloneService;
 import com.devguardian.repository.util.RepositoryAccessValidator;
 import com.devguardian.security.CurrentUserUtil;
 import com.devguardian.common.exception.custom.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +41,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class AnalysisServiceImpl implements AnalysisService {
 
         private final RepositoryRepository repositoryRepository;
@@ -43,6 +50,7 @@ public class AnalysisServiceImpl implements AnalysisService {
 
         // private final RepositoryScanner repositoryScanner;
         private final RepositoryScanner mockRepositoryScanner;
+        private final GitRepositoryScanner gitRepositoryScanner;
         private final RuleEngine ruleEngine;
 
         private final ScoreCalculator scoreCalculator;
@@ -56,107 +64,163 @@ public class AnalysisServiceImpl implements AnalysisService {
         private final RepositoryAccessValidator repositoryAccessValidator;
         private final CurrentUserUtil currentUserUtil;
 
+        private final CloneService cloneService;
+        private final GithubConnectionService githubConnectionService;
+
         @Override
+        @Transactional
         public Analysis startAnalysis(Long repositoryId) {
+
+            Repository repository =
+                    repositoryRepository.findById(repositoryId)
+                            .orElseThrow(() ->
+                                    new ResourceNotFoundException(
+                                            "Repository not found"
+                                    ));
+
+            repositoryAccessValidator.validateOwnership(
+                    repository,
+                    currentUserUtil.getCurrentUser()
+            );
+
+            /*
+             * Clone repository
+             */
+
+            GithubConnection connection =
+                    githubConnectionService
+                            .getCurrentUserConnection();
+
+            cloneService.cloneRepository(
+                    repository,
+                    connection
+            );
+
+            /*
+             * Create RUNNING analysis
+             */
+
+            Analysis analysis =
+                    analysisRepository.save(
+                            Analysis.builder()
+                                    .repository(repository)
+                                    .status(AnalysisStatus.RUNNING)
+                                    .startedAt(LocalDateTime.now())
+                                    .build()
+                    );
+
+            /*
+             * Publish event
+             */
+
+            eventPublisher.publishEvent(
+                    new AnalysisStartedEvent(
+                            analysis.getId(),
+                            repository.getId()
+                    )
+            );
+
+            return analysis;
+        }
+
+        @Override
+        @Transactional
+        public void executeAnalysis(Long analysisId) {
+
+            Analysis analysis = analysisRepository.findById(analysisId)
+                    .orElseThrow(() ->
+                            new ResourceNotFoundException(
+                                    "Analysis not found"
+                            ));
+
+            try {
+
+                Repository repository = analysis.getRepository();
 
                 /*
                  * STEP 1
-                 * Fetch repository
+                 * Scan repository files
                  */
-                Repository repository = repositoryRepository.findById(repositoryId)
-                                .orElseThrow(() -> new ResourceNotFoundException("Repository not found"));
-
-                repositoryAccessValidator.validateOwnership(repository, currentUserUtil.getCurrentUser());
+                // Replace mockRepositoryScanner later
+                ScanContext context =
+                        gitRepositoryScanner.scan(repository);
 
                 /*
                  * STEP 2
-                 * Create analysis record
+                 * Run rule engine
                  */
-                Analysis analysis = analysisRepository.save(
-                                Analysis.builder()
-                                                .repository(repository)
-                                                .status(AnalysisStatus.RUNNING)
-                                                .startedAt(LocalDateTime.now())
-                                                .build());
+                List<Issue> issues =
+                        ruleEngine.runAllRules(context);
 
                 /*
                  * STEP 3
-                 * Scan repository files
-                 */
-                // ScanContext context = repositoryScanner.scan(repository);
-                ScanContext context = mockRepositoryScanner.scan(repository);
-
-                /*
-                 * STEP 4
-                 * Run rule engine
-                 */
-                List<Issue> issues = ruleEngine.runAllRules(context);
-
-                /*
-                 * STEP 5
                  * Attach analysis to issues
                  */
-                issues.forEach(issue -> issue.setAnalysis(analysis));
+                issues.forEach(issue ->
+                        issue.setAnalysis(analysis));
 
                 analysis.getIssues().addAll(issues);
 
                 /*
-                 * STEP 6
+                 * STEP 4
                  * Save issues
                  */
                 issueRepository.saveAll(issues);
 
                 /*
-                 * STEP 7
+                 * STEP 5
                  * Calculate scores
                  */
-                ScoreResult scoreResult = scoreCalculator.calculateScores(issues);
+                ScoreResult scoreResult =
+                        scoreCalculator.calculateScores(issues);
 
                 analysis.setSecurityScore(
-                                scoreResult.getSecurityScore());
+                        scoreResult.getSecurityScore());
 
                 analysis.setQualityScore(
-                                scoreResult.getQualityScore());
+                        scoreResult.getQualityScore());
 
                 analysis.setArchitectureScore(
-                                scoreResult.getArchitectureScore());
+                        scoreResult.getArchitectureScore());
+
+                /*
+                 * STEP 6
+                 * Generate report summary
+                 */
+                AnalysisReportSummary summary =
+                        reportGenerator.generate(analysis);
+
+                /*
+                 * STEP 7
+                 * Build report JSON
+                 */
+                String reportData = """
+                    {
+                      "totalIssues": %d,
+                      "criticalIssues": %d,
+                      "highIssues": %d,
+                      "mediumIssues": %d,
+                      "lowIssues": %d,
+                      "securityScore": %d,
+                      "qualityScore": %d,
+                      "architectureScore": %d
+                    }
+                    """.formatted(
+                        summary.getTotalIssues(),
+                        summary.getCriticalIssues(),
+                        summary.getHighIssues(),
+                        summary.getMediumIssues(),
+                        summary.getLowIssues(),
+                        summary.getSecurityScore(),
+                        summary.getQualityScore(),
+                        summary.getArchitectureScore());
 
                 /*
                  * STEP 8
-                 * Generate report summary
+                 * Create report
                  */
-                AnalysisReportSummary summary = reportGenerator.generate(analysis);
-
-                /*
-                 * STEP 9
-                 * Build report data
-                 */
-                String reportData = """
-                                {
-                                  "totalIssues": %d,
-                                  "criticalIssues": %d,
-                                  "highIssues": %d,
-                                  "mediumIssues": %d,
-                                  "lowIssues": %d,
-                                  "securityScore": %d,
-                                  "qualityScore": %d,
-                                  "architectureScore": %d
-                                }
-                                """.formatted(
-                                summary.getTotalIssues(),
-                                summary.getCriticalIssues(),
-                                summary.getHighIssues(),
-                                summary.getMediumIssues(),
-                                summary.getLowIssues(),
-                                summary.getSecurityScore(),
-                                summary.getQualityScore(),
-                                summary.getArchitectureScore());
-
-                /*
-                 * STEP 10
-                 * Create analysis report
-                 */
-                AnalysisReport report = AnalysisReport.builder()
+                AnalysisReport report =
+                        AnalysisReport.builder()
                                 .analysis(analysis)
                                 .reportType(ReportType.SUMMARY)
                                 .format(ReportFormat.JSON)
@@ -164,24 +228,53 @@ public class AnalysisServiceImpl implements AnalysisService {
                                 .build();
 
                 analysisReportRepository.save(report);
+
                 analysis.setReport(report);
 
                 /*
-                 * STEP 11
+                 * STEP 9
                  * Complete analysis
                  */
-                analysis.setCompletedAt(LocalDateTime.now());
+                analysis.setCompletedAt(
+                        LocalDateTime.now()
+                );
 
-                analysis.setStatus(AnalysisStatus.COMPLETED);
-                Analysis completedAnalysis = analysisRepository.save(analysis);
+                analysis.setStatus(
+                        AnalysisStatus.COMPLETED
+                );
 
-                eventPublisher.publishEvent(new AnalysisCompletedEvent(completedAnalysis.getId(), repository.getId()));
+                Analysis completedAnalysis =
+                        analysisRepository.save(analysis);
 
                 /*
-                 * STEP 12
-                 * Save final analysis
+                 * STEP 10
+                 * Publish completed event
                  */
-                return completedAnalysis;
+                eventPublisher.publishEvent(
+                        new AnalysisCompletedEvent(
+                                completedAnalysis.getId(),
+                                repository.getId()
+                        )
+                );
+
+            } catch (Exception ex) {
+
+                log.error(
+                        "Analysis failed for ID {}",
+                        analysisId,
+                        ex
+                );
+
+                analysis.setStatus(
+                        AnalysisStatus.FAILED
+                );
+
+                analysis.setCompletedAt(
+                        LocalDateTime.now()
+                );
+
+                analysisRepository.save(analysis);
+            }
         }
 
         @Override
