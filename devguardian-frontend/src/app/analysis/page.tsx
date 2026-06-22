@@ -53,6 +53,23 @@ function AnalysisPageContent() {
     }
   }, [activeAnalysisId, dispatch]);
 
+  // Poll for analysis status updates if the current active analysis is in a "RUNNING" state
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+    if (activeAnalysisId && activeAnalysis?.status === "RUNNING") {
+      intervalId = setInterval(() => {
+        if (repoId) {
+          dispatch(fetchRepositoryAnalyses(repoId));
+        }
+      }, 2000);
+    }
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [activeAnalysisId, activeAnalysis?.status, repoId, dispatch]);
+
   const runScan = async () => {
     if (!repoId) return;
     setLocalScanning(true);
@@ -69,7 +86,7 @@ function AnalysisPageContent() {
     }
   };
 
-  const isScanning = loading || localScanning;
+  const isScanning = loading || localScanning || activeAnalysis?.status === "RUNNING";
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -148,7 +165,7 @@ function AnalysisPageContent() {
                 <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-blue-500" /> Info</span>
               </div>
             </div>
-            
+
             {issues.length === 0 ? (
               <div className="text-center py-16 text-sm text-muted-foreground border border-dashed border-border rounded-2xl bg-card/10">
                 {isScanning ? "Scanning codebase..." : "No vulnerabilities or issues identified in this scan run."}
