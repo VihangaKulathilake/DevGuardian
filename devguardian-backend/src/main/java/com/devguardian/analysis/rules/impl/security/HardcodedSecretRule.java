@@ -1,4 +1,4 @@
-package com.devguardian.analysis.rules.impl;
+package com.devguardian.analysis.rules.impl.security;
 
 import com.devguardian.analysis.entity.Issue;
 import com.devguardian.analysis.enums.IssueCategory;

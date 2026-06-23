@@ -17,7 +17,7 @@ public class DefaultRuleEngine implements RuleEngine {
     @Override
     public List<Issue> runAllRules(ScanContext context) {
 
-        return rules.stream()
+        return rules.parallelStream()
                 .flatMap(rule -> rule.evaluate(context).stream())
                 .toList();
     }

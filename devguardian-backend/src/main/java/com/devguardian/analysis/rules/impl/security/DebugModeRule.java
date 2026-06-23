@@ -1,4 +1,4 @@
-package com.devguardian.analysis.rules.impl;
+package com.devguardian.analysis.rules.impl.security;
 
 import com.devguardian.analysis.entity.Issue;
 import com.devguardian.analysis.enums.IssueCategory;
@@ -12,20 +12,20 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 @Component
-public class SqlInjectionRule implements AnalysisRule {
+public class DebugModeRule implements AnalysisRule {
 
-    private static final Pattern SQL_PATTERN =
-            Pattern.compile("SELECT.*\\+|INSERT.*\\+|UPDATE.*\\+|DELETE.*\\+",
+    private static final Pattern DEBUG_PATTERN =
+            Pattern.compile("(debug\\s*=\\s*true|debug\\s*:\\s*true)",
                     Pattern.CASE_INSENSITIVE);
 
     @Override
     public String getRuleCode() {
-        return "SQL_INJECTION_RULE";
+        return "DEBUG_MODE_RULE";
     }
 
     @Override
     public String getName() {
-        return "SQL Injection Detection";
+        return "Debug Mode Detection";
     }
 
     @Override
@@ -39,18 +39,18 @@ public class SqlInjectionRule implements AnalysisRule {
 
             for (int i = 0; i < lines.length; i++) {
 
-                if (SQL_PATTERN.matcher(lines[i]).find()) {
+                if (DEBUG_PATTERN.matcher(lines[i]).find()) {
 
                     issues.add(
                             Issue.builder()
                                     .ruleCode(getRuleCode())
-                                    .title("Potential SQL Injection")
-                                    .description("SQL query appears to use string concatenation.")
-                                    .severity(SeverityLevel.HIGH)
-                                    .category(IssueCategory.SECURITY)
+                                    .title("Debug Mode Enabled")
+                                    .description("Debug mode is enabled in configuration.")
+                                    .severity(SeverityLevel.MEDIUM)
+                                    .category(IssueCategory.CONFIGURATION)
                                     .filePath(filePath)
                                     .lineNumber(i + 1)
-                                    .recommendation("Use prepared statements or parameterized queries.")
+                                    .recommendation("Disable debug mode before deployment.")
                                     .build()
                     );
                 }
