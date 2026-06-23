@@ -29,7 +29,9 @@ export default function RepositoriesPage() {
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"github" | "custom">("github");
-  
+  const [importingRepoId, setImportingRepoId] = useState<number | null>(null);
+
+
   // Custom URL Form State
   const [repoUrl, setRepoUrl] = useState("");
   const [customName, setCustomName] = useState("");
@@ -83,7 +85,7 @@ export default function RepositoriesPage() {
   };
 
   const handleImportGithubRepo = async (githubRepoId: number) => {
-    setIsSubmitting(true);
+    setImportingRepoId(githubRepoId);
     try {
       const resultAction = await dispatch(importGithubRepository(githubRepoId));
       if (importGithubRepository.fulfilled.match(resultAction)) {
@@ -92,7 +94,7 @@ export default function RepositoriesPage() {
     } catch (err) {
       console.error("Failed to import repository:", err);
     } finally {
-      setIsSubmitting(false);
+      setImportingRepoId(null);
     }
   };
 
@@ -122,7 +124,7 @@ export default function RepositoriesPage() {
       <div className="flex flex-1">
         <Sidebar currentPath="/repositories" />
         <main className="flex-1 p-6 md:p-8 bg-background overflow-y-auto">
-          
+
           {/* GitHub Connection Banner (Top alert) */}
           {!isGithubConnected && !githubLoading && (
             <div className="mb-6 p-4 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in duration-300 text-left">
@@ -215,11 +217,10 @@ export default function RepositoriesPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("github")}
-                className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold border-b-2 transition-all ${
-                  activeTab === "github"
-                    ? "border-primary text-white"
-                    : "border-transparent text-muted-foreground hover:text-white"
-                }`}
+                className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold border-b-2 transition-all ${activeTab === "github"
+                  ? "border-primary text-white"
+                  : "border-transparent text-muted-foreground hover:text-white"
+                  }`}
               >
                 <GitFork className="h-3.5 w-3.5" />
                 Import from GitHub
@@ -227,11 +228,10 @@ export default function RepositoriesPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("custom")}
-                className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold border-b-2 transition-all ${
-                  activeTab === "custom"
-                    ? "border-primary text-white"
-                    : "border-transparent text-muted-foreground hover:text-white"
-                }`}
+                className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold border-b-2 transition-all ${activeTab === "custom"
+                  ? "border-primary text-white"
+                  : "border-transparent text-muted-foreground hover:text-white"
+                  }`}
               >
                 <Link2 className="h-3.5 w-3.5" />
                 Custom Git URL
@@ -292,9 +292,8 @@ export default function RepositoriesPage() {
                         {unimportedRepos.map((repo, idx) => (
                           <div
                             key={repo.id}
-                            className={`flex items-center justify-between gap-4 p-3 text-xs ${
-                              idx !== unimportedRepos.length - 1 ? "border-b border-border/50" : ""
-                            } hover:bg-zinc-950/40 transition-colors`}
+                            className={`flex items-center justify-between gap-4 p-3 text-xs ${idx !== unimportedRepos.length - 1 ? "border-b border-border/50" : ""
+                              } hover:bg-zinc-950/40 transition-colors`}
                           >
                             <div className="flex flex-col gap-0.5 min-w-0">
                               <span className="font-semibold text-white truncate">{repo.name}</span>
@@ -307,7 +306,8 @@ export default function RepositoriesPage() {
                             <Button
                               size="sm"
                               onClick={() => handleImportGithubRepo(repo.id)}
-                              loading={isSubmitting}
+                              loading={importingRepoId === repo.id}
+                              disabled={importingRepoId !== null && importingRepoId !== repo.id}
                               className="h-8 shadow-sm"
                             >
                               Import
