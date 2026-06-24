@@ -31,3 +31,7 @@ github:
 devguardian:
   workspace:
     base-path: workspace/repos
+
+groq:
+  api:
+    key: ${GROQ_API_KEY}
