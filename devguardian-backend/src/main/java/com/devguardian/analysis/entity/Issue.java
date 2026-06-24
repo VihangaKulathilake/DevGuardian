@@ -65,6 +65,24 @@ public class Issue {
     @Column(columnDefinition = "TEXT")
     private String recommendation;
 
+    @Column(name = "issue_type")
+    private String type;
+
+    @Column(name = "file_name")
+    private String fileName;
+
+    @Column(name = "code_snippet", columnDefinition = "TEXT")
+    private String codeSnippet;
+
+    @Column(name = "ai_explanation", columnDefinition = "TEXT")
+    private String aiExplanation;
+
+    @Column(name = "ai_impact", columnDefinition = "TEXT")
+    private String aiImpact;
+
+    @Column(name = "ai_recommendation", columnDefinition = "TEXT")
+    private String aiRecommendation;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
