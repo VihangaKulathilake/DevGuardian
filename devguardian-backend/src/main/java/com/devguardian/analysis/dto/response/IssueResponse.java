@@ -5,6 +5,7 @@ import com.devguardian.analysis.enums.IssueCategory;
 import com.devguardian.analysis.enums.SeverityLevel;
 import lombok.Builder;
 import lombok.Getter;
+import java.time.LocalDateTime;
 
 @Schema(description = "Response representing a specific code vulnerability or lint issue detected during analysis")
 @Getter
@@ -37,4 +38,19 @@ public class IssueResponse {
 
     @Schema(description = "Recommended remediation actions or guidelines", example = "Extract secrets to environment variables or use a secret vault.")
     private String recommendation;
+
+    @Schema(description = "AI explanation of why this is an issue", example = "The secret is hardcoded and visible in source control.")
+    private String aiExplanation;
+
+    @Schema(description = "AI impact of this issue if exploited", example = "An attacker could compromise the service.")
+    private String aiImpact;
+
+    @Schema(description = "AI recommended fix for the issue", example = "Move the secret to an environment variable.")
+    private String aiRecommendation;
+
+    @Schema(description = "LLM model used for the AI analysis", example = "llama-3.1-8b-instant")
+    private String aiModel;
+
+    @Schema(description = "Timestamp when the AI analysis was generated")
+    private LocalDateTime aiGeneratedAt;
 }

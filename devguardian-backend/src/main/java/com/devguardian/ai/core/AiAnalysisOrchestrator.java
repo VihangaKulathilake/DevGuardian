@@ -26,16 +26,17 @@ public class AiAnalysisOrchestrator {
         );
 
         String cached = cacheService.get(cacheKey);
+        AiIssueResponse responseObj;
         if (cached != null) {
-            return mapper.map(cached);
+            responseObj = mapper.map(cached);
+        } else {
+            String prompt = promptBuilder.build(request);
+            String response = llmProvider.generate(prompt);
+            cacheService.put(cacheKey, response);
+            responseObj = mapper.map(response);
         }
 
-        String prompt = promptBuilder.build(request);
-
-        String response = llmProvider.generate(prompt);
-
-        cacheService.put(cacheKey, response);
-
-        return mapper.map(response);
+        responseObj.setModelName(llmProvider.getModelName());
+        return responseObj;
     }
 }

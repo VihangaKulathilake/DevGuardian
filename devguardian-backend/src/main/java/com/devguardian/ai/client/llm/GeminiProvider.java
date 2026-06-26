@@ -1,5 +1,6 @@
 package com.devguardian.ai.client.llm;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.ParameterizedTypeReference;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "ai.provider", havingValue = "gemini")
 public class GeminiProvider implements LlmProvider {
@@ -24,7 +26,12 @@ public class GeminiProvider implements LlmProvider {
     private String model;
 
     @Override
+    @SuppressWarnings("unchecked")
     public String generate(String prompt) {
+
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new IllegalStateException("Gemini API key is missing.");
+        }
 
         Map<String, Object> body = Map.of(
                 "contents", List.of(
@@ -45,21 +52,30 @@ public class GeminiProvider implements LlmProvider {
                 .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
                 .block();
 
-        if (response != null && response.containsKey("candidates")) {
-            List<Map<String, Object>> candidates = (List<Map<String, Object>>) response.get("candidates");
-            if (candidates != null && !candidates.isEmpty()) {
-                Map<String, Object> candidate = candidates.get(0);
-                Map<String, Object> content = (Map<String, Object>) candidate.get("content");
-                if (content != null && content.containsKey("parts")) {
-                    List<Map<String, Object>> parts = (List<Map<String, Object>>) content.get("parts");
-                    if (parts != null && !parts.isEmpty()) {
-                        Map<String, Object> part = parts.get(0);
-                        return (String) part.get("text");
-                    }
-                }
-            }
+        if (response == null) {
+            throw new RuntimeException("Empty response from Gemini.");
         }
 
-        return "";
+        log.debug("Gemini Response : {}", response);
+
+        List<Map<String, Object>> candidates =
+                (List<Map<String, Object>>) response.get("candidates");
+
+        if (candidates == null || candidates.isEmpty()) {
+            return "";
+        }
+
+        Map<String, Object> content =
+                (Map<String, Object>) candidates.get(0).get("content");
+
+        List<Map<String, Object>> parts =
+                (List<Map<String, Object>>) content.get("parts");
+
+        return (String) parts.get(0).get("text");
+    }
+
+    @Override
+    public String getModelName() {
+        return model;
     }
 }

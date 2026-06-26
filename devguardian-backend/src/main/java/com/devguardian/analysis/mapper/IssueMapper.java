@@ -9,6 +9,11 @@ import org.springframework.stereotype.Component;
 public class IssueMapper {
     public IssueResponse toIssueResponse(Issue issue) {
 
+        String rec = issue.getAiRecommendation();
+        if (rec == null || rec.isBlank()) {
+            rec = issue.getRecommendation();
+        }
+
         return IssueResponse.builder()
                 .id(issue.getId())
                 .ruleCode(issue.getRuleCode())
@@ -18,7 +23,12 @@ public class IssueMapper {
                 .description(issue.getDescription())
                 .filePath(issue.getFilePath())
                 .lineNumber(issue.getLineNumber())
-                .recommendation(issue.getRecommendation())
+                .recommendation(rec)
+                .aiExplanation(issue.getAiExplanation())
+                .aiImpact(issue.getAiImpact())
+                .aiRecommendation(issue.getAiRecommendation())
+                .aiModel(issue.getAiModel())
+                .aiGeneratedAt(issue.getAiGeneratedAt())
                 .build();
     }
 }

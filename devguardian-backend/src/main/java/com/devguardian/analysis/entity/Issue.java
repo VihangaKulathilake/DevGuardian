@@ -83,6 +83,12 @@ public class Issue {
     @Column(name = "ai_recommendation", columnDefinition = "TEXT")
     private String aiRecommendation;
 
+    @Column(name = "ai_model")
+    private String aiModel;
+
+    @Column(name = "ai_generated_at")
+    private LocalDateTime aiGeneratedAt;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

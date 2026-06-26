@@ -8,6 +8,7 @@ import com.devguardian.analysis.enums.ReportFormat;
 import com.devguardian.analysis.enums.ReportType;
 import com.devguardian.analysis.events.AnalysisCompletedEvent;
 import com.devguardian.analysis.events.AnalysisStartedEvent;
+import com.devguardian.analysis.events.IssueCreatedEvent;
 import com.devguardian.analysis.report.interfaces.ReportGenerator;
 import com.devguardian.analysis.report.model.AnalysisReportSummary;
 import com.devguardian.analysis.repository.AnalysisReportRepository;
@@ -165,7 +166,14 @@ public class AnalysisServiceImpl implements AnalysisService {
                  * STEP 4
                  * Save issues
                  */
-                issueRepository.saveAll(issues);
+                List<Issue> savedIssues = issueRepository.saveAll(issues);
+
+                /*
+                 * STEP 4.5
+                 * Publish issue created events for AI enrichment
+                 */
+                savedIssues.forEach(issue ->
+                        eventPublisher.publishEvent(new IssueCreatedEvent(issue)));
 
                 /*
                  * STEP 5
