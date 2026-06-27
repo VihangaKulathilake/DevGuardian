@@ -31,7 +31,6 @@ export default function RepositoriesPage() {
   const [activeTab, setActiveTab] = useState<"github" | "custom">("github");
   const [importingRepoId, setImportingRepoId] = useState<number | null>(null);
 
-
   // Custom URL Form State
   const [repoUrl, setRepoUrl] = useState("");
   const [customName, setCustomName] = useState("");
@@ -119,65 +118,71 @@ export default function RepositoriesPage() {
   });
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-[#030306] cyber-grid-bg text-foreground">
       <Navbar />
       <div className="flex flex-1">
         <Sidebar currentPath="/repositories" />
-        <main className="flex-1 p-6 md:p-8 bg-background overflow-y-auto">
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto w-full max-w-[1600px] mx-auto space-y-8">
 
           {/* GitHub Connection Banner (Top alert) */}
           {!isGithubConnected && !githubLoading && (
-            <div className="mb-6 p-4 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in duration-300 text-left">
-              <div className="flex gap-3 items-start">
-                <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 shrink-0 h-10 w-10 flex items-center justify-center">
-                  <GitFork className="h-5 w-5" />
+            <div className="p-5 border border-cyber-purple/35 bg-[#0a0715]/90 text-left relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-5 cyber-card-clip">
+              {/* Dot Matrix overlay */}
+              <div className="absolute inset-0 cyber-grid-dot opacity-20 pointer-events-none" />
+              
+              <div className="flex gap-4 items-start relative z-10">
+                <div className="border border-cyber-purple bg-cyber-purple/10 text-cyber-purple shrink-0 h-11 w-11 flex items-center justify-center shadow-[0_0_12px_#8f00ff35]">
+                  <GitFork className="h-5.5 w-5.5 shrink-0" />
                 </div>
-                <div className="flex flex-col gap-0.5">
-                  <h4 className="text-xs font-semibold text-white">Link GitHub Account</h4>
-                  <p className="text-[10px] text-muted-foreground leading-relaxed max-w-2xl">
-                    Unlock full automation. Connect your GitHub account to import repositories directly, auto-configure scanners on pull requests, and commit secure fixes back to your codebase.
+                <div className="flex flex-col gap-1">
+                  <h4 className="text-xs font-orbitron font-extrabold text-white uppercase tracking-wider">
+                    INTEGRATION REQUIRED: LINK CODEBASE HOST
+                  </h4>
+                  <p className="text-[11px] text-zinc-400 font-sans leading-relaxed max-w-3xl">
+                    Unlock full DevSecOps automation. Authenticate GitHub integrations to index projects instantly, automatically check code on incoming pull requests, and commit secure AI remedies.
                   </p>
                 </div>
               </div>
               <Button
                 variant="secondary"
                 size="sm"
-                className="shrink-0 border-indigo-500/20 text-indigo-300 hover:text-white"
+                className="shrink-0 border-cyber-purple/40 text-cyber-purple hover:text-white hover:border-cyber-purple shadow-[0_0_8px_#8f00ff20] relative z-10 font-mono py-2"
                 onClick={handleConnectGithub}
               >
-                Connect GitHub
+                CONNECT GITHUB NODE
               </Button>
             </div>
           )}
 
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-cyber-cyan/15 pb-6">
             <div className="text-left">
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                  Linked Repositories
+                <h1 className="text-2xl sm:text-3xl font-orbitron font-extrabold text-white uppercase tracking-wider leading-none">
+                  LINKED CODEBASE AUDITS
                 </h1>
                 {isGithubConnected && (
-                  <span className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    GitHub Synced
+                  <span className="inline-flex items-center px-3 py-0.5 text-[9px] font-bold tracking-wider font-mono uppercase bg-[#051e12]/80 text-[#00ff66] border border-[#00ff66]/35 shadow-[0_0_8px_rgba(0,255,102,0.15)] select-none">
+                    <span className="h-1 w-1 rounded-full mr-1.5 shrink-0 bg-cyber-green animate-pulse" />
+                    GITHUB INTEGRATION ACTIVE
                   </span>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground mt-1">
-                Manage and configure security scans for your code repositories.
+              <p className="text-xs font-mono text-zinc-500 uppercase tracking-widest mt-2">
+                Configure scanning triggers and secure code integrations across active repositories.
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            
+            <div className="flex items-center gap-3 shrink-0">
               {isGithubConnected && (
                 <Button
                   variant="secondary"
                   size="sm"
                   onClick={handleDisconnectGithub}
-                  className="border-border hover:bg-destructive/10 hover:text-destructive flex items-center gap-1.5"
+                  className="border-zinc-800 text-zinc-400 hover:bg-cyber-pink/10 hover:border-cyber-pink/40 hover:text-cyber-pink flex items-center gap-1.5 py-2.5 font-mono"
                 >
                   <LogOut className="h-3.5 w-3.5" />
-                  Disconnect
+                  DISCONNECT NODE
                 </Button>
               )}
               <Button
@@ -185,10 +190,11 @@ export default function RepositoriesPage() {
                   setIsAddModalOpen(true);
                   setActiveTab(isGithubConnected ? "github" : "custom");
                 }}
-                className="shadow-lg shadow-primary/20 flex items-center justify-center gap-1.5"
+                variant="primary"
+                className="shadow-[0_0_15px_rgba(0,240,255,0.45)] flex items-center justify-center gap-1.5 py-2.5"
               >
-                <Plus className="h-4 w-4" />
-                Add Repository
+                <Plus className="h-4.5 w-4.5" />
+                ADD CODEBASE
               </Button>
             </div>
           </div>
@@ -203,38 +209,36 @@ export default function RepositoriesPage() {
             isOpen={isAddModalOpen}
             onClose={() => setIsAddModalOpen(false)}
             title={
-              <div className="flex items-center gap-2.5">
-                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                  <GitBranch className="h-4 w-4" />
-                </div>
-                <span>Connect Repository</span>
+              <div className="flex items-center gap-2 text-white">
+                <GitBranch className="h-5 w-5 text-cyber-cyan" />
+                <span className="font-orbitron font-extrabold uppercase tracking-wider text-xs">LINK SYSTEM CODEBASE</span>
               </div>
             }
             size="lg"
           >
             {/* Modal Tabs */}
-            <div className="flex border-b border-border mb-5">
+            <div className="flex border-b border-zinc-800 mb-6 bg-black/35 select-none font-mono">
               <button
                 type="button"
                 onClick={() => setActiveTab("github")}
-                className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold border-b-2 transition-all ${activeTab === "github"
-                  ? "border-primary text-white"
-                  : "border-transparent text-muted-foreground hover:text-white"
+                className={`flex items-center gap-2 px-5 py-3 text-[10px] font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${activeTab === "github"
+                  ? "border-cyber-cyan text-cyber-cyan text-shadow-cyan"
+                  : "border-transparent text-zinc-500 hover:text-zinc-300"
                   }`}
               >
-                <GitFork className="h-3.5 w-3.5" />
-                Import from GitHub
+                <GitFork className="h-4 w-4 shrink-0" />
+                IMPORT GITHUB PROJECTS
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab("custom")}
-                className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold border-b-2 transition-all ${activeTab === "custom"
-                  ? "border-primary text-white"
-                  : "border-transparent text-muted-foreground hover:text-white"
+                className={`flex items-center gap-2 px-5 py-3 text-[10px] font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${activeTab === "custom"
+                  ? "border-cyber-cyan text-cyber-cyan text-shadow-cyan"
+                  : "border-transparent text-zinc-500 hover:text-zinc-300"
                   }`}
               >
-                <Link2 className="h-3.5 w-3.5" />
-                Custom Git URL
+                <Link2 className="h-4 w-4 shrink-0" />
+                CUSTOM REPO DIRECTORY
               </button>
             </div>
 
@@ -243,64 +247,68 @@ export default function RepositoriesPage() {
               <div className="flex flex-col gap-4 text-left">
                 {!isGithubConnected ? (
                   // Connected State Fallback inside Modal
-                  <div className="flex flex-col items-center justify-center text-center p-8 bg-zinc-950/40 border border-border/80 rounded-2xl gap-5">
-                    <div className="h-14 w-14 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center shadow-lg">
+                  <div className="flex flex-col items-center justify-center text-center p-8 bg-zinc-950/40 border border-zinc-900 rounded-none gap-5 relative overflow-hidden">
+                    <div className="absolute inset-0 cyber-grid-dot opacity-20 pointer-events-none" />
+                    
+                    <div className="h-14 w-14 border border-cyber-purple bg-cyber-purple/10 text-cyber-purple flex items-center justify-center shadow-[0_0_15px_#8f00ff35] animate-pulse">
                       <GitFork className="h-7 w-7" />
                     </div>
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-bold text-white">OAuth Integration Required</h4>
-                      <p className="text-xs text-muted-foreground max-w-sm leading-relaxed">
-                        Connect your profile workspace with GitHub to search and load your projects instantly from active codebases.
+                    <div className="space-y-1.5">
+                      <h4 className="text-xs font-orbitron font-extrabold text-white uppercase tracking-wider">
+                        OAUTH INTEGRATION REQUIRED
+                      </h4>
+                      <p className="text-[11px] text-zinc-400 font-sans max-w-sm leading-relaxed">
+                        Link your workspace directory to GitHub to index repository databases and search codebases directly.
                       </p>
                     </div>
-                    <Button onClick={handleConnectGithub} className="w-full sm:w-auto">
-                      Link GitHub Account
+                    <Button onClick={handleConnectGithub} className="w-full sm:w-auto py-2.5 font-mono">
+                      AUTHENTICATE CREDENTIALS
                     </Button>
                   </div>
                 ) : (
                   // Connected GitHub Repository List
-                  <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-5">
                     {/* Repository search and metadata */}
-                    <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+                    <div className="flex flex-col sm:flex-row gap-4 items-center justify-between font-mono">
                       <div className="relative w-full sm:w-72">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-zinc-500" />
                         <input
                           type="text"
                           value={githubSearchQuery}
                           onChange={(e) => setGithubSearchQuery(e.target.value)}
-                          placeholder="Search GitHub repositories..."
-                          className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-zinc-800 bg-zinc-950/50 text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary/50 transition-colors"
+                          placeholder="Search repositories..."
+                          className="w-full pl-9 pr-4 py-2.5 text-xs rounded-none border border-zinc-800 bg-[#07070b]/90 text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-cyber-cyan/50 focus:ring-1 focus:ring-cyber-cyan/35 transition-colors font-mono"
                         />
                       </div>
-                      <span className="text-[10px] font-semibold text-muted-foreground shrink-0 uppercase tracking-wider">
-                        {unimportedRepos.length} Repositories Available
+                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest shrink-0">
+                        {unimportedRepos.length} Repos Available
                       </span>
                     </div>
 
                     {/* Repository rows list */}
                     {githubLoading ? (
                       <div className="flex flex-col items-center justify-center py-16 gap-3">
-                        <div className="h-7 w-7 border-2 border-primary border-t-transparent animate-spin rounded-full" />
-                        <span className="text-xs text-muted-foreground">Loading repositories...</span>
+                        <div className="h-7 w-7 border-2 border-cyber-cyan border-t-transparent animate-spin rounded-full" />
+                        <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest animate-pulse">Syncing codebase index...</span>
                       </div>
                     ) : unimportedRepos.length === 0 ? (
-                      <div className="text-center py-12 text-xs text-muted-foreground border border-dashed border-border rounded-xl bg-card/10">
-                        {githubSearchQuery ? "No matching repositories found." : "All your GitHub repositories have already been imported!"}
+                      <div className="text-center py-12 text-xs font-mono text-zinc-500 border border-dashed border-zinc-800 bg-[#0b0b14]/20 uppercase tracking-wider">
+                        {githubSearchQuery ? "// No repositories match query." : "// All active repos imported."}
                       </div>
                     ) : (
-                      <div className="flex flex-col border border-border rounded-xl overflow-hidden max-h-[300px] overflow-y-auto bg-black/25">
+                      <div className="flex flex-col border border-zinc-800 bg-[#050508] overflow-hidden max-h-[300px] overflow-y-auto scrollbar-thin">
                         {unimportedRepos.map((repo, idx) => (
                           <div
                             key={repo.id}
-                            className={`flex items-center justify-between gap-4 p-3 text-xs ${idx !== unimportedRepos.length - 1 ? "border-b border-border/50" : ""
-                              } hover:bg-zinc-950/40 transition-colors`}
+                            className={`flex items-center justify-between gap-4 p-3.5 text-xs ${idx !== unimportedRepos.length - 1 ? "border-b border-zinc-800/80" : ""
+                              } hover:bg-[#0c0c14] transition-colors`}
                           >
-                            <div className="flex flex-col gap-0.5 min-w-0">
-                              <span className="font-semibold text-white truncate">{repo.name}</span>
-                              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                                <span>{repo.default_branch || "main"}</span>
+                            <div className="flex flex-col gap-0.5 min-w-0 font-sans">
+                              <span className="font-bold text-white truncate">{repo.name}</span>
+                              <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-mono">
+                                <span className="uppercase text-cyber-cyan font-bold">{repo.default_branch || "main"}</span>
                                 <span>•</span>
-                                <span>{repo.private ? "Private" : "Public"}</span>
+                                <span>{repo.private ? "PRIVATE KEYED" : "PUBLIC ROUTE"}</span>
                               </div>
                             </div>
                             <Button
@@ -308,9 +316,10 @@ export default function RepositoriesPage() {
                               onClick={() => handleImportGithubRepo(repo.id)}
                               loading={importingRepoId === repo.id}
                               disabled={importingRepoId !== null && importingRepoId !== repo.id}
-                              className="h-8 shadow-sm"
+                              variant="secondary"
+                              className="h-8 shadow-sm font-mono border-zinc-800/80 hover:border-cyber-cyan"
                             >
-                              Import
+                              IMPORT
                             </Button>
                           </div>
                         ))}
@@ -323,48 +332,51 @@ export default function RepositoriesPage() {
 
             {/* TAB CONTENT: Custom Git URL */}
             {activeTab === "custom" && (
-              <form onSubmit={handleAddRepoSubmit} className="flex flex-col gap-5 text-left">
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Enter the remote Git URL of any hosted repository manually (e.g. GitHub, GitLab, or Bitbucket) to setup static analysis.
+              <form onSubmit={handleAddRepoSubmit} className="flex flex-col gap-6 text-left">
+                <p className="text-xs text-zinc-400 leading-relaxed font-sans font-medium">
+                  Enter remote Git endpoint urls directly (e.g. self-hosted Bitbucket/GitLab instances) to build static codebase audit logs manually.
                 </p>
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-2 mt-2">
                   <Input
-                    label="Repository Display Name"
-                    placeholder="e.g. core-api"
+                    label="DISPLAY MODULE IDENTIFIER"
+                    placeholder="e.g. core-security-api"
                     value={customName}
                     onChange={(e) => setCustomName(e.target.value)}
+                    className="bg-[#0b0b14]/90 border-zinc-800 focus:border-cyber-cyan text-zinc-200"
                   />
                   <Input
-                    label="Remote Git clone URL"
-                    placeholder="https://github.com/owner/repository"
+                    label="REMOTE GIT REPO DIRECTORY (.git URL)"
+                    placeholder="https://gitlab.company.com/owner/repo.git"
                     value={repoUrl}
                     onChange={(e) => setRepoUrl(e.target.value)}
                     required
+                    className="bg-[#0b0b14]/90 border-zinc-800 focus:border-cyber-cyan text-zinc-200"
                   />
                 </div>
 
-                <div className="p-3 bg-secondary rounded-xl border border-border flex items-start gap-3">
-                  <Sparkles className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                <div className="p-4 bg-[#0b0a14] border border-cyber-purple/20 flex items-start gap-3">
+                  <Sparkles className="h-4.5 w-4.5 text-cyber-purple shrink-0 mt-0.5 animate-pulse" />
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-semibold text-white">Manual Auto-Scan Profile</span>
-                    <p className="text-[10px] text-muted-foreground leading-relaxed">
-                      Manual imports configuration will require scheduling scans or run CLI audits using API tokens.
+                    <span className="text-xs font-orbitron font-bold text-white uppercase tracking-wider">MANUAL ANALYSIS PROFILES</span>
+                    <p className="text-[10px] text-zinc-500 font-mono leading-relaxed">
+                      Custom repositories must be scheduled periodically or analyzed using CLI scripts and API credentials.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800">
                   <Button
                     type="button"
                     variant="secondary"
                     size="sm"
                     onClick={() => setIsAddModalOpen(false)}
+                    className="border-zinc-800 font-mono"
                   >
-                    Cancel
+                    CANCEL
                   </Button>
-                  <Button type="submit" size="sm" loading={isSubmitting}>
-                    Link & Scan Repository
+                  <Button type="submit" size="sm" variant="primary" loading={isSubmitting} className="font-mono">
+                    LINK & INITIALIZE AUDIT
                   </Button>
                 </div>
               </form>

@@ -29,6 +29,7 @@ public class IssueMapper {
                 .aiRecommendation(issue.getAiRecommendation())
                 .aiModel(issue.getAiModel())
                 .aiGeneratedAt(issue.getAiGeneratedAt())
+                .codeSnippet(issue.getCodeSnippet())
                 .build();
     }
 }

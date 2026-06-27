@@ -53,4 +53,7 @@ public class IssueResponse {
 
     @Schema(description = "Timestamp when the AI analysis was generated")
     private LocalDateTime aiGeneratedAt;
+
+    @Schema(description = "Actual codebase snippet matching the rule", example = "String secretKey = \"admin123\";")
+    private String codeSnippet;
 }

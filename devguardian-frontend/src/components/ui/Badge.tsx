@@ -11,18 +11,33 @@ export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
       <span
         ref={ref}
         className={cn(
-          "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border tracking-wide uppercase transition-colors duration-200",
+          "inline-flex items-center px-3 py-0.5 text-[9px] font-bold tracking-wider font-mono uppercase transition-all duration-300 relative border shrink-0",
+          "clip-path-none", // clean digital chip
           {
-            "bg-emerald-500/10 text-emerald-400 border-emerald-500/20": variant === "success",
-            "bg-amber-500/10 text-amber-400 border-amber-500/20": variant === "warning",
-            "bg-destructive/10 text-destructive border-destructive/20": variant === "error",
-            "bg-blue-500/10 text-blue-400 border-blue-500/20": variant === "info",
-            "bg-secondary text-muted-foreground border-border": variant === "neutral",
+            // success -> Neon Green
+            "bg-[#051e12]/80 text-[#00ff66] border-[#00ff66]/35 shadow-[0_0_8px_rgba(0,255,102,0.15)]": variant === "success",
+            // warning -> Neon Yellow
+            "bg-[#1e1705]/80 text-[#fffb00] border-[#fffb00]/35 shadow-[0_0_8px_rgba(255,251,0,0.15)]": variant === "warning",
+            // error -> Neon Pink/Red
+            "bg-[#240a12]/80 text-[#ff0055] border-[#ff0055]/35 shadow-[0_0_8px_rgba(255,0,85,0.15)]": variant === "error",
+            // info -> Neon Cyan
+            "bg-[#031d24]/80 text-[#00f0ff] border-[#00f0ff]/35 shadow-[0_0_8px_rgba(0,240,255,0.15)]": variant === "info",
+            // neutral -> Dark Gray
+            "bg-[#11111a]/85 text-[#8a8a9e] border-[#1a1a2e]/60": variant === "neutral",
           },
           className
         )}
         {...props}
       >
+        <span className="h-1 w-1 rounded-full mr-1.5 shrink-0 animate-pulse"
+          style={{
+            backgroundColor: 
+              variant === "success" ? "#00ff66" :
+              variant === "warning" ? "#fffb00" :
+              variant === "error" ? "#ff0055" :
+              variant === "info" ? "#00f0ff" : "#8a8a9e"
+          }}
+        />
         {children}
       </span>
     );
@@ -30,3 +45,4 @@ export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
 );
 Badge.displayName = "Badge";
 export default Badge;
+

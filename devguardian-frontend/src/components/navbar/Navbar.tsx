@@ -5,14 +5,14 @@ import Input from "../ui/Input";
 
 export const Navbar: React.FC = () => {
   return (
-    <header className="w-full bg-card/65 backdrop-blur-md border-b border-border sticky top-0 z-40 px-6 py-4 flex items-center justify-between">
+    <header className="w-full bg-[#07070c]/80 backdrop-blur-md border-b border-cyber-cyan/15 sticky top-0 z-40 px-6 py-4 flex items-center justify-between">
       {/* Brand Logo & Name */}
-      <div className="flex items-center gap-2.5">
-        <div className="h-8 w-8 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20">
-          <ShieldAlert className="h-4.5 w-4.5" />
+      <div className="flex items-center gap-3">
+        <div className="h-9 w-9 rounded-sm bg-cyber-cyan text-black flex items-center justify-center shadow-[0_0_12px_rgba(0,240,255,0.45)]">
+          <ShieldAlert className="h-5 w-5" />
         </div>
-        <span className="font-bold text-base tracking-tight text-foreground">
-          DevGuardian
+        <span className="font-orbitron font-black text-sm tracking-widest text-white uppercase">
+          Dev<span className="text-cyber-cyan">Guardian</span>
         </span>
       </div>
 
@@ -20,8 +20,9 @@ export const Navbar: React.FC = () => {
       <div className="hidden md:flex max-w-sm w-full relative">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
         <Input
-          placeholder="Search repositories, issues, analysis..."
-          className="pl-10 py-1.5 bg-black/25 text-xs rounded-xl"
+          placeholder="SEARCH SYSTEM DIRECTORY..."
+          className="pl-10 py-2 bg-black/45 text-[10px] uppercase font-mono tracking-wider border-border/80"
+          mono={true}
         />
       </div>
 
@@ -29,11 +30,11 @@ export const Navbar: React.FC = () => {
       <div className="flex items-center gap-4">
         {/* Notifications Icon */}
         <button
-          className="relative p-2 hover:bg-secondary rounded-xl text-muted-foreground hover:text-foreground transition-all duration-200"
+          className="relative p-2.5 bg-[#12121a]/60 hover:bg-[#1a1a2e]/80 border border-border/50 text-muted-foreground hover:text-cyber-cyan hover:border-cyber-cyan/30 hover:shadow-[0_0_8px_rgba(0,240,255,0.2)] transition-all duration-300 cyber-btn-clip cursor-pointer"
           aria-label="View notifications"
         >
-          <Bell className="h-4.5 w-4.5" />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
+          <Bell className="h-4 w-4" />
+          <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-cyber-pink animate-pulse" />
         </button>
 
         {/* User Profile */}
@@ -44,3 +45,4 @@ export const Navbar: React.FC = () => {
 };
 
 export default Navbar;
+

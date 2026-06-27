@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import RepoCard from "./RepoCard";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
 import { fetchRepositories } from "@/features/repository/repositorySlice";
@@ -8,6 +9,7 @@ import { analysisApi } from "@/features/analysis/analysisApi";
 
 export const RepositoryList: React.FC = () => {
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const { repositories, loading, error } = useAppSelector((state) => state.repo);
 
   const [repoDetails, setRepoDetails] = useState<Record<number, {
@@ -87,7 +89,7 @@ export const RepositoryList: React.FC = () => {
       const resultAction = await dispatch(triggerAnalysis(repoId));
       if (triggerAnalysis.fulfilled.match(resultAction)) {
         const analysis = resultAction.payload;
-        window.location.href = `/analysis?repoId=${repoId}&analysisId=${analysis.id}`;
+        router.push(`/analysis?repoId=${repoId}&analysisId=${analysis.id}`);
       }
     } catch (err) {
       console.error("Failed to trigger analysis:", err);
@@ -96,24 +98,32 @@ export const RepositoryList: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="text-center py-12 text-sm text-muted-foreground">
-        Loading repositories...
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="h-48 border border-border/50 bg-[#0d0d12]/40 animate-pulse p-6 flex flex-col justify-between cyber-card-clip">
+            <div className="space-y-3">
+              <div className="h-4 w-28 bg-zinc-800 rounded" />
+              <div className="h-3 w-16 bg-zinc-800 rounded" />
+            </div>
+            <div className="h-8 w-full bg-zinc-800 rounded mt-6" />
+          </div>
+        ))}
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-12 text-sm text-destructive">
-        Error: {error}
+      <div className="text-center py-12 font-mono text-xs uppercase tracking-wider text-cyber-pink border border-cyber-pink/20 bg-cyber-pink/5">
+        SYS_ERROR: {error}
       </div>
     );
   }
 
   if (!repositories || repositories.length === 0) {
     return (
-      <div className="text-center py-16 text-sm text-muted-foreground border border-dashed border-border rounded-2xl bg-card/10">
-        No repositories linked yet.
+      <div className="text-center py-16 font-mono text-xs uppercase tracking-wider text-muted-foreground border border-dashed border-border/80 bg-card/10 cyber-card-clip">
+        NO WORKSPACE REPOSITORIES LINKED YET
       </div>
     );
   }
@@ -139,7 +149,7 @@ export const RepositoryList: React.FC = () => {
             warningIssues={details.warning}
             infoIssues={details.info}
             onRunAnalysis={() => handleRunAnalysis(repo.id)}
-            onViewAnalysis={() => window.location.href = `/analysis?repoId=${repo.id}`}
+            onViewAnalysis={() => router.push(`/analysis?repoId=${repo.id}`)}
           />
         );
       })}
@@ -148,3 +158,4 @@ export const RepositoryList: React.FC = () => {
 };
 
 export default RepositoryList;
+

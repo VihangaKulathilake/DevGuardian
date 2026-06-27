@@ -4,14 +4,15 @@ import { cn } from "@/lib/utils";
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
+  mono?: boolean;
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type = "text", label, error, ...props }, ref) => {
+  ({ className, type = "text", label, error, mono = false, ...props }, ref) => {
     return (
-      <div className="w-full flex flex-col gap-1.5">
+      <div className="w-full flex flex-col gap-1.5 text-left">
         {label && (
-          <label className="text-xs font-semibold text-muted-foreground tracking-wider uppercase">
+          <label className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase font-orbitron">
             {label}
           </label>
         )}
@@ -19,14 +20,18 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           type={type}
           ref={ref}
           className={cn(
-            "w-full px-4 py-2 bg-secondary border rounded-xl text-foreground text-sm transition-colors duration-200 placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 disabled:opacity-50 disabled:pointer-events-none",
-            error ? "border-destructive focus:border-destructive focus:ring-destructive/50" : "border-border",
+            "w-full px-4 py-2.5 bg-[#0b0b14] border text-foreground text-sm transition-all duration-300 placeholder:text-muted-foreground/30 focus:outline-none disabled:opacity-50 disabled:pointer-events-none",
+            "cyber-btn-clip",
+            mono ? "font-mono" : "font-sans",
+            error 
+              ? "border-cyber-pink/60 focus:border-cyber-pink focus:shadow-[0_0_12px_rgba(255,0,85,0.25)]" 
+              : "border-border focus:border-cyber-cyan/70 focus:shadow-[0_0_12px_rgba(0,240,255,0.25)]",
             className
           )}
           {...props}
         />
         {error && (
-          <span className="text-xs text-destructive font-medium mt-0.5">
+          <span className="text-[10px] text-cyber-pink font-bold mt-1 font-mono uppercase tracking-wider">
             {error}
           </span>
         )}
@@ -36,3 +41,4 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 );
 Input.displayName = "Input";
 export default Input;
+

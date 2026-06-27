@@ -5,7 +5,6 @@ import Link from "next/link";
 import { ShieldCheck, GitFork } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import Card from "@/components/ui/Card";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
 import { loginUser } from "@/features/auth/authSlice";
 
@@ -27,77 +26,102 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full max-w-md p-2">
-      <div className="flex flex-col items-center mb-8">
-        <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20 mb-3">
-          <ShieldCheck className="h-6 w-6" />
+    <div className="w-full flex flex-col items-center">
+      {/* Icon Cockpit Header */}
+      <div className="flex flex-col items-center mb-6 text-center select-none">
+        <div className="h-12 w-12 rounded-none border border-cyber-cyan bg-cyber-cyan/10 flex items-center justify-center text-cyber-cyan shadow-[0_0_15px_rgba(0,240,255,0.3)] mb-4 animate-pulse">
+          <ShieldCheck className="h-7 w-7" />
         </div>
-        <h1 className="text-xl font-bold text-white">Welcome back</h1>
-        <p className="text-xs text-muted-foreground mt-1">
-          Login to your DevGuardian workspace
+        
+        <h1 className="text-lg font-orbitron font-extrabold text-white tracking-widest uppercase flex items-center gap-2">
+          AUTH GATEWAY
+          <span className="h-2 w-2 rounded-full bg-cyber-cyan animate-ping shrink-0" />
+        </h1>
+        <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mt-1">
+          SECURE WORKSPACE VERIFICATION
         </p>
       </div>
 
-      <Card className="p-6">
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {/* Login Form content */}
+      <div className="w-full">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           {error && (
-            <div className="p-3 text-xs bg-destructive/10 border border-destructive/20 rounded-xl text-destructive text-center">
-              {error}
+            <div className="p-3 text-xs font-mono bg-cyber-pink/15 border border-cyber-pink/40 text-cyber-pink text-center tracking-wide uppercase">
+              // error: {error}
             </div>
           )}
+          
           <Input
             label="Email Address"
             type="email"
-            placeholder="name@company.com"
+            placeholder="agent@company.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            className="bg-[#0b0b14]/90 border-zinc-800 text-zinc-200 focus:border-cyber-cyan focus:ring-cyber-cyan/30"
           />
+          
           <Input
-            label="Password"
+            label="Security Passkey"
             type="password"
             placeholder="••••••••"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            className="bg-[#0b0b14]/90 border-zinc-800 text-zinc-200 focus:border-cyber-cyan focus:ring-cyber-cyan/30"
           />
 
-          <div className="flex items-center justify-between text-xs mt-1">
-            <label className="flex items-center gap-2 cursor-pointer text-muted-foreground hover:text-white transition-colors">
-              <input type="checkbox" className="rounded bg-black border-border accent-primary" />
-              Remember me
+          {/* Remember & Forgot actions */}
+          <div className="flex items-center justify-between text-[11px] font-mono mt-1 select-none">
+            <label className="flex items-center gap-2 cursor-pointer text-zinc-400 hover:text-white transition-colors">
+              <input 
+                type="checkbox" 
+                className="h-3.5 w-3.5 rounded-none bg-black border border-zinc-700 accent-cyber-cyan focus:ring-0 cursor-pointer" 
+              />
+              Remember credential
             </label>
-            <a href="#" className="text-primary font-medium hover:underline">
-              Forgot password?
+            <a href="#" className="text-cyber-cyan hover:text-cyber-cyan/80 font-bold tracking-wider uppercase transition-colors">
+              Recover key
             </a>
           </div>
 
-          <Button type="submit" loading={loading} className="w-full mt-2">
-            Sign In
+          <Button 
+            type="submit" 
+            loading={loading} 
+            variant="primary"
+            className="w-full mt-3 py-3 shadow-[0_0_15px_rgba(0,240,255,0.4)] relative overflow-hidden group"
+          >
+            <span className="relative z-10">INITIALIZE SESSION</span>
           </Button>
         </form>
 
-        <div className="relative my-6 text-center">
+        {/* Separator line */}
+        <div className="relative my-7 text-center select-none font-mono">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-border" />
+            <span className="w-full border-t border-zinc-800" />
           </div>
-          <span className="relative bg-card px-3 text-xs text-muted-foreground">
-            Or continue with
+          <span className="relative bg-[#07070b] px-3.5 text-[9px] font-bold text-zinc-500 uppercase tracking-widest">
+            OR VERIFY WITH AUTH PROVIDER
           </span>
         </div>
 
-        <Button variant="secondary" className="w-full flex items-center justify-center gap-2.5">
-          <GitFork className="h-4 w-4" />
-          Connect GitHub Account
+        {/* GitHub Sign in */}
+        <Button 
+          variant="secondary" 
+          className="w-full flex items-center justify-center gap-2 py-3 border-zinc-800/80 hover:border-cyber-cyan hover:shadow-[0_0_10px_rgba(0,240,255,0.2)] text-zinc-300 hover:text-cyber-cyan font-mono"
+        >
+          <GitFork className="h-4.5 w-4.5 shrink-0" />
+          CONNECT REPO CREDENTIALS
         </Button>
 
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          New to DevGuardian?{" "}
-          <Link href="/register" className="text-primary font-medium hover:underline">
-            Create an account
+        {/* Nav to registration */}
+        <p className="text-center text-xs font-mono text-zinc-500 mt-8 select-none">
+          NO CREDENTIALS INSTALLED?{" "}
+          <Link href="/register" className="text-cyber-pink hover:text-cyber-pink/80 font-bold uppercase tracking-wider transition-colors ml-1.5">
+            REQUEST NODE ACCESS
           </Link>
         </p>
-      </Card>
+      </div>
     </div>
   );
 }

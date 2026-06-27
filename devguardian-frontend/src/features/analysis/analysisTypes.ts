@@ -20,6 +20,7 @@ export interface IssueResponse {
   filePath: string;
   lineNumber: number;
   recommendation: string;
+  codeSnippet?: string;
 }
 
 export interface AnalysisState {

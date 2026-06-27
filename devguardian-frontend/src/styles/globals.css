@@ -1,31 +1,231 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #09090b;
+  --color-background: #050508;
   --color-foreground: #fafafa;
-  --color-card: #18181b;
+  --color-card: #0d0d12;
   --color-card-foreground: #fafafa;
-  --color-popover: #09090b;
+  --color-popover: #050508;
   --color-popover-foreground: #fafafa;
-  --color-primary: #6366f1;
-  --color-primary-foreground: #ffffff;
-  --color-secondary: #27272a;
+  --color-primary: #00f0ff;
+  --color-primary-foreground: #000000;
+  --color-secondary: #12121e;
   --color-secondary-foreground: #fafafa;
-  --color-muted: #27272a;
-  --color-muted-foreground: #a1a1aa;
-  --color-accent: #27272a;
-  --color-accent-foreground: #fafafa;
-  --color-destructive: #ef4444;
+  --color-muted: #181825;
+  --color-muted-foreground: #8a8a9e;
+  --color-accent: #ff007f;
+  --color-accent-foreground: #ffffff;
+  --color-destructive: #ff0055;
   --color-destructive-foreground: #ffffff;
-  --color-border: #27272a;
-  --color-input: #27272a;
-  --color-ring: #6366f1;
+  --color-border: #1a1a2e;
+  --color-input: #12121e;
+  --color-ring: #00f0ff;
+
+  /* Custom Gaming Fonts */
+  --font-sans: var(--font-space-grotesk), sans-serif;
+  --font-orbitron: var(--font-orbitron), sans-serif;
+  --font-mono: var(--font-share-tech-mono), monospace;
+
+  /* Cyber Theme Colors */
+  --color-cyber-cyan: #00f0ff;
+  --color-cyber-pink: #ff007f;
+  --color-cyber-purple: #8f00ff;
+  --color-cyber-green: #00ff66;
+  --color-cyber-yellow: #fffb00;
+  --color-cyber-blue: #0055ff;
+
+  /* Neon Shadows */
+  --shadow-neon-cyan: 0 0 4px rgba(0, 240, 255, 0.25);
+  --shadow-neon-pink: 0 0 4px rgba(255, 0, 127, 0.25);
+  --shadow-neon-purple: 0 0 4px rgba(143, 0, 255, 0.25);
+  --shadow-neon-green: 0 0 4px rgba(0, 255, 102, 0.25);
+
+  /* Animations */
+  --animate-neon-pulse: neon-pulse 3s infinite ease-in-out;
+  --animate-cyber-grid: grid-scroll 24s linear infinite;
+  --animate-scanline: scanline-run 6s linear infinite;
+  --animate-radar-sweep: radar-sweep 4s linear infinite;
+
+  @keyframes neon-pulse {
+    0%, 100% {
+      opacity: 0.9;
+      filter: none;
+    }
+    50% {
+      opacity: 1;
+      filter: drop-shadow(0 0 2px var(--color-cyber-cyan));
+    }
+  }
+
+  @keyframes grid-scroll {
+    0% {
+      background-position: 0 0;
+    }
+    100% {
+      background-position: 0 40px;
+    }
+  }
+
+  @keyframes scanline-run {
+    0% {
+      transform: translateY(-100%);
+    }
+    100% {
+      transform: translateY(100%);
+    }
+  }
+
+  @keyframes radar-sweep {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
 }
 
 @layer base {
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: var(--font-sans), sans-serif;
+    font-family: var(--font-sans);
+  }
+
+  /* Custom glowing scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #030305;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--color-cyber-cyan), var(--color-cyber-purple));
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-cyber-pink);
   }
 }
+
+/* Custom background patterns */
+.cyber-grid-bg {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(0, 240, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 240, 255, 0.015) 1px, transparent 1px);
+  position: relative;
+}
+
+.cyber-grid-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, transparent 10%, #050508 85%);
+  pointer-events: none;
+}
+
+/* Dotted Cyber Matrix */
+.cyber-grid-dot {
+  background-size: 24px 24px;
+  background-image: radial-gradient(rgba(0, 240, 255, 0.035) 1px, transparent 1px);
+}
+
+/* Scanline Effect */
+.scanlines-overlay {
+  position: relative;
+  overflow: hidden;
+}
+.scanlines-overlay::after {
+  content: " ";
+  display: none;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+  z-index: 10;
+  background-size: 100% 4px, 6px 100%;
+  pointer-events: none;
+}
+
+/* Conic Border Flow Gradient */
+.glow-card-flow {
+  position: relative;
+  overflow: hidden;
+}
+.glow-card-flow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--color-cyber-cyan) 0%, var(--color-cyber-purple) 100%);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.45;
+}
+.glow-card-flow::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  background: #07070b;
+  z-index: 1;
+}
+
+/* Laser scan line animation overlay */
+.laser-scan-line {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-cyber-cyan), transparent);
+  opacity: 0.4;
+  animation: laser-sweep 5s linear infinite;
+  z-index: 5;
+  pointer-events: none;
+}
+
+@keyframes laser-sweep {
+  0% {
+    top: 0%;
+  }
+  50% {
+    top: 100%;
+  }
+  100% {
+    top: 0%;
+  }
+}
+
+/* Cyber Terminal line glows */
+.neon-glow-cyan {
+  text-shadow: 0 0 5px var(--color-cyber-cyan), 0 0 10px rgba(0, 240, 255, 0.4);
+}
+.neon-glow-pink {
+  text-shadow: 0 0 5px var(--color-cyber-pink), 0 0 10px rgba(255, 0, 127, 0.4);
+}
+.neon-glow-green {
+  text-shadow: 0 0 5px var(--color-cyber-green), 0 0 10px rgba(0, 255, 102, 0.4);
+}
+
+/* Cyber card borders */
+.cyber-card-clip {
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+}
+
+.cyber-btn-clip {
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+}
+
+/* Corner notches */
+.tech-corner-accent {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid var(--color-cyber-cyan);
+  border-left: 2px solid var(--color-cyber-cyan);
+  top: 6px;
+  left: 6px;
+  pointer-events: none;
+  z-index: 20;
+}
+
+

@@ -30,24 +30,25 @@ export const RepoCard: React.FC<RepoCardProps> = ({
   return (
     <Card
       onClick={onViewAnalysis}
-      className="hover:border-primary/45 cursor-pointer transition-all duration-200 p-6 flex flex-col justify-between h-full group"
+      className="hover:border-cyber-cyan/50 cursor-pointer transition-all duration-300 p-6 flex flex-col justify-between h-full group"
+      techCorners={true}
     >
       <div>
         <div className="flex items-center justify-between gap-3 mb-2">
-          <h4 className="text-base font-bold truncate text-foreground flex items-center gap-2 group-hover:text-primary transition-colors">
-            <GitBranch className="h-4 w-4 text-primary" />
+          <h4 className="text-sm font-bold truncate text-white flex items-center gap-2 group-hover:text-cyber-cyan transition-colors font-orbitron tracking-wider">
+            <GitBranch className="h-4.5 w-4.5 text-cyber-cyan group-hover:animate-pulse" />
             {repoName}
           </h4>
           <Badge variant="neutral">{visibility}</Badge>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
+        <div className="flex items-center gap-2 text-[10px] font-mono uppercase text-muted-foreground mb-4">
           <span>{language}</span>
           {lastAnalyzed && (
             <>
               <span>•</span>
               <span className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
+                <Clock className="h-3 w-3 text-cyber-cyan" />
                 {lastAnalyzed}
               </span>
             </>
@@ -80,12 +81,13 @@ export const RepoCard: React.FC<RepoCardProps> = ({
               onViewAnalysis?.();
             }}
           >
-            View Report
+            Report
           </Button>
           {onRunAnalysis && (
             <Button
               size="sm"
-              className="px-4"
+              variant="primary"
+              className="px-4 shrink-0"
               onClick={(e) => {
                 e.stopPropagation();
                 onRunAnalysis();
@@ -101,3 +103,4 @@ export const RepoCard: React.FC<RepoCardProps> = ({
 };
 
 export default RepoCard;
+

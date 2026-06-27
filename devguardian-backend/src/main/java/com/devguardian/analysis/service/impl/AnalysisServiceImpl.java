@@ -155,10 +155,21 @@ public class AnalysisServiceImpl implements AnalysisService {
 
                 /*
                  * STEP 3
-                 * Attach analysis to issues
+                 * Attach analysis and real code snippets to issues
                  */
-                issues.forEach(issue ->
-                        issue.setAnalysis(analysis));
+                issues.forEach(issue -> {
+                    issue.setAnalysis(analysis);
+                    if (issue.getCodeSnippet() == null || issue.getCodeSnippet().isBlank()) {
+                        String fileContent = context.getFiles().get(issue.getFilePath());
+                        if (fileContent != null) {
+                            String[] lines = fileContent.split("\n");
+                            int lineIdx = issue.getLineNumber() - 1;
+                            if (lineIdx >= 0 && lineIdx < lines.length) {
+                                issue.setCodeSnippet(lines[lineIdx].trim());
+                            }
+                        }
+                    }
+                });
 
                 analysis.getIssues().addAll(issues);
 
