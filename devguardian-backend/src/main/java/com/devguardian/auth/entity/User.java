@@ -1,7 +1,6 @@
 package com.devguardian.auth.entity;
 
 import com.devguardian.repository.entity.Repository;
-import com.devguardian.notification.entity.Notification;
 import com.devguardian.auth.enums.ProviderType;
 import com.devguardian.auth.enums.Role;
 import jakarta.persistence.*;
@@ -50,9 +49,6 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Repository> repositories = new ArrayList<>();
 
-    @Builder.Default
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Notification> notifications = new ArrayList<>();
 
     @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)

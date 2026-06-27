@@ -1,10 +1,10 @@
 package com.devguardian.notification.entity;
 
-import com.devguardian.auth.entity.User;
+import com.devguardian.notification.enums.NotificationPriority;
+import com.devguardian.notification.enums.NotificationStatus;
 import com.devguardian.notification.enums.NotificationType;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -12,35 +12,41 @@ import java.time.LocalDateTime;
 @Table(name = "notifications")
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Notification {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private String userId;
 
-    @Column(nullable = false)
+    private String repositoryId;
+
+    private String analysisId;
+
     private String title;
 
-    @Column(nullable = false, length = 1000)
+    @Column(length = 2000)
     private String message;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private NotificationType type;
 
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean isRead = false;
+    @Enumerated(EnumType.STRING)
+    private NotificationStatus status;
 
-    @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Enumerated(EnumType.STRING)
+    private NotificationPriority priority;
+
+    private boolean isRead;
+
     private LocalDateTime createdAt;
-}
 
+    private LocalDateTime updatedAt;
+
+    @Column(columnDefinition = "TEXT")
+    private String metadata; // JSON string
+}

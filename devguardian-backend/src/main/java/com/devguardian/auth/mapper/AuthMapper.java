@@ -15,7 +15,6 @@ public interface AuthMapper {
     @Mapping(target = "provider", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "repositories", ignore = true)
-    @Mapping(target = "notifications", ignore = true)
     @Mapping(target = "authTokens", ignore = true)
     User toEntity(RegisterRequest request);
 
