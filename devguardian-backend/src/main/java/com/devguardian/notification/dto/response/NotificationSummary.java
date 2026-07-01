@@ -10,6 +10,7 @@ public class NotificationSummary {
 
     private String id;
     private String title;
+    @com.fasterxml.jackson.annotation.JsonProperty("isRead")
     private boolean isRead;
     private NotificationPriority priority;
 }

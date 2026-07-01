@@ -22,7 +22,7 @@ public class NotificationController {
     }
 
     @GetMapping("/user/{userId}")
-    public List<NotificationSummary> getUserNotifications(@PathVariable String userId) {
+    public List<NotificationResponse> getUserNotifications(@PathVariable String userId) {
         return service.getUserNotifications(userId);
     }
 

@@ -16,6 +16,7 @@ public class NotificationResponse {
     private String message;
     private NotificationType type;
     private NotificationPriority priority;
+    @com.fasterxml.jackson.annotation.JsonProperty("isRead")
     private boolean isRead;
     private LocalDateTime createdAt;
 }

@@ -139,6 +139,14 @@ function RecommendationPageContent() {
         { type: 'deleted', text: `spring.datasource.password="admin123"`, originalLineNo: baseLine + 1 },
         { type: 'added', text: `spring.datasource.password=\${DATABASE_PASSWORD}`, fixedLineNo: baseLine + 1 }
       ];
+    } else if (title.toLowerCase().includes("large file")) {
+      originalCode = `// Large file detected: ${filePath}\n// Tracking large files directly in git degrades clone and scan performance.`;
+      fixedCode = `# Add to your .gitignore to exclude this file from repository tracking\n${filePath}`;
+      unifiedLines = [
+        { type: 'deleted', text: `// Large file detected: ${filePath}`, originalLineNo: baseLine },
+        { type: 'added', text: `# Exclude large files/data from Git tracking in .gitignore`, fixedLineNo: baseLine },
+        { type: 'added', text: `${filePath}`, fixedLineNo: baseLine + 1 }
+      ];
     } else {
       originalCode = `// TODO: Implement user verification logic`;
       fixedCode = `if (user.isVerified()) {\n    proceedToDashboard();\n} else {\n    throw new UnauthorizedException();\n}`;

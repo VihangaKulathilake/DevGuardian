@@ -13,7 +13,7 @@ public class NotificationMapper {
 
     public Notification toEntity(NotificationRequest req) {
         return Notification.builder()
-                .userId(req.getUserId())
+                .userId(req.getUserId() != null ? Long.valueOf(req.getUserId()) : null)
                 .title(req.getTitle())
                 .message(req.getMessage())
                 .type(req.getType())
@@ -29,7 +29,7 @@ public class NotificationMapper {
 
     public NotificationResponse toResponse(Notification n) {
         return NotificationResponse.builder()
-                .id(n.getId())
+                .id(n.getId() != null ? String.valueOf(n.getId()) : null)
                 .title(n.getTitle())
                 .message(n.getMessage())
                 .type(n.getType())
@@ -41,7 +41,7 @@ public class NotificationMapper {
 
     public NotificationSummary toSummary(Notification n) {
         return NotificationSummary.builder()
-                .id(n.getId())
+                .id(n.getId() != null ? String.valueOf(n.getId()) : null)
                 .title(n.getTitle())
                 .priority(n.getPriority())
                 .isRead(n.isRead())

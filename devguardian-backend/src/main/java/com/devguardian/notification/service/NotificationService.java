@@ -10,7 +10,7 @@ public interface NotificationService {
 
     NotificationResponse create(NotificationRequest request);
 
-    List<NotificationSummary> getUserNotifications(String userId);
+    List<NotificationResponse> getUserNotifications(String userId);
 
     NotificationResponse getById(String id);
 

@@ -26,36 +26,36 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public List<NotificationSummary> getUserNotifications(String userId) {
-        return repository.findByUserIdOrderByCreatedAtDesc(userId)
+    public List<NotificationResponse> getUserNotifications(String userId) {
+        return repository.findByUserIdOrderByCreatedAtDesc(userId != null ? Long.valueOf(userId) : null)
                 .stream()
-                .map(mapper::toSummary)
+                .map(mapper::toResponse)
                 .toList();
     }
 
     @Override
     public NotificationResponse getById(String id) {
-        Notification n = repository.findById(id)
+        Notification n = repository.findById(id != null ? Long.valueOf(id) : null)
                 .orElseThrow(() -> new RuntimeException("Notification not found"));
         return mapper.toResponse(n);
     }
 
     @Override
     public void markAsRead(String id) {
-        Notification n = repository.findById(id).orElseThrow();
+        Notification n = repository.findById(id != null ? Long.valueOf(id) : null).orElseThrow();
         n.setRead(true);
         repository.save(n);
     }
 
     @Override
     public void markAllAsRead(String userId) {
-        List<Notification> list = repository.findByUserIdOrderByCreatedAtDesc(userId);
+        List<Notification> list = repository.findByUserIdOrderByCreatedAtDesc(userId != null ? Long.valueOf(userId) : null);
         list.forEach(n -> n.setRead(true));
         repository.saveAll(list);
     }
 
     @Override
     public long getUnreadCount(String userId) {
-        return repository.countByUserIdAndIsReadFalse(userId);
+        return repository.countByUserIdAndIsReadFalse(userId != null ? Long.valueOf(userId) : null);
     }
 }

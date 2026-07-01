@@ -1,6 +1,7 @@
 import * as React from "react";
 import UserProfileDropdown from "./UserProfileDropdown";
-import { ShieldAlert, Bell, Search } from "lucide-react";
+import NotificationDropdown from "./NotificationDropdown";
+import { ShieldAlert, Search } from "lucide-react";
 import Input from "../ui/Input";
 
 export const Navbar: React.FC = () => {
@@ -29,13 +30,7 @@ export const Navbar: React.FC = () => {
       {/* Navigation Actions */}
       <div className="flex items-center gap-4">
         {/* Notifications Icon */}
-        <button
-          className="relative p-2.5 bg-[#12121a]/60 hover:bg-[#1a1a2e]/80 border border-border/50 text-muted-foreground hover:text-cyber-cyan hover:border-cyber-cyan/30 hover:shadow-[0_0_8px_rgba(0,240,255,0.2)] transition-all duration-300 cyber-btn-clip cursor-pointer"
-          aria-label="View notifications"
-        >
-          <Bell className="h-4 w-4" />
-          <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-cyber-pink animate-pulse" />
-        </button>
+        <NotificationDropdown />
 
         {/* User Profile */}
         <UserProfileDropdown />
