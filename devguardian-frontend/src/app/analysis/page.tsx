@@ -188,31 +188,50 @@ const RemediationDiffModal: React.FC<DiffModalProps> = ({
   // Safe keyword highlighter
   const highlightLine = (line: string) => {
     if (!line || line.trim() === "") return <span>&nbsp;</span>;
-    let html = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const commentIndex = html.indexOf("//");
-    let commentHtml = "";
-    if (commentIndex !== -1) {
-      commentHtml = `<span class="text-zinc-500 font-normal font-mono">${html.substring(commentIndex)}</span>`;
-      html = html.substring(0, commentIndex);
-    }
-    html = html.replace(/"([^"]*)"/g, '<span class="text-cyber-yellow font-mono">"$1"</span>');
-    const keywords = ["class", "public", "private", "protected", "return", "new", "throw", "try", "catch", "final", "void", "static", "if", "else", "true", "false"];
-    const typeKeywords = ["String", "int", "boolean", "double", "float", "long", "char", "Exception"];
-    const apiClasses = ["System", "PreparedStatement", "Statement", "Connection", "ResultSet", "log", "error", "getenv"];
 
-    keywords.forEach(kw => {
-      const regex = new RegExp(`\\b(${kw})\\b`, "g");
-      html = html.replace(regex, '<span class="text-cyber-pink font-bold font-mono">$1</span>');
-    });
-    typeKeywords.forEach(tk => {
-      const regex = new RegExp(`\\b(${tk})\\b`, "g");
-      html = html.replace(regex, '<span class="text-cyber-purple font-semibold font-mono">$1</span>');
-    });
-    apiClasses.forEach(ac => {
-      const regex = new RegExp(`\\b(${ac})\\b`, "g");
-      html = html.replace(regex, '<span class="text-cyber-cyan font-medium font-mono">$1</span>');
-    });
-    if (commentHtml) html += commentHtml;
+    const tokenRegex = /(\/\/.*)|("[^"]*")|([a-zA-Z_]\w*)|([^\w"/]+|.)/g;
+    let html = "";
+    let match;
+
+    const keywords = new Set([
+      "class", "public", "private", "protected", "return", "new", "throw", "try", 
+      "catch", "final", "void", "static", "if", "else", "true", "false"
+    ]);
+    const typeKeywords = new Set([
+      "String", "int", "boolean", "double", "float", "long", "char", "Exception"
+    ]);
+    const apiClasses = new Set([
+      "System", "PreparedStatement", "Statement", "Connection", "ResultSet", "log", "error", "getenv"
+    ]);
+
+    const escapeHtml = (str: string) => {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    };
+
+    while ((match = tokenRegex.exec(line)) !== null) {
+      const [token, comment, string, word, other] = match;
+      if (comment !== undefined) {
+        html += `<span class="text-zinc-500 font-normal font-mono">${escapeHtml(comment)}</span>`;
+      } else if (string !== undefined) {
+        html += `<span class="text-cyber-yellow font-mono">${escapeHtml(string)}</span>`;
+      } else if (word !== undefined) {
+        if (keywords.has(word)) {
+          html += `<span class="text-cyber-pink font-bold font-mono">${word}</span>`;
+        } else if (typeKeywords.has(word)) {
+          html += `<span class="text-cyber-purple font-semibold font-mono">${word}</span>`;
+        } else if (apiClasses.has(word)) {
+          html += `<span class="text-cyber-cyan font-medium font-mono">${word}</span>`;
+        } else {
+          html += escapeHtml(word);
+        }
+      } else {
+        html += escapeHtml(token);
+      }
+    }
+
     return <span dangerouslySetInnerHTML={{ __html: html }} />;
   };
 

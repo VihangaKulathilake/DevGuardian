@@ -17,12 +17,16 @@ public class HardcodedPasswordRule implements AnalysisRule {
 
     // Match Java assignments: variable containing 'password', 'passwd', or 'pwd' assigned a double-quoted literal
     private static final Pattern JAVA_PASSWORD_PATTERN = Pattern.compile(
-            "(?i)\\b(?:password|passwd|pwd)\\s*=\\s*\"([^\"]+)\""
+            "(?i)\\b(\\w*(?:password|passwd|pwd)\\w*)\\s*=\\s*\"([^\"]+)\""
     );
 
     // Match properties/YAML assignments: key containing 'password', 'passwd', or 'pwd' assigned a non-placeholder value
     private static final Pattern PROP_PASSWORD_PATTERN = Pattern.compile(
             "(?i)\\b[\\w\\.-]*(?:password|passwd|pwd)[\\w\\.-]*\\s*[:=]\\s*([^\\s#\"'${]+)"
+    );
+
+    private static final Pattern FALSE_POSITIVE_VAR_PATTERN = Pattern.compile(
+            "(?i)message|msg|error|err|hint|label|tooltip|placeholder|description|desc|text|title|subject|format|regex|pattern|template|prompt|invalid|success|failure|validation|display|name|header|warn|fail"
     );
 
     @Override
@@ -53,11 +57,13 @@ public class HardcodedPasswordRule implements AnalysisRule {
                 }
 
                 String possiblePassword = null;
+                String varName = null;
 
                 if (isJava) {
                     Matcher matcher = JAVA_PASSWORD_PATTERN.matcher(line);
                     if (matcher.find()) {
-                        possiblePassword = matcher.group(1).trim();
+                        varName = matcher.group(1);
+                        possiblePassword = matcher.group(2).trim();
                     }
                 } else if (isPropOrYml) {
                     Matcher matcher = PROP_PASSWORD_PATTERN.matcher(line);
@@ -67,8 +73,14 @@ public class HardcodedPasswordRule implements AnalysisRule {
                 }
 
                 if (possiblePassword != null) {
-                    // Filter out trivial placeholders, empty strings, variable invocations, or property expansion
+                    // Filter out UI/message variables
+                    if (isJava && varName != null && FALSE_POSITIVE_VAR_PATTERN.matcher(varName).find()) {
+                        continue;
+                    }
+
+                    // Filter out trivial placeholders, empty strings, variable invocations, property expansion, or sentences with spaces
                     if (possiblePassword.isEmpty() 
+                            || possiblePassword.contains(" ") // passwords typically do not contain spaces
                             || possiblePassword.equalsIgnoreCase("null")
                             || possiblePassword.startsWith("${") 
                             || possiblePassword.contains("System.get")
