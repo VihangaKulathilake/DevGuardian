@@ -31,10 +31,14 @@ spring:
           uri: lb://repository-service
           predicates:
             - Path=/api/repositories/**
-        - id: monolith-analysis
-          uri: lb://devguardian
+        - id: analysis-service
+          uri: lb://analysis-service
           predicates:
-            - Path=/api/analysis/**, /api/ai/**
+            - Path=/api/analysis/**
+        - id: ai-service
+          uri: lb://ai-service
+          predicates:
+            - Path=/api/ai/**
         - id: monolith-notifications
           uri: lb://devguardian
           predicates:

@@ -1,0 +1,24 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: ai-service
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+ai:
+  provider: groq
+
+groq:
+  api:
+    key: ${GROQ_API_KEY}
+    model: llama-3.1-8b-instant
+
+gemini:
+  api:
+    key: ${GEMINI_API_KEY}
+    model: gemini-1.5-flash
