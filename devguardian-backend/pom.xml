@@ -26,6 +26,7 @@
 		<module>devguardian-eureka-server</module>
 		<module>devguardian-gateway</module>
 		<module>devguardian-auth-service</module>
+		<module>devguardian-repository-service</module>
 	</modules>
 
 	<dependencyManagement>

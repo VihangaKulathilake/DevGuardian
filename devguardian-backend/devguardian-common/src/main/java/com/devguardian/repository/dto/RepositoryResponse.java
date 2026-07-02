@@ -17,6 +17,9 @@ public class RepositoryResponse {
     @Schema(description = "Unique repository identifier", example = "1001")
     private Long id;
 
+    @Schema(description = "ID of the user who owns this repository", example = "1")
+    private Long userId;
+
     @Schema(description = "Name of the code repository", example = "devguardian-backend")
     private String name;
 

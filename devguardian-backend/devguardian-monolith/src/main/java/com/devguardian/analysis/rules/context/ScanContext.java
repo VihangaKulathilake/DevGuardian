@@ -1,10 +1,9 @@
 package com.devguardian.analysis.rules.context;
 
-import com.devguardian.repository.entity.Repository;
+import com.devguardian.repository.dto.RepositoryResponse;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.util.List;
 import java.util.Map;
 
 @Getter
@@ -14,7 +13,7 @@ public class ScanContext {
     /*
      * Repository being scanned
      */
-    private Repository repository;
+    private RepositoryResponse repository;
 
     /*
      * Simulated or fetched file content

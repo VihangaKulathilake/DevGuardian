@@ -18,5 +18,6 @@ public interface RepositoryService {
 
     void deleteRepository(Long id);
     RepositoryResponse importRepository(ImportRepositoryRequest request);
+    void cloneRepository(Long id);
 }
 

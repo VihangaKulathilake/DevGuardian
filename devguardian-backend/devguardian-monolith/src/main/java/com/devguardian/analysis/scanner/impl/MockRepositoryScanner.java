@@ -2,7 +2,7 @@ package com.devguardian.analysis.scanner.impl;
 
 import com.devguardian.analysis.rules.context.ScanContext;
 import com.devguardian.analysis.scanner.interfaces.RepositoryScanner;
-import com.devguardian.repository.entity.Repository;
+import com.devguardian.repository.dto.RepositoryResponse;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +14,7 @@ import java.util.Map;
 public class MockRepositoryScanner implements RepositoryScanner {
 
         @Override
-        public ScanContext scan(Repository repository) {
+        public ScanContext scan(RepositoryResponse repository) {
 
                 /*
                  * Simulated repository files
@@ -49,7 +49,7 @@ public class MockRepositoryScanner implements RepositoryScanner {
                 files.put(
                                 ".env",
                                 """
-                                DATABASE_URL=postgres://localhost:5432/db
+                                DATABASE_URL=postgres://postgres://localhost:5432/db
                                 """);
 
                 Map<String, Long> fileSizes = new HashMap<>();
@@ -59,6 +59,10 @@ public class MockRepositoryScanner implements RepositoryScanner {
                 fileSizes.put("Dockerfile", 45L);
                 fileSizes.put(".env", 45L);
 
-                return new ScanContext(repository, files, fileSizes);
+                return new ScanContext(
+                                repository,
+                                files,
+                                fileSizes
+                );
         }
 }

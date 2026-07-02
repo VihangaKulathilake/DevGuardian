@@ -23,12 +23,12 @@ spring:
           uri: lb://auth-service
           predicates:
             - Path=/api/auth/**
-        - id: monolith-github
-          uri: lb://devguardian
+        - id: repository-service-github
+          uri: lb://repository-service
           predicates:
             - Path=/api/github/**
-        - id: monolith-repos
-          uri: lb://devguardian
+        - id: repository-service-repos
+          uri: lb://repository-service
           predicates:
             - Path=/api/repositories/**
         - id: monolith-analysis

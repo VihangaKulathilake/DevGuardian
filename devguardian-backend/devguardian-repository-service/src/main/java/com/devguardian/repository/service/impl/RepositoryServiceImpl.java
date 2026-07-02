@@ -13,6 +13,7 @@ import com.devguardian.repository.entity.Repository;
 import com.devguardian.repository.enums.*;
 import com.devguardian.repository.mapper.RepositoryMapper;
 import com.devguardian.repository.repository.RepositoryRepository;
+import com.devguardian.repository.service.interfaces.CloneService;
 import com.devguardian.repository.service.interfaces.RepositoryService;
 import com.devguardian.security.CurrentUserUtil;
 import com.devguardian.common.exception.custom.ResourceNotFoundException;
@@ -32,6 +33,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     private final CurrentUserUtil currentUserUtil;
     private final GithubConnectionService githubConnectionService;
     private final GithubApiClient githubApiClient;
+    private final CloneService cloneService;
 
     // CREATE REPOSITORY
     @Override
@@ -148,5 +150,15 @@ public class RepositoryServiceImpl implements RepositoryService {
         Repository saved = repositoryRepository.save(repository);
 
         return repositoryMapper.toResponse(saved);
+    }
+
+    @Override
+    public void cloneRepository(Long id) {
+        Long userId = currentUserUtil.getCurrentUser().getId();
+        Repository repository = repositoryRepository.findByIdAndUserId(id, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Repository not found"));
+
+        GithubConnection connection = githubConnectionService.getCurrentUserConnection();
+        cloneService.cloneRepository(repository, connection);
     }
 }

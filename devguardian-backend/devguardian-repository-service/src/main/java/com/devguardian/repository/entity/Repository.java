@@ -1,7 +1,7 @@
 package com.devguardian.repository.entity;
 
 
-import com.devguardian.analysis.entity.Analysis;
+
 import com.devguardian.repository.enums.*;
 import jakarta.persistence.*;
 import lombok.*;
@@ -76,10 +76,7 @@ public class Repository {
     @Column(name = "imported_at")
     private LocalDateTime importedAt;
 
-    // Future: analysis history
-    @Builder.Default
-    @OneToMany(mappedBy = "repository", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Analysis> analyses = new ArrayList<>();
+
 
     // Future: repository file snapshots or scanned files
     @Builder.Default

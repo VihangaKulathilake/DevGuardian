@@ -4,14 +4,13 @@ import com.devguardian.analysis.discovery.FileFilterService;
 import com.devguardian.analysis.rules.context.ScanContext;
 import com.devguardian.analysis.scanner.interfaces.RepositoryScanner;
 import com.devguardian.repository.config.WorkspaceProperties;
-import com.devguardian.repository.entity.Repository;
+import com.devguardian.repository.dto.RepositoryResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import jakarta.validation.constraints.NotNull;
+
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.HashMap;
@@ -28,7 +27,7 @@ public class GitRepositoryScanner implements RepositoryScanner {
     private static final long MAX_FILE_SIZE = 1024 * 1024;
 
     @Override
-    public ScanContext scan(Repository repository) {
+    public ScanContext scan(RepositoryResponse repository) {
 
         Map<String, String> files = new HashMap<>();
         Map<String, Long> fileSizes = new HashMap<>();
@@ -59,52 +58,39 @@ public class GitRepositoryScanner implements RepositoryScanner {
                             long size = Files.size(path);
 
                             if (size > MAX_FILE_SIZE) {
+                                log.warn(
+                                        "Skipping large file: {} ({} bytes)",
+                                        path.getFileName(),
+                                        size
+                                );
                                 return;
                             }
 
+                            String relativePath =
+                                    rootDirectory.relativize(path).toString();
+
                             String content =
-                                    Files.readString(
-                                            path,
-                                            StandardCharsets.UTF_8
-                                    );
+                                    Files.readString(path, StandardCharsets.UTF_8);
 
-                            String relativePath = rootDirectory
-                                            .relativize(path)
-                                            .toString();
+                            files.put(relativePath, content);
+                            fileSizes.put(relativePath, size);
 
-                            files.put(
-                                    relativePath,
-                                    content
-                            );
-
-                            fileSizes.put(
-                                    relativePath,
-                                    size
-                            );
-
-                        } catch (IOException ex) {
-
-                            log.debug(
-                                    "Skipping file {} because {}",
-                                    path,
-                                    ex.getMessage()
+                        } catch (IOException e) {
+                            log.error(
+                                    "Failed to read file content: {}",
+                                    path.getFileName(),
+                                    e
                             );
                         }
                     });
 
         } catch (IOException ex) {
-
-            throw new RuntimeException(
-                    "Failed to scan repository files",
+            log.error(
+                    "Failed to traverse directory: {}",
+                    repositoryPath,
                     ex
             );
         }
-
-        log.info(
-                "Scanned {} files from repository {}",
-                files.size(),
-                repository.getFullName()
-        );
 
         return new ScanContext(
                 repository,
@@ -114,7 +100,7 @@ public class GitRepositoryScanner implements RepositoryScanner {
     }
 
     private String buildRepositoryPath(
-            Repository repository
+            RepositoryResponse repository
     ) {
 
         return workspaceProperties.getBasePath()

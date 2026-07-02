@@ -22,12 +22,8 @@ import com.devguardian.analysis.scoring.interfaces.ScoreCalculator;
 import com.devguardian.analysis.scoring.model.ScoreResult;
 import com.devguardian.analysis.service.interfaces.AnalysisService;
 import com.devguardian.analysis.util.AnalysisAccessValidator;
-import com.devguardian.github.entity.GithubConnection;
-import com.devguardian.github.service.interfaces.GithubConnectionService;
-import com.devguardian.repository.entity.Repository;
-import com.devguardian.repository.repository.RepositoryRepository;
-import com.devguardian.repository.service.interfaces.CloneService;
-import com.devguardian.repository.util.RepositoryAccessValidator;
+import com.devguardian.client.RepositoryClient;
+import com.devguardian.repository.dto.RepositoryResponse;
 import com.devguardian.security.CurrentUserUtil;
 import com.devguardian.common.exception.custom.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -45,11 +41,10 @@ import java.util.List;
 @Slf4j
 public class AnalysisServiceImpl implements AnalysisService {
 
-        private final RepositoryRepository repositoryRepository;
+        private final RepositoryClient repositoryClient;
         private final AnalysisRepository analysisRepository;
         private final IssueRepository issueRepository;
 
-        // private final RepositoryScanner repositoryScanner;
         private final RepositoryScanner mockRepositoryScanner;
         private final GitRepositoryScanner gitRepositoryScanner;
         private final RuleEngine ruleEngine;
@@ -62,49 +57,35 @@ public class AnalysisServiceImpl implements AnalysisService {
         private final ApplicationEventPublisher eventPublisher;
 
         private final AnalysisAccessValidator analysisAccessValidator;
-        private final RepositoryAccessValidator repositoryAccessValidator;
         private final CurrentUserUtil currentUserUtil;
-
-        private final CloneService cloneService;
-        private final GithubConnectionService githubConnectionService;
 
         @Override
         @Transactional
         public Analysis startAnalysis(Long repositoryId) {
 
-            Repository repository =
-                    repositoryRepository.findById(repositoryId)
-                            .orElseThrow(() ->
-                                    new ResourceNotFoundException(
-                                            "Repository not found"
-                                    ));
+            RepositoryResponse repository = repositoryClient.getRepository(repositoryId);
+            if (repository == null) {
+                throw new ResourceNotFoundException("Repository not found");
+            }
 
-            repositoryAccessValidator.validateOwnership(
-                    repository,
-                    currentUserUtil.getCurrentUser().getId()
-            );
+            if (!repository.getUserId().equals(currentUserUtil.getCurrentUser().getId())) {
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "You do not have permission to access this repository"
+                );
+            }
 
             /*
-             * Clone repository
+             * Clone repository via repository-service
              */
-
-            GithubConnection connection =
-                    githubConnectionService
-                            .getCurrentUserConnection();
-
-            cloneService.cloneRepository(
-                    repository,
-                    connection
-            );
+            repositoryClient.cloneRepository(repositoryId);
 
             /*
              * Create RUNNING analysis
              */
-
             Analysis analysis =
                     analysisRepository.save(
                             Analysis.builder()
-                                    .repository(repository)
+                                    .repositoryId(repositoryId)
                                     .status(AnalysisStatus.RUNNING)
                                     .startedAt(LocalDateTime.now())
                                     .build()
@@ -113,11 +94,10 @@ public class AnalysisServiceImpl implements AnalysisService {
             /*
              * Publish event
              */
-
             eventPublisher.publishEvent(
                     new AnalysisStartedEvent(
                             analysis.getId(),
-                            repository.getId()
+                            repositoryId
                     )
             );
 
@@ -136,13 +116,12 @@ public class AnalysisServiceImpl implements AnalysisService {
 
             try {
 
-                Repository repository = analysis.getRepository();
+                RepositoryResponse repository = repositoryClient.getRepository(analysis.getRepositoryId());
 
                 /*
                  * STEP 1
                  * Scan repository files
                  */
-                // Replace mockRepositoryScanner later
                 ScanContext context =
                         gitRepositoryScanner.scan(repository);
 
@@ -312,12 +291,18 @@ public class AnalysisServiceImpl implements AnalysisService {
         @Transactional(readOnly = true)
         public List<Analysis> getRepositoryAnalyses(Long repositoryId) {
 
-                Repository repository = repositoryRepository.findById(repositoryId)
-                                .orElseThrow(() -> new ResourceNotFoundException("Repository not found"));
+                RepositoryResponse repository = repositoryClient.getRepository(repositoryId);
+                if (repository == null) {
+                    throw new ResourceNotFoundException("Repository not found");
+                }
 
-                repositoryAccessValidator.validateOwnership(repository, currentUserUtil.getCurrentUser().getId());
+                if (!repository.getUserId().equals(currentUserUtil.getCurrentUser().getId())) {
+                    throw new org.springframework.security.access.AccessDeniedException(
+                            "You do not have permission to access this repository"
+                    );
+                }
 
-                return analysisRepository.findByRepositoryOrderByCreatedAtDesc(repository);
+                return analysisRepository.findByRepositoryIdOrderByCreatedAtDesc(repositoryId);
         }
 
         @Override

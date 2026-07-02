@@ -19,7 +19,7 @@ public interface RepositoryMapper {
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "userId", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "analyses", ignore = true)
+
     @Mapping(target = "files", ignore = true)
     @Mapping(target = "cloneUrl", source = "url")
     @Mapping(target = "fullName", expression = "java(extractFullName(request.getUrl()))")
@@ -41,7 +41,7 @@ public interface RepositoryMapper {
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "userId", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "analyses", ignore = true)
+
     @Mapping(target = "files", ignore = true)
     void updateEntityFromRequest(UpdateRepositoryRequest request, @MappingTarget Repository repository);
 

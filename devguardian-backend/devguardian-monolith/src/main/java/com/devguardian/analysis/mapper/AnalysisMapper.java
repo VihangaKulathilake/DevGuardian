@@ -11,7 +11,7 @@ public class AnalysisMapper {
 
         return AnalysisResponse.builder()
                 .id(analysis.getId())
-                .repositoryId(analysis.getRepository().getId())
+                .repositoryId(analysis.getRepositoryId())
                 .status(analysis.getStatus())
                 .securityScore(analysis.getSecurityScore())
                 .qualityScore(analysis.getQualityScore())

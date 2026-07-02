@@ -119,4 +119,17 @@ public class RepositoryController {
     ) {
         repositoryService.deleteRepository(id);
     }
+
+    @Operation(
+            summary = "Clone a repository configuration",
+            description = "Triggers the git clone flow for a repository to scan it locally"
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Repository cloned successfully"
+    )
+    @PostMapping("/{id}/clone")
+    public void cloneRepository(@PathVariable Long id) {
+        repositoryService.cloneRepository(id);
+    }
 }

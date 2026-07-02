@@ -1,7 +1,6 @@
 package com.devguardian.analysis.entity;
 
 import com.devguardian.analysis.enums.AnalysisStatus;
-import com.devguardian.repository.entity.Repository;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -24,12 +23,8 @@ public class Analysis {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /*
-     * Many analyses belong to one repository
-     */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "repository_id", nullable = false)
-    private Repository repository;
+    @Column(name = "repository_id", nullable = false)
+    private Long repositoryId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
