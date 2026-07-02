@@ -1,5 +1,6 @@
 package com.devguardian.analysis.scanner.impl;
 
+import com.devguardian.analysis.discovery.FileFilterService;
 import com.devguardian.analysis.rules.context.ScanContext;
 import com.devguardian.analysis.scanner.interfaces.RepositoryScanner;
 import com.devguardian.repository.config.WorkspaceProperties;
@@ -7,11 +8,12 @@ import com.devguardian.repository.entity.Repository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
+import jakarta.validation.constraints.NotNull;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
+import java.nio.file.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -22,6 +24,8 @@ import java.util.stream.Stream;
 public class GitRepositoryScanner implements RepositoryScanner {
 
     private final WorkspaceProperties workspaceProperties;
+    private final FileFilterService fileFilterService;
+    private static final long MAX_FILE_SIZE = 1024 * 1024;
 
     @Override
     public ScanContext scan(Repository repository) {
@@ -31,9 +35,9 @@ public class GitRepositoryScanner implements RepositoryScanner {
 
         String repositoryPath = buildRepositoryPath(repository);
 
-        File rootDirectory = new File(repositoryPath);
+        Path rootDirectory = Path.of(repositoryPath);
 
-        if (!rootDirectory.exists()) {
+        if (!Files.exists(rootDirectory)) {
             throw new RuntimeException(
                     "Repository source directory not found: "
                             + repositoryPath
@@ -41,27 +45,20 @@ public class GitRepositoryScanner implements RepositoryScanner {
         }
 
         try (Stream<java.nio.file.Path> pathStream =
-                     Files.walk(rootDirectory.toPath())) {
+                     Files.walk(rootDirectory)) {
 
             pathStream
                     .filter(Files::isRegularFile)
+                    .filter(fileFilterService::shouldScan)
                     .forEach(path -> {
 
                         try {
-
-                            /*
-                             * Skip Git metadata
-                             */
-                            if (path.toString().contains(".git")) {
-                                return;
-                            }
-
                             /*
                              * Skip large files
                              */
                             long size = Files.size(path);
 
-                            if (size > 1024 * 1024) {
+                            if (size > MAX_FILE_SIZE) {
                                 return;
                             }
 
@@ -71,8 +68,7 @@ public class GitRepositoryScanner implements RepositoryScanner {
                                             StandardCharsets.UTF_8
                                     );
 
-                            String relativePath =
-                                    rootDirectory.toPath()
+                            String relativePath = rootDirectory
                                             .relativize(path)
                                             .toString();
 
@@ -86,13 +82,13 @@ public class GitRepositoryScanner implements RepositoryScanner {
                                     size
                             );
 
-                        } catch (Exception ignored) {
+                        } catch (IOException ex) {
 
-                            /*
-                             * Ignore binary files,
-                             * unreadable files,
-                             * encoding issues
-                             */
+                            log.debug(
+                                    "Skipping file {} because {}",
+                                    path,
+                                    ex.getMessage()
+                            );
                         }
                     });
 
