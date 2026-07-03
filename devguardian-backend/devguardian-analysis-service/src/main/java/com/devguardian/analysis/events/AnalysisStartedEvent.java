@@ -9,5 +9,6 @@ public class AnalysisStartedEvent {
 
     private final Long analysisId;
     private final Long repositoryId;
+    private final String token;
 
 }

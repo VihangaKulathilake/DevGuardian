@@ -26,4 +26,4 @@ eureka:
 
 devguardian:
   workspace:
-    base-path: workspace/repos
+    base-path: ../workspace/repos

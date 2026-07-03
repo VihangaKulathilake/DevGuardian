@@ -29,8 +29,13 @@ public class AnalysisStartedListener {
                 event.getAnalysisId()
         );
 
-        analysisService.executeAnalysis(
-                event.getAnalysisId()
-        );
+        com.devguardian.config.FeignClientInterceptor.setToken(event.getToken());
+        try {
+            analysisService.executeAnalysis(
+                    event.getAnalysisId()
+            );
+        } finally {
+            com.devguardian.config.FeignClientInterceptor.clearToken();
+        }
     }
 }

@@ -31,6 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -94,10 +96,17 @@ public class AnalysisServiceImpl implements AnalysisService {
             /*
              * Publish event
              */
+            String token = null;
+            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attributes != null) {
+                token = attributes.getRequest().getHeader("Authorization");
+            }
+
             eventPublisher.publishEvent(
                     new AnalysisStartedEvent(
                             analysis.getId(),
-                            repositoryId
+                            repositoryId,
+                            token
                     )
             );
 
@@ -256,6 +265,17 @@ public class AnalysisServiceImpl implements AnalysisService {
                 );
 
             } catch (Exception ex) {
+                try {
+                    java.io.StringWriter sw = new java.io.StringWriter();
+                    java.io.PrintWriter pw = new java.io.PrintWriter(sw);
+                    ex.printStackTrace(pw);
+                    java.nio.file.Files.writeString(
+                        java.nio.file.Paths.get("d:/DevGuardian/devguardian-backend/scan_error.log"),
+                        "Analysis ID: " + analysisId + "\n" + sw.toString()
+                    );
+                } catch (Exception e) {
+                    // ignore
+                }
 
                 log.error(
                         "Analysis failed for ID {}",

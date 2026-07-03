@@ -154,11 +154,26 @@ public class RepositoryServiceImpl implements RepositoryService {
 
     @Override
     public void cloneRepository(Long id) {
-        Long userId = currentUserUtil.getCurrentUser().getId();
-        Repository repository = repositoryRepository.findByIdAndUserId(id, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Repository not found"));
+        try {
+            Long userId = currentUserUtil.getCurrentUser().getId();
+            Repository repository = repositoryRepository.findByIdAndUserId(id, userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Repository not found"));
 
-        GithubConnection connection = githubConnectionService.getCurrentUserConnection();
-        cloneService.cloneRepository(repository, connection);
+            GithubConnection connection = githubConnectionService.getCurrentUserConnection();
+            cloneService.cloneRepository(repository, connection);
+        } catch (Exception ex) {
+            try {
+                java.io.StringWriter sw = new java.io.StringWriter();
+                java.io.PrintWriter pw = new java.io.PrintWriter(sw);
+                ex.printStackTrace(pw);
+                java.nio.file.Files.writeString(
+                    java.nio.file.Paths.get("d:/DevGuardian/devguardian-backend/clone_error.log"),
+                    "Clone ID: " + id + "\n" + sw.toString()
+                );
+            } catch (Exception e) {
+                // ignore
+            }
+            throw ex;
+        }
     }
 }

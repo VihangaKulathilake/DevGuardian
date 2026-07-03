@@ -18,6 +18,8 @@ spring:
               - OPTIONS
             allowedHeaders: "*"
             allowCredentials: true
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_LAST
       routes:
         - id: auth-service
           uri: lb://auth-service
@@ -34,7 +36,7 @@ spring:
         - id: analysis-service
           uri: lb://analysis-service
           predicates:
-            - Path=/api/analysis/**
+            - Path=/api/analysis/**, /api/analyses/**
         - id: ai-service
           uri: lb://ai-service
           predicates:
