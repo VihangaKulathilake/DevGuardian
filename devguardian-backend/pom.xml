@@ -22,13 +22,13 @@
 
 	<modules>
 		<module>devguardian-common</module>
-		<module>devguardian-monolith</module>
 		<module>devguardian-eureka-server</module>
 		<module>devguardian-gateway</module>
 		<module>devguardian-auth-service</module>
 		<module>devguardian-repository-service</module>
 		<module>devguardian-analysis-service</module>
 		<module>devguardian-ai-service</module>
+		<module>devguardian-notification-service</module>
 	</modules>
 
 	<dependencyManagement>

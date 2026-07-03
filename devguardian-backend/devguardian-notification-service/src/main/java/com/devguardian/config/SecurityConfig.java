@@ -2,7 +2,6 @@ package com.devguardian.config;
 
 import com.devguardian.security.handler.JwtAuthenticationEntryPoint;
 import com.devguardian.security.JwtAuthenticationFilter;
-import com.devguardian.constants.ApiEndpoints;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,13 +37,12 @@ public class SecurityConfig {
                         )
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints remaining in monolith
+                        // Public endpoints
                         .requestMatchers(
                                 "/error",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/v3/api-docs/**",
-                                "/api/github/callback"
+                                "/v3/api-docs/**"
                         )
                         .permitAll()
                         // Everything else protected

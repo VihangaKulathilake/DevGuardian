@@ -39,10 +39,10 @@ spring:
           uri: lb://ai-service
           predicates:
             - Path=/api/ai/**
-        - id: monolith-notifications
-          uri: lb://devguardian
+        - id: notification-service
+          uri: lb://notification-service
           predicates:
-            - Path=/api/notifications/**
+            - Path=/api/v1/notifications/**, /api/notifications/**
 
 eureka:
   client:
