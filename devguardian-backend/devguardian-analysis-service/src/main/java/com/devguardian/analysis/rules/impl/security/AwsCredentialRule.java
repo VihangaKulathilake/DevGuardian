@@ -3,27 +3,51 @@ package com.devguardian.analysis.rules.impl.security;
 import com.devguardian.analysis.entity.Issue;
 import com.devguardian.analysis.enums.IssueCategory;
 import com.devguardian.analysis.enums.SeverityLevel;
-import com.devguardian.analysis.rules.context.ScanContext;
-import com.devguardian.analysis.rules.interfaces.AnalysisRule;
+import com.devguardian.analysis.rules.support.AbstractLineScanRule;
+import com.devguardian.analysis.rules.support.ScanFilters;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Detects exposed AWS credentials.
+ *
+ * <p>False-positive fixes:</p>
+ * <ul>
+ *   <li>AWS's own documented example credentials
+ *       ({@code AKIAIOSFODNN7EXAMPLE}, {@code wJalrXUtnFEMI/...EXAMPLEKEY})
+ *       and any key containing {@code EXAMPLE} are ignored - these appear in
+ *       thousands of READMEs and SDK samples.</li>
+ *   <li>Access-key IDs must not be a fragment of a longer token (guarded by
+ *       stricter boundaries), eliminating matches inside base64 blobs and
+ *       ARNs.</li>
+ *   <li>Secret keys must be exactly 40 chars of the AWS alphabet <b>and</b>
+ *       have generated-credential entropy; sentence-like or repeated values
+ *       are ignored, as are {@code ${...}} references and placeholders.</li>
+ *   <li>Key names like {@code aws.secret.key.property} or
+ *       {@code secretKeyRef} (Kubernetes) no longer fire on non-values.</li>
+ * </ul>
+ */
 @Component
-public class AwsCredentialRule implements AnalysisRule {
+public class AwsCredentialRule extends AbstractLineScanRule {
 
-    // Matches AWS Access Key ID: AKIA or ASIA prefix followed by 16 alphanumeric characters
     private static final Pattern AWS_ACCESS_KEY_PATTERN = Pattern.compile(
-            "\\b((?:AKIA|ASIA)[0-9A-Z]{16})\\b"
-    );
+            "(?<![A-Za-z0-9/+=])((?:AKIA|ASIA|ABIA|ACCA)[0-9A-Z]{16})(?![A-Za-z0-9/+=])");
 
-    // Matches AWS Secret Access Key variable assignments with 40 character high entropy keys
     private static final Pattern AWS_SECRET_KEY_PATTERN = Pattern.compile(
-            "(?i)\\b(?:aws[-_]?secret|aws[-_]?secret[-_]?(?:access)?[-_]?key|secret[-_]?key)\\s*[:=]\\s*[\"']?([A-Za-z0-9/+=]{40})[\"']?"
-    );
+            "(?i)\\b(?:aws[_\\-.]?)?secret[_\\-.]?(?:access[_\\-.]?)?key\\s*[:=]\\s*"
+                    + "[\"']?([A-Za-z0-9/+=]{40})[\"']?(?![A-Za-z0-9/+=])");
+
+    /** Credentials published by AWS in documentation - never real. */
+    private static final Set<String> DOCUMENTED_EXAMPLES = Set.of(
+            "AKIAIOSFODNN7EXAMPLE",
+            "AKIAI44QH8DHBEXAMPLE",
+            "ASIAIOSFODNN7EXAMPLE",
+            "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+            "je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY");
 
     @Override
     public String getRuleCode() {
@@ -36,58 +60,68 @@ public class AwsCredentialRule implements AnalysisRule {
     }
 
     @Override
-    public List<Issue> evaluate(ScanContext context) {
-        List<Issue> issues = new ArrayList<>();
+    protected boolean appliesTo(String normalizedPath) {
+        return true; // AWS keys leak into any file type
+    }
 
-        context.getFiles().forEach((filePath, content) -> {
-            String[] lines = content.split("\n");
-            for (int i = 0; i < lines.length; i++) {
-                String line = lines[i].trim();
-
-                // Skip comments
-                if (line.startsWith("#") || line.startsWith("//") || line.startsWith("*")) {
-                    continue;
-                }
-
-                // 1. Check for AWS Access Key ID
-                Matcher accessMatcher = AWS_ACCESS_KEY_PATTERN.matcher(line);
-                if (accessMatcher.find()) {
-                    String accessKey = accessMatcher.group(1);
-                    issues.add(Issue.builder()
-                            .ruleCode(getRuleCode())
-                            .title("AWS Access Key Exposed")
-                            .description("An AWS Access Key ID ('" + accessKey + "') was found in the codebase. Exposed AWS credentials can lead to unauthorized cloud resource access, billing spikes, and full account takeover.")
-                            .severity(SeverityLevel.CRITICAL)
-                            .category(IssueCategory.SECRET_MANAGEMENT)
-                            .filePath(filePath)
-                            .lineNumber(i + 1)
-                            .recommendation("Revoke this AWS Access Key immediately in the AWS IAM Console. Rotate credentials and configure IAM roles or load keys from secure environments.")
-                            .build());
-                    continue; // Skip secret check if access key is already flagged on this line
-                }
-
-                // 2. Check for AWS Secret Access Key
-                Matcher secretMatcher = AWS_SECRET_KEY_PATTERN.matcher(line);
-                if (secretMatcher.find()) {
-                    String secretKey = secretMatcher.group(1);
-                    if (secretKey.startsWith("${")) {
-                        continue; // Reference placeholder
-                    }
-
-                    issues.add(Issue.builder()
-                            .ruleCode(getRuleCode())
-                            .title("AWS Secret Access Key Exposed")
-                            .description("An AWS Secret Access Key was found hardcoded. In combination with an access key, this allows full administrative API access to your AWS infrastructure.")
-                            .severity(SeverityLevel.CRITICAL)
-                            .category(IssueCategory.SECRET_MANAGEMENT)
-                            .filePath(filePath)
-                            .lineNumber(i + 1)
-                            .recommendation("Revoke and rotate AWS credentials immediately. Do not store AWS credentials in version control.")
-                            .build());
-                }
+    @Override
+    protected void checkLine(String filePath, String code, int lineNumber, List<Issue> issues) {
+        Matcher accessMatcher = AWS_ACCESS_KEY_PATTERN.matcher(code);
+        while (accessMatcher.find()) {
+            String accessKey = accessMatcher.group(1);
+            if (isExample(accessKey)) {
+                continue;
             }
-        });
+            issues.add(Issue.builder()
+                    .ruleCode(getRuleCode())
+                    .title("AWS Access Key Exposed")
+                    .description("An AWS Access Key ID (" + ScanFilters.mask(accessKey)
+                            + ") was found in the codebase. Together with its secret key it "
+                            + "grants API access to your AWS account - exposed pairs are "
+                            + "typically abused within minutes of a public commit.")
+                    .severity(SeverityLevel.CRITICAL)
+                    .category(IssueCategory.SECRET_MANAGEMENT)
+                    .filePath(filePath)
+                    .lineNumber(lineNumber)
+                    .recommendation("Deactivate this access key in the IAM console immediately, "
+                            + "rotate credentials, audit CloudTrail for unauthorized use, and "
+                            + "switch to IAM roles / instance profiles or the default "
+                            + "credential provider chain.")
+                    .build());
+            return; // one credential finding per line
+        }
 
-        return issues;
+        Matcher secretMatcher = AWS_SECRET_KEY_PATTERN.matcher(code);
+        if (secretMatcher.find()) {
+            String secretKey = secretMatcher.group(1);
+            if (isExample(secretKey)
+                    || ScanFilters.isVariableReference(secretKey)
+                    || ScanFilters.isPlaceholderValue(secretKey)
+                    || !ScanFilters.looksLikeGeneratedToken(secretKey)) {
+                return;
+            }
+            issues.add(Issue.builder()
+                    .ruleCode(getRuleCode())
+                    .title("AWS Secret Access Key Exposed")
+                    .description("A value matching the exact shape of an AWS Secret Access Key "
+                            + "(" + ScanFilters.mask(secretKey) + ") is hardcoded. Combined "
+                            + "with an access key ID this allows full API access to your AWS "
+                            + "infrastructure.")
+                    .severity(SeverityLevel.CRITICAL)
+                    .category(IssueCategory.SECRET_MANAGEMENT)
+                    .filePath(filePath)
+                    .lineNumber(lineNumber)
+                    .recommendation("Rotate the credential pair in IAM now and remove it from "
+                            + "git history (e.g. git filter-repo). Store AWS credentials only "
+                            + "in the environment, ~/.aws/credentials outside the repo, or an "
+                            + "IAM role.")
+                    .build());
+        }
+    }
+
+    private boolean isExample(String key) {
+        return DOCUMENTED_EXAMPLES.contains(key)
+                || key.toUpperCase().contains("EXAMPLE")
+                || key.toUpperCase().contains("SAMPLE");
     }
 }

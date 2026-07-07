@@ -3,31 +3,69 @@ package com.devguardian.analysis.rules.impl.security;
 import com.devguardian.analysis.entity.Issue;
 import com.devguardian.analysis.enums.IssueCategory;
 import com.devguardian.analysis.enums.SeverityLevel;
-import com.devguardian.analysis.rules.context.ScanContext;
-import com.devguardian.analysis.rules.interfaces.AnalysisRule;
+import com.devguardian.analysis.rules.support.AbstractLineScanRule;
+import com.devguardian.analysis.rules.support.ScanFilters;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Detects real hardcoded passwords in Java sources and configuration files.
+ *
+ * <p>False-positive fixes:</p>
+ * <ul>
+ *   <li>UI/message/validation variables ({@code passwordErrorMessage},
+ *       {@code passwordPattern}, {@code passwordHint}...) are excluded by
+ *       variable-name semantics.</li>
+ *   <li>Placeholders ({@code changeme}, {@code <your-password>}, {@code ****}),
+ *       property references ({@code ${DB_PASSWORD}}), env lookups and values
+ *       that merely echo the key name are excluded.</li>
+ *   <li>Structural config keys that are not credentials
+ *       ({@code password-parameter}, {@code password.policy...},
+ *       {@code passwordField}) are excluded.</li>
+ *   <li>Comments (including block comments) never fire; test fixtures are
+ *       skipped entirely.</li>
+ *   <li>Values in Java that are regexes, format strings or i18n keys
+ *       ({@code my.app.password.invalid}) are excluded.</li>
+ * </ul>
+ */
 @Component
-public class HardcodedPasswordRule implements AnalysisRule {
+public class HardcodedPasswordRule extends AbstractLineScanRule {
 
-    // Match Java assignments: variable containing 'password', 'passwd', or 'pwd' assigned a double-quoted literal
-    private static final Pattern JAVA_PASSWORD_PATTERN = Pattern.compile(
-            "(?i)\\b(\\w*(?:password|passwd|pwd)\\w*)\\s*=\\s*\"([^\"]+)\""
-    );
+    /** Java: identifier containing password/passwd/pwd assigned a string literal. */
+    private static final Pattern JAVA_ASSIGNMENT = Pattern.compile(
+            "(?i)\\b([\\w$]*(?:password|passwd|pwd)[\\w$]*)\\s*=\\s*\"([^\"]*)\"");
 
-    // Match properties/YAML assignments: key containing 'password', 'passwd', or 'pwd' assigned a non-placeholder value
-    private static final Pattern PROP_PASSWORD_PATTERN = Pattern.compile(
-            "(?i)\\b[\\w\\.-]*(?:password|passwd|pwd)[\\w\\.-]*\\s*[:=]\\s*([^\\s#\"'${]+)"
-    );
+    /** Java: comparison against a literal, e.g. password.equals("s3cret"). */
+    private static final Pattern JAVA_COMPARISON = Pattern.compile(
+            "(?i)\\b([\\w$]*(?:password|passwd|pwd)[\\w$]*)\\s*\\.\\s*(?:equals|equalsIgnoreCase|contentEquals)\\s*\\(\\s*\"([^\"]+)\"\\s*\\)");
 
-    private static final Pattern FALSE_POSITIVE_VAR_PATTERN = Pattern.compile(
-            "(?i)message|msg|error|err|hint|label|tooltip|placeholder|description|desc|text|title|subject|format|regex|pattern|template|prompt|invalid|success|failure|validation|display|name|header|warn|fail"
-    );
+    /** Properties/YAML: key containing password assigned a value. */
+    private static final Pattern CONFIG_ASSIGNMENT = Pattern.compile(
+            "(?i)^\\s*([\\w.\\-]*(?:password|passwd|pwd)[\\w.\\-]*)\\s*[:=]\\s*(.+?)\\s*$");
+
+    /**
+     * Variable/key name fragments that indicate the value is NOT a credential:
+     * UI text, validation artefacts, field/parameter names, policies, encoders.
+     */
+    private static final Pattern NON_CREDENTIAL_NAME = Pattern.compile(
+            "(?i)message|msg|error|err|hint|label|tooltip|placeholder|description|desc"
+                    + "|text|title|subject|format|regex|pattern|template|prompt|invalid"
+                    + "|success|failure|validation|display|header|warn|fail|length"
+                    + "|policy|rule|requirement|strength|encoder|hasher|hash|digest"
+                    + "|field|param|parameter|attr|attribute|column|input|form"
+                    + "|reset|forgot|change|confirm|repeat|retype|mismatch|history"
+                    + "|expir|min|max|url|uri|path|endpoint|page|view|screen|enabled|required");
+
+    /** Values that are clearly not passwords (class refs, i18n keys, regexes). */
+    private static final Pattern NON_CREDENTIAL_VALUE = Pattern.compile(
+            "^(?:[a-z][\\w]*(?:\\.[a-z][\\w]*){2,}"   // i18n / property key: a.b.c
+                    + "|\\^.*\\$"                       // anchored regex
+                    + "|.*%[sd].*"                      // format string
+                    + "|\\{\\d+}.*"                     // MessageFormat
+                    + "|classpath:.*|file:.*|https?://.*)$");
 
     @Override
     public String getRuleCode() {
@@ -40,69 +78,78 @@ public class HardcodedPasswordRule implements AnalysisRule {
     }
 
     @Override
-    public List<Issue> evaluate(ScanContext context) {
-        List<Issue> issues = new ArrayList<>();
+    protected boolean appliesTo(String normalizedPath) {
+        return ScanFilters.isJavaSource(normalizedPath) || ScanFilters.isConfigFile(normalizedPath);
+    }
 
-        context.getFiles().forEach((filePath, content) -> {
-            String[] lines = content.split("\n");
-            boolean isJava = filePath.endsWith(".java");
-            boolean isPropOrYml = filePath.endsWith(".properties") || filePath.endsWith(".yml") || filePath.endsWith(".yaml");
-
-            for (int i = 0; i < lines.length; i++) {
-                String line = lines[i].trim();
-
-                // Skip comment lines
-                if (line.startsWith("#") || line.startsWith("//") || line.startsWith("*")) {
-                    continue;
-                }
-
-                String possiblePassword = null;
-                String varName = null;
-
-                if (isJava) {
-                    Matcher matcher = JAVA_PASSWORD_PATTERN.matcher(line);
-                    if (matcher.find()) {
-                        varName = matcher.group(1);
-                        possiblePassword = matcher.group(2).trim();
-                    }
-                } else if (isPropOrYml) {
-                    Matcher matcher = PROP_PASSWORD_PATTERN.matcher(line);
-                    if (matcher.find()) {
-                        possiblePassword = matcher.group(1).trim();
-                    }
-                }
-
-                if (possiblePassword != null) {
-                    // Filter out UI/message variables
-                    if (isJava && varName != null && FALSE_POSITIVE_VAR_PATTERN.matcher(varName).find()) {
-                        continue;
-                    }
-
-                    // Filter out trivial placeholders, empty strings, variable invocations, property expansion, or sentences with spaces
-                    if (possiblePassword.isEmpty() 
-                            || possiblePassword.contains(" ") // passwords typically do not contain spaces
-                            || possiblePassword.equalsIgnoreCase("null")
-                            || possiblePassword.startsWith("${") 
-                            || possiblePassword.contains("System.get")
-                            || possiblePassword.equals("\"\"")
-                            || possiblePassword.length() < 3) {
-                        continue;
-                    }
-
-                    issues.add(Issue.builder()
-                            .ruleCode(getRuleCode())
-                            .title("Hardcoded Password Detected")
-                            .description("A hardcoded password or credential was detected in the file. Hardcoded secrets are easily extracted from version control systems.")
-                            .severity(SeverityLevel.HIGH)
-                            .category(IssueCategory.SECRET_MANAGEMENT)
-                            .filePath(filePath)
-                            .lineNumber(i + 1)
-                            .recommendation("Remove the plaintext password and load it from environment variables or a secure configuration service.")
-                            .build());
-                }
+    @Override
+    protected void checkLine(String filePath, String code, int lineNumber, List<Issue> issues) {
+        if (ScanFilters.isJavaSource(filePath)) {
+            Matcher assignment = JAVA_ASSIGNMENT.matcher(code);
+            if (assignment.find()
+                    && report(filePath, lineNumber, assignment.group(1), assignment.group(2),
+                              false, issues)) {
+                return;
             }
-        });
+            Matcher comparison = JAVA_COMPARISON.matcher(code);
+            if (comparison.find()) {
+                report(filePath, lineNumber, comparison.group(1), comparison.group(2),
+                       true, issues);
+            }
+        } else {
+            Matcher config = CONFIG_ASSIGNMENT.matcher(code);
+            if (config.find()) {
+                String value = unquote(config.group(2));
+                report(filePath, lineNumber, config.group(1), value, false, issues);
+            }
+        }
+    }
 
-        return issues;
+    private boolean report(String filePath, int lineNumber, String key, String value,
+                           boolean comparison, List<Issue> issues) {
+        String trimmedValue = value.trim();
+
+        if (NON_CREDENTIAL_NAME.matcher(key).find()) {
+            return false;
+        }
+        if (trimmedValue.length() < 4 || trimmedValue.contains(" ")) {
+            return false; // sentences and trivial values
+        }
+        if (ScanFilters.isVariableReference(trimmedValue)
+                || ScanFilters.isPlaceholderValue(trimmedValue)
+                || ScanFilters.valueEchoesKey(key, trimmedValue)
+                || NON_CREDENTIAL_VALUE.matcher(trimmedValue).matches()) {
+            return false;
+        }
+
+        String context = comparison
+                ? "compared against the '" + key + "' variable"
+                : "assigned to '" + key + "'";
+
+        issues.add(Issue.builder()
+                .ruleCode(getRuleCode())
+                .title("Hardcoded Password Detected")
+                .description("A literal password (" + ScanFilters.mask(trimmedValue) + ") is "
+                        + context + ". Credentials committed to source control are permanently "
+                        + "recoverable from repository history and are a frequent breach entry point.")
+                .severity(SeverityLevel.HIGH)
+                .category(IssueCategory.SECRET_MANAGEMENT)
+                .filePath(filePath)
+                .lineNumber(lineNumber)
+                .recommendation("Remove the literal and load the password from an environment "
+                        + "variable, a secrets manager (Vault, AWS Secrets Manager, ...) or an "
+                        + "externalized encrypted configuration. Rotate the exposed credential.")
+                .build());
+        return true;
+    }
+
+    private String unquote(String value) {
+        String v = value.trim();
+        if (v.length() >= 2
+                && ((v.startsWith("\"") && v.endsWith("\""))
+                    || (v.startsWith("'") && v.endsWith("'")))) {
+            return v.substring(1, v.length() - 1);
+        }
+        return v;
     }
 }
