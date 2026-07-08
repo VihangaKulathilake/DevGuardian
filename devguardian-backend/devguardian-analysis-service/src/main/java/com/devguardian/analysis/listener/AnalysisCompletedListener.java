@@ -1,15 +1,14 @@
 package com.devguardian.analysis.listener;
 
 import com.devguardian.analysis.events.AnalysisCompletedEvent;
-import com.devguardian.client.NotificationClient;
 import com.devguardian.client.RepositoryClient;
 import com.devguardian.notification.dto.request.NotificationRequest;
 import com.devguardian.notification.enums.NotificationPriority;
-import com.devguardian.notification.enums.NotificationStatus;
 import com.devguardian.notification.enums.NotificationType;
 import com.devguardian.repository.dto.RepositoryResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +17,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class AnalysisCompletedListener {
 
-    private final NotificationClient notificationClient;
+    private final RabbitTemplate rabbitTemplate;
     private final RepositoryClient repositoryClient;
 
     @EventListener
@@ -42,8 +41,12 @@ public class AnalysisCompletedListener {
                         .priority(NotificationPriority.MEDIUM)
                         .build();
 
-                notificationClient.createNotification(notificationRequest);
-                log.info("Triggered notification creation for user {}", repository.getUserId());
+                rabbitTemplate.convertAndSend(
+                        "devguardian.exchange",
+                        "notification.send",
+                        notificationRequest
+                );
+                log.info("Sent notification message to RabbitMQ for user {}", repository.getUserId());
             }
         } catch (Exception e) {
             log.error("Failed to trigger notification for analysis completion", e);

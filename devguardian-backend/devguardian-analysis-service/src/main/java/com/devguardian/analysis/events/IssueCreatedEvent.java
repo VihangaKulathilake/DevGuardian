@@ -1,11 +1,14 @@
 package com.devguardian.analysis.events;
 
-import com.devguardian.analysis.entity.Issue;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
 public class IssueCreatedEvent {
-    private final Issue issue;
+    private Long issueId;
 }

@@ -29,6 +29,7 @@ import com.devguardian.common.exception.custom.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -57,6 +58,7 @@ public class AnalysisServiceImpl implements AnalysisService {
         private final AnalysisReportRepository analysisReportRepository;
 
         private final ApplicationEventPublisher eventPublisher;
+        private final RabbitTemplate rabbitTemplate;
 
         private final AnalysisAccessValidator analysisAccessValidator;
         private final CurrentUserUtil currentUserUtil;
@@ -102,7 +104,9 @@ public class AnalysisServiceImpl implements AnalysisService {
                 token = attributes.getRequest().getHeader("Authorization");
             }
 
-            eventPublisher.publishEvent(
+            rabbitTemplate.convertAndSend(
+                    com.devguardian.config.RabbitMQConfig.EXCHANGE_NAME,
+                    com.devguardian.config.RabbitMQConfig.ANALYSIS_STARTED_ROUTING_KEY,
                     new AnalysisStartedEvent(
                             analysis.getId(),
                             repositoryId,
@@ -172,7 +176,11 @@ public class AnalysisServiceImpl implements AnalysisService {
                  * Publish issue created events for AI enrichment
                  */
                 savedIssues.forEach(issue ->
-                        eventPublisher.publishEvent(new IssueCreatedEvent(issue)));
+                        rabbitTemplate.convertAndSend(
+                                com.devguardian.config.RabbitMQConfig.EXCHANGE_NAME,
+                                com.devguardian.config.RabbitMQConfig.ISSUE_CREATED_ROUTING_KEY,
+                                new IssueCreatedEvent(issue.getId())
+                        ));
 
                 /*
                  * STEP 5
