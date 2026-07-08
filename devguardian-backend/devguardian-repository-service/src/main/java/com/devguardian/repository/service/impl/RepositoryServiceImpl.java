@@ -17,9 +17,12 @@ import com.devguardian.repository.service.interfaces.CloneService;
 import com.devguardian.repository.service.interfaces.RepositoryService;
 import com.devguardian.security.CurrentUserUtil;
 import com.devguardian.common.exception.custom.ResourceNotFoundException;
+import com.devguardian.repository.config.WorkspaceProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
 
 import java.util.List;
 
@@ -34,6 +37,7 @@ public class RepositoryServiceImpl implements RepositoryService {
     private final GithubConnectionService githubConnectionService;
     private final GithubApiClient githubApiClient;
     private final CloneService cloneService;
+    private final WorkspaceProperties workspaceProperties;
 
     // CREATE REPOSITORY
     @Override
@@ -159,7 +163,22 @@ public class RepositoryServiceImpl implements RepositoryService {
             Repository repository = repositoryRepository.findByIdAndUserId(id, userId)
                     .orElseThrow(() -> new ResourceNotFoundException("Repository not found"));
 
-            GithubConnection connection = githubConnectionService.getCurrentUserConnection();
+            if (repository.getProvider() == RepositoryProvider.LOCAL) {
+                java.io.File localDir = new java.io.File(repository.getCloneUrl());
+                if (!localDir.exists() || !localDir.isDirectory()) {
+                    throw new RuntimeException("Local repository directory does not exist or is not a directory: " + repository.getCloneUrl());
+                }
+                return;
+            }
+
+            GithubConnection connection = null;
+            if (repository.getProvider() == RepositoryProvider.GITHUB) {
+                try {
+                    connection = githubConnectionService.getCurrentUserConnection();
+                } catch (Exception e) {
+                    // Ignore, JGit will try public clone without credentials
+                }
+            }
             cloneService.cloneRepository(repository, connection);
         } catch (Exception ex) {
             try {
@@ -175,5 +194,140 @@ public class RepositoryServiceImpl implements RepositoryService {
             }
             throw ex;
         }
+    }
+
+    @Override
+    public RepositoryResponse uploadRepository(MultipartFile file, String name, String branch, String language) {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("Uploaded file is empty");
+        }
+
+        Long userId = currentUserUtil.getCurrentUser().getId();
+
+        // 1. Create a transient or placeholder Repository to get a unique database ID
+        Repository repository = Repository.builder()
+                .userId(userId)
+                .name(name)
+                .fullName("uploads/" + name)
+                .githubRepoId(System.currentTimeMillis()) // Mock unique ID
+                .cloneUrl("pending")
+                .branch(branch != null && !branch.isBlank() ? branch : "main")
+                .language(language != null && !language.isBlank() ? language : "Auto")
+                .provider(RepositoryProvider.LOCAL)
+                .visibility(Visibility.PRIVATE)
+                .status(RepositoryStatus.ACTIVE)
+                .type(RepositoryType.GIT)
+                .scanFrequency(ScanFrequency.DAILY)
+                .build();
+
+        Repository saved = repositoryRepository.save(repository);
+
+        // 2. Define the extraction target path
+        String targetPath = workspaceProperties.getBasePath()
+                + java.io.File.separator
+                + userId
+                + java.io.File.separator
+                + saved.getId()
+                + java.io.File.separator
+                + "source";
+
+        java.io.File destDir = new java.io.File(targetPath);
+        if (!destDir.exists()) {
+            destDir.mkdirs();
+        }
+
+        // 3. Save the ZIP file temporarily and extract it
+        java.io.File tempZipFile = null;
+        try {
+            tempZipFile = java.io.File.createTempFile("repo_upload_", ".zip");
+            file.transferTo(tempZipFile);
+
+            // Extract the ZIP contents to destDir
+            extractZip(tempZipFile, destDir);
+
+            // 4. Update the repository cloneUrl to point to the target path
+            saved.setCloneUrl(destDir.getAbsolutePath().replace('\\', '/'));
+            saved = repositoryRepository.save(saved);
+
+        } catch (Exception e) {
+            try {
+                java.io.StringWriter sw = new java.io.StringWriter();
+                java.io.PrintWriter pw = new java.io.PrintWriter(sw);
+                e.printStackTrace(pw);
+                java.nio.file.Files.writeString(
+                    java.nio.file.Paths.get("d:/DevGuardian/devguardian-backend/upload_error.log"),
+                    "Upload error:\n" + sw.toString()
+                );
+            } catch (Exception ex) {
+                // ignore
+            }
+            // Clean up and throw
+            if (destDir.exists()) {
+                deleteDirectory(destDir);
+            }
+            repositoryRepository.delete(saved);
+            throw new RuntimeException("Failed to process uploaded repository ZIP", e);
+        } finally {
+            if (tempZipFile != null && tempZipFile.exists()) {
+                tempZipFile.delete();
+            }
+        }
+
+        return repositoryMapper.toResponse(saved);
+    }
+
+    private void extractZip(java.io.File zipFile, java.io.File destDir) throws IOException {
+        byte[] buffer = new byte[4096];
+        try (java.util.zip.ZipInputStream zis = new java.util.zip.ZipInputStream(new java.io.FileInputStream(zipFile))) {
+            java.util.zip.ZipEntry zipEntry = zis.getNextEntry();
+            while (zipEntry != null) {
+                // Ensure target file is within destination folder (guard against zip slip vulnerability)
+                java.io.File newFile = newFile(destDir, zipEntry);
+                if (zipEntry.isDirectory()) {
+                    if (!newFile.isDirectory() && !newFile.mkdirs()) {
+                        throw new IOException("Failed to create directory " + newFile);
+                    }
+                } else {
+                    // Fix for Windows: create parent directory if not exist
+                    java.io.File parent = newFile.getParentFile();
+                    if (!parent.isDirectory() && !parent.mkdirs()) {
+                        throw new IOException("Failed to create directory " + parent);
+                    }
+                    
+                    // Write file content
+                    try (java.io.FileOutputStream fos = new java.io.FileOutputStream(newFile)) {
+                        int len;
+                        while ((len = zis.read(buffer)) > 0) {
+                            fos.write(buffer, 0, len);
+                        }
+                    }
+                }
+                zipEntry = zis.getNextEntry();
+            }
+            zis.closeEntry();
+        }
+    }
+
+    private java.io.File newFile(java.io.File destinationDir, java.util.zip.ZipEntry zipEntry) throws IOException {
+        java.io.File destFile = new java.io.File(destinationDir, zipEntry.getName());
+
+        String destDirPath = destinationDir.getCanonicalPath();
+        String destFilePath = destFile.getCanonicalPath();
+
+        if (!destFilePath.startsWith(destDirPath + java.io.File.separator) && !destFilePath.equals(destDirPath)) {
+            throw new IOException("Entry is outside of the target dir: " + zipEntry.getName());
+        }
+
+        return destFile;
+    }
+
+    private void deleteDirectory(java.io.File directory) {
+        java.io.File[] allContents = directory.listFiles();
+        if (allContents != null) {
+            for (java.io.File file : allContents) {
+                deleteDirectory(file);
+            }
+        }
+        directory.delete();
     }
 }

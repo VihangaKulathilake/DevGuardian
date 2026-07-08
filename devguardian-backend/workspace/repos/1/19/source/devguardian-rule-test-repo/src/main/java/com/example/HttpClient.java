@@ -1,0 +1,1 @@
+package com.example; class HttpClient{String url="http://example.com/api";}

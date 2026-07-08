@@ -42,6 +42,15 @@ export const repositoryApi = {
     return response.data;
   },
 
+  async uploadRepository(formData: FormData): Promise<RepositoryResponse> {
+    const response = await api.post<RepositoryResponse>("/api/repositories/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  },
+
   async disconnectGithub(): Promise<void> {
     await api.delete("/api/github/disconnect");
   },

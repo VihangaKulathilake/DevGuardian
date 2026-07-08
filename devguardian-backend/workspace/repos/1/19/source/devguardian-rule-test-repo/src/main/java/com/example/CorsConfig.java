@@ -1,0 +1,1 @@
+@CrossOrigin(origins="*") class CorsConfig{}

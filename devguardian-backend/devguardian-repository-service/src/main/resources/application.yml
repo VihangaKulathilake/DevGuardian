@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: repository-service
+  servlet:
+    multipart:
+      max-file-size: 150MB
+      max-request-size: 150MB
 
   datasource:
     url: jdbc:postgresql://localhost:5432/devguardian_repository

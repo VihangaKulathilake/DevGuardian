@@ -123,7 +123,7 @@ function RecommendationPageContent() {
         { type: 'deleted', text: `ResultSet resultSet = statement.executeQuery(query);`, originalLineNo: baseLine + 2 },
         { type: 'added', text: `ResultSet resultSet = preparedStatement.executeQuery();`, fixedLineNo: baseLine + 3 }
       ];
-    } else if (title.toLowerCase().includes("secret") || title.toLowerCase().includes("key")) {
+    } else if (title.toLowerCase().includes("secret") || title.toLowerCase().includes("key") || title.toLowerCase().includes("password") || title.toLowerCase().includes("credential")) {
       originalCode = `String secretKey = "stripe_api_key_placeholder_12345"; // Hardcoded credentials`;
       fixedCode = `String secretKey = System.getenv("DEVGUARDIAN_SECRET_KEY"); // Read from env variables`;
       unifiedLines = [

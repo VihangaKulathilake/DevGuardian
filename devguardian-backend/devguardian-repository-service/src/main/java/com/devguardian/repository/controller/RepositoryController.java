@@ -15,6 +15,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
 
 import java.util.List;
 
@@ -131,5 +133,23 @@ public class RepositoryController {
     @PostMapping("/{id}/clone")
     public void cloneRepository(@PathVariable Long id) {
         repositoryService.cloneRepository(id);
+    }
+
+    @Operation(
+            summary = "Upload repository ZIP file",
+            description = "Uploads a zip archive of a repository from the client machine, extracts it, and registers it as a local codebase"
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Repository ZIP uploaded and extracted successfully"
+    )
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public RepositoryResponse uploadRepository(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("name") String name,
+            @RequestParam(value = "branch", required = false, defaultValue = "main") String branch,
+            @RequestParam(value = "language", required = false, defaultValue = "Auto") String language
+    ) {
+        return repositoryService.uploadRepository(file, name, branch, language);
     }
 }

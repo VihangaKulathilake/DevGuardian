@@ -1,0 +1,1 @@
+package com.example; class HardcodedPassword{String password="admin123";}

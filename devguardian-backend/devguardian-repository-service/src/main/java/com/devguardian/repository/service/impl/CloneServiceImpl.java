@@ -54,17 +54,24 @@ public class CloneServiceImpl implements CloneService {
                     targetPath
             );
 
-            Git.cloneRepository()
+            org.eclipse.jgit.api.CloneCommand cloneCommand = Git.cloneRepository()
                     .setURI(repository.getCloneUrl())
-                    .setDirectory(directory)
-                    .setBranch(repository.getBranch())
-                    .setCredentialsProvider(
-                            new UsernamePasswordCredentialsProvider(
-                                    githubConnection.getAccessToken(),
-                                    ""
-                            )
-                    )
-                    .call();
+                    .setDirectory(directory);
+
+            if (repository.getBranch() != null && !repository.getBranch().isBlank()) {
+                cloneCommand.setBranch(repository.getBranch());
+            }
+
+            if (githubConnection != null && githubConnection.getAccessToken() != null && !githubConnection.getAccessToken().isBlank()) {
+                cloneCommand.setCredentialsProvider(
+                        new UsernamePasswordCredentialsProvider(
+                                githubConnection.getAccessToken(),
+                                ""
+                        )
+                );
+            }
+
+            cloneCommand.call();
 
             log.info(
                     "Repository cloned successfully: {}",

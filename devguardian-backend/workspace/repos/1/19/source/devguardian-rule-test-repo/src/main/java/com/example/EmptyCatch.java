@@ -1,0 +1,1 @@
+class EmptyCatch{void f(){try{}catch(Exception e){}}}

@@ -46,6 +46,17 @@ export const addRepository = createAsyncThunk(
   }
 );
 
+export const uploadRepository = createAsyncThunk(
+  "repo/upload",
+  async (formData: FormData, { rejectWithValue }) => {
+    try {
+      return await repositoryApi.uploadRepository(formData);
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "Failed to upload repository archive");
+    }
+  }
+);
+
 export const removeRepository = createAsyncThunk(
   "repo/remove",
   async (id: number, { rejectWithValue }) => {
@@ -154,6 +165,18 @@ export const repositorySlice = createSlice({
         state.repositories.push(action.payload);
       })
       .addCase(addRepository.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(uploadRepository.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(uploadRepository.fulfilled, (state, action) => {
+        state.loading = false;
+        state.repositories.push(action.payload);
+      })
+      .addCase(uploadRepository.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

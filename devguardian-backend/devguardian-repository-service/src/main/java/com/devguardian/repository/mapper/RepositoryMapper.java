@@ -11,6 +11,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.Named;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface RepositoryMapper {
@@ -45,6 +46,7 @@ public interface RepositoryMapper {
     @Mapping(target = "files", ignore = true)
     void updateEntityFromRequest(UpdateRepositoryRequest request, @MappingTarget Repository repository);
 
+    @Named("extractFullName")
     default String extractFullName(String url) {
         if (url == null || url.trim().isEmpty()) {
             return "unknown/repository";
@@ -62,6 +64,7 @@ public interface RepositoryMapper {
         return "unknown/" + normalized.replaceAll("[^a-zA-Z0-9-]", "");
     }
 
+    @Named("generateMockGithubRepoId")
     default Long generateMockGithubRepoId(String url) {
         if (url == null) {
             return 0L;

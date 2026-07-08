@@ -101,12 +101,29 @@ public class GlobalExceptionHandler {
             Exception ex,
             HttpServletRequest request
     ) {
+        ex.printStackTrace();
+        try {
+            java.io.StringWriter sw = new java.io.StringWriter();
+            java.io.PrintWriter pw = new java.io.PrintWriter(sw);
+            ex.printStackTrace(pw);
+            java.nio.file.Files.writeString(
+                java.nio.file.Paths.get("d:/DevGuardian/devguardian-backend/exception.log"),
+                "Request URI: " + request.getRequestURI() + "\n" + sw.toString()
+            );
+        } catch (Exception e) {
+            // ignore
+        }
+
+        String msg = ex.getMessage();
+        if (msg == null || msg.trim().isEmpty()) {
+            msg = ex.getClass().getName();
+        }
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(buildError(
                         HttpStatus.INTERNAL_SERVER_ERROR,
                         ErrorCode.INTERNAL_SERVER_ERROR,
-                        "An unexpected error occurred",
+                        "Unexpected error: " + msg,
                         request
                 ));
     }

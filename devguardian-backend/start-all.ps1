@@ -12,7 +12,7 @@ $env:SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED="false"
 
 # 2. Start Eureka Server (Required First)
 Write-Host "Starting Eureka Server on port 8761..." -ForegroundColor Green
-Start-Process powershell -ArgumentList "-NoExit", "-Command", ".\mvnw spring-boot:run -pl :devguardian-eureka-server"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", ".\mvnw.cmd spring-boot:run -pl :devguardian-eureka-server"
 
 # Wait for Eureka to initialize
 Write-Host "Waiting 8 seconds for Eureka to start..." -ForegroundColor Yellow
@@ -20,22 +20,22 @@ Start-Sleep -Seconds 8
 
 # 3. Start API Gateway
 Write-Host "Starting API Gateway on port 8080..." -ForegroundColor Green
-Start-Process powershell -ArgumentList "-NoExit", "-Command", ".\mvnw spring-boot:run -pl :devguardian-gateway"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", ".\mvnw.cmd spring-boot:run -pl :devguardian-gateway"
 
 # 4. Start Core Microservices
 Write-Host "Starting Auth Service on port 8081..." -ForegroundColor Green
-Start-Process powershell -ArgumentList "-NoExit", "-Command", ".\mvnw spring-boot:run -pl :devguardian-auth-service"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", ".\mvnw.cmd spring-boot:run -pl :devguardian-auth-service"
 
 Write-Host "Starting Repository Service on port 8082..." -ForegroundColor Green
-Start-Process powershell -ArgumentList "-NoExit", "-Command", ".\mvnw spring-boot:run -pl :devguardian-repository-service"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", ".\mvnw.cmd spring-boot:run -pl :devguardian-repository-service"
 
 Write-Host "Starting Analysis Service on port 8083..." -ForegroundColor Green
-Start-Process powershell -ArgumentList "-NoExit", "-Command", ".\mvnw spring-boot:run -pl :devguardian-analysis-service"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", ".\mvnw.cmd spring-boot:run -pl :devguardian-analysis-service"
 
 Write-Host "Starting AI Service on port 8084..." -ForegroundColor Green
-Start-Process powershell -ArgumentList "-NoExit", "-Command", ".\mvnw spring-boot:run -pl :devguardian-ai-service"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", ".\mvnw.cmd spring-boot:run -pl :devguardian-ai-service"
 
 Write-Host "Starting Notification Service on port 8085..." -ForegroundColor Green
-Start-Process powershell -ArgumentList "-NoExit", "-Command", ".\mvnw spring-boot:run -pl :devguardian-notification-service"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", ".\mvnw.cmd spring-boot:run -pl :devguardian-notification-service"
 
 Write-Host "All processes spawned successfully! Spawned windows contain service console logs." -ForegroundColor Cyan

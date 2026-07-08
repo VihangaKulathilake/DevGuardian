@@ -7,6 +7,8 @@ import com.devguardian.repository.dto.RepositoryResponse;
 import com.devguardian.repository.dto.UpdateRepositoryRequest;
 import com.devguardian.repository.entity.Repository;
 
+import org.springframework.web.multipart.MultipartFile;
+
 public interface RepositoryService {
     RepositoryResponse createRepository(CreateRepositoryRequest request);
 
@@ -19,5 +21,6 @@ public interface RepositoryService {
     void deleteRepository(Long id);
     RepositoryResponse importRepository(ImportRepositoryRequest request);
     void cloneRepository(Long id);
+    RepositoryResponse uploadRepository(MultipartFile file, String name, String branch, String language);
 }
 

@@ -1,0 +1,1 @@
+package com.example; class AwsCredentials{String AWS_ACCESS_KEY_ID="AKIAIOSFODNN7EXAMPLE"; String AWS_SECRET_ACCESS_KEY="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY";}

@@ -4,6 +4,7 @@ public enum RepositoryProvider {
     GITHUB,
     GITLAB,
     BITBUCKET,
+    LOCAL,
     OTHER
 }
 

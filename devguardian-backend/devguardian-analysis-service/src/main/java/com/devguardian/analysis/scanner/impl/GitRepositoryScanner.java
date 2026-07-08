@@ -5,6 +5,7 @@ import com.devguardian.analysis.rules.context.ScanContext;
 import com.devguardian.analysis.scanner.interfaces.RepositoryScanner;
 import com.devguardian.repository.config.WorkspaceProperties;
 import com.devguardian.repository.dto.RepositoryResponse;
+import com.devguardian.repository.enums.RepositoryProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -32,7 +33,9 @@ public class GitRepositoryScanner implements RepositoryScanner {
         Map<String, String> files = new HashMap<>();
         Map<String, Long> fileSizes = new HashMap<>();
 
-        String repositoryPath = buildRepositoryPath(repository);
+        String repositoryPath = repository.getProvider() == RepositoryProvider.LOCAL
+                ? repository.getUrl()
+                : buildRepositoryPath(repository);
 
         Path rootDirectory = Path.of(repositoryPath);
 
@@ -67,7 +70,7 @@ public class GitRepositoryScanner implements RepositoryScanner {
                             }
 
                             String relativePath =
-                                    rootDirectory.relativize(path).toString();
+                                    rootDirectory.relativize(path).toString().replace('\\', '/');
 
                             String content =
                                     Files.readString(path, StandardCharsets.UTF_8);

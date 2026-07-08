@@ -1,0 +1,1 @@
+package com.example; import java.sql.*; class SqlInjection{void f(Connection c,String u)throws Exception{c.createStatement().executeQuery("SELECT * FROM users WHERE name='"+u+"'");}}

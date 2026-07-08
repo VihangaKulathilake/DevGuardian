@@ -3,21 +3,31 @@ package com.devguardian.auth.mapper;
 import com.devguardian.auth.dto.AuthResponse;
 import com.devguardian.auth.dto.RegisterRequest;
 import com.devguardian.auth.entity.User;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingConstants;
+import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
-public interface AuthMapper {
+@Component
+public class AuthMapper {
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "role", ignore = true)
-    @Mapping(target = "provider", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "authTokens", ignore = true)
-    User toEntity(RegisterRequest request);
+    public User toEntity(RegisterRequest request) {
+        if (request == null) {
+            return null;
+        }
+        return User.builder()
+                .name(request.getName())
+                .email(request.getEmail())
+                .password(request.getPassword())
+                .build();
+    }
 
-    @Mapping(target = "token", ignore = true)
-    @Mapping(target = "userId", source = "id")
-    AuthResponse toResponse(User user);
+    public AuthResponse toResponse(User user) {
+        if (user == null) {
+            return null;
+        }
+        return AuthResponse.builder()
+                .userId(user.getId())
+                .role(user.getRole())
+                .email(user.getEmail())
+                .name(user.getName())
+                .build();
+    }
 }

@@ -1,0 +1,1 @@
+package com.example; class HardcodedSecret{String secret="super-secret-token";}

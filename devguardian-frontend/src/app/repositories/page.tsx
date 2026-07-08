@@ -8,7 +8,7 @@ import RepositoryList from "@/components/dashboard/RepositoryList";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
-import { Plus, GitBranch, Sparkles, GitFork, Search, Link2, LogOut } from "lucide-react";
+import { Plus, GitBranch, Sparkles, GitFork, Search, Link2, LogOut, FolderOpen, Upload } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
 import {
   addRepository,
@@ -16,6 +16,7 @@ import {
   connectGithubAccount,
   importGithubRepository,
   disconnectGithubAccount,
+  uploadRepository,
 } from "@/features/repository/repositorySlice";
 
 export default function RepositoriesPage() {
@@ -28,13 +29,48 @@ export default function RepositoriesPage() {
   } = useAppSelector((state) => state.repo);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"github" | "custom">("github");
+  const [activeTab, setActiveTab] = useState<"github" | "url" | "upload">("github");
   const [importingRepoId, setImportingRepoId] = useState<number | null>(null);
 
-  // Custom URL Form State
+  // Remote Git URL Form State
   const [repoUrl, setRepoUrl] = useState("");
   const [customName, setCustomName] = useState("");
+  const [urlBranch, setUrlBranch] = useState("main");
+  const [urlLanguage, setUrlLanguage] = useState("Auto");
+  
+  // ZIP Upload Form State
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadName, setUploadName] = useState("");
+  const [uploadBranch, setUploadBranch] = useState("main");
+  const [uploadLanguage, setUploadLanguage] = useState("Auto");
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleUploadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!uploadFile) return;
+    setIsSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", uploadFile);
+      formData.append("name", uploadName.trim() || uploadFile.name.replace(".zip", ""));
+      formData.append("branch", uploadBranch.trim() || "main");
+      formData.append("language", uploadLanguage.trim() || "Auto");
+
+      const resultAction = await dispatch(uploadRepository(formData));
+      if (uploadRepository.fulfilled.match(resultAction)) {
+        setIsAddModalOpen(false);
+        setUploadFile(null);
+        setUploadName("");
+        setUploadBranch("main");
+        setUploadLanguage("Auto");
+      }
+    } catch (err) {
+      console.error("Failed to upload ZIP archive:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // GitHub import search state
   const [githubSearchQuery, setGithubSearchQuery] = useState("");
@@ -51,21 +87,23 @@ export default function RepositoriesPage() {
     }
   }, [isAddModalOpen, dispatch]);
 
-  const handleAddRepoSubmit = async (e: React.FormEvent) => {
+
+
+  const handleUrlSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
       const urlParts = repoUrl.trim().split("/");
-      const extractedName = customName.trim() || urlParts[urlParts.length - 1]?.replace(".git", "") || "repo";
+      const extractedName = customName.trim() || urlParts[urlParts.length - 1]?.replace(".git", "") || "url-repo";
 
       const resultAction = await dispatch(
         addRepository({
           name: extractedName,
-          url: repoUrl,
+          url: repoUrl.trim(),
           provider: "OTHER",
           visibility: "PRIVATE",
-          branch: "main",
-          language: "TypeScript",
+          branch: urlBranch.trim() || "main",
+          language: urlLanguage.trim() || "Auto",
           type: "BACKEND",
           scanFrequency: "DAILY",
         })
@@ -75,9 +113,11 @@ export default function RepositoriesPage() {
         setIsAddModalOpen(false);
         setRepoUrl("");
         setCustomName("");
+        setUrlBranch("main");
+        setUrlLanguage("Auto");
       }
     } catch (err) {
-      console.error("Failed to add repository:", err);
+      console.error("Failed to add remote repository:", err);
     } finally {
       setIsSubmitting(false);
     }
@@ -188,7 +228,7 @@ export default function RepositoriesPage() {
               <Button
                 onClick={() => {
                   setIsAddModalOpen(true);
-                  setActiveTab(isGithubConnected ? "github" : "custom");
+                  setActiveTab(isGithubConnected ? "github" : "local");
                 }}
                 variant="primary"
                 className="shadow-[0_0_15px_rgba(0,240,255,0.45)] flex items-center justify-center gap-1.5 py-2.5"
@@ -217,28 +257,40 @@ export default function RepositoriesPage() {
             size="lg"
           >
             {/* Modal Tabs */}
-            <div className="flex border-b border-zinc-800 mb-6 bg-black/35 select-none font-mono">
+            <div className="flex border-b border-zinc-800 mb-6 bg-black/35 select-none font-mono overflow-x-auto scrollbar-none">
               <button
                 type="button"
                 onClick={() => setActiveTab("github")}
-                className={`flex items-center gap-2 px-5 py-3 text-[10px] font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${activeTab === "github"
+                className={`flex items-center gap-2 px-5 py-3 text-[10px] font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer shrink-0 ${activeTab === "github"
                   ? "border-cyber-cyan text-cyber-cyan text-shadow-cyan"
                   : "border-transparent text-zinc-500 hover:text-zinc-300"
                   }`}
               >
                 <GitFork className="h-4 w-4 shrink-0" />
-                IMPORT GITHUB PROJECTS
+                GITHUB INTEGRATION
               </button>
+
               <button
                 type="button"
-                onClick={() => setActiveTab("custom")}
-                className={`flex items-center gap-2 px-5 py-3 text-[10px] font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${activeTab === "custom"
+                onClick={() => setActiveTab("url")}
+                className={`flex items-center gap-2 px-5 py-3 text-[10px] font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer shrink-0 ${activeTab === "url"
                   ? "border-cyber-cyan text-cyber-cyan text-shadow-cyan"
                   : "border-transparent text-zinc-500 hover:text-zinc-300"
                   }`}
               >
                 <Link2 className="h-4 w-4 shrink-0" />
-                CUSTOM REPO DIRECTORY
+                REMOTE GIT URL
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("upload")}
+                className={`flex items-center gap-2 px-5 py-3 text-[10px] font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer shrink-0 ${activeTab === "upload"
+                  ? "border-cyber-cyan text-cyber-cyan text-shadow-cyan"
+                  : "border-transparent text-zinc-500 hover:text-zinc-300"
+                  }`}
+              >
+                <Upload className="h-4 w-4 shrink-0" />
+                UPLOAD ZIP ARCHIVE
               </button>
             </div>
 
@@ -330,24 +382,26 @@ export default function RepositoriesPage() {
               </div>
             )}
 
-            {/* TAB CONTENT: Custom Git URL */}
-            {activeTab === "custom" && (
-              <form onSubmit={handleAddRepoSubmit} className="flex flex-col gap-6 text-left">
+
+
+            {/* TAB CONTENT: Remote Git URL */}
+            {activeTab === "url" && (
+              <form onSubmit={handleUrlSubmit} className="flex flex-col gap-6 text-left">
                 <p className="text-xs text-zinc-400 leading-relaxed font-sans font-medium">
-                  Enter remote Git endpoint urls directly (e.g. self-hosted Bitbucket/GitLab instances) to build static codebase audit logs manually.
+                  Enter remote Git endpoint URLs directly (e.g. public or credentialed GitHub, GitLab, or Bitbucket clone URLs) to clone and audit them.
                 </p>
 
                 <div className="grid gap-4 sm:grid-cols-2 mt-2">
                   <Input
                     label="DISPLAY MODULE IDENTIFIER"
-                    placeholder="e.g. core-security-api"
+                    placeholder="e.g. remote-auth-microservice"
                     value={customName}
                     onChange={(e) => setCustomName(e.target.value)}
                     className="bg-[#0b0b14]/90 border-zinc-800 focus:border-cyber-cyan text-zinc-200"
                   />
                   <Input
-                    label="REMOTE GIT REPO DIRECTORY (.git URL)"
-                    placeholder="https://gitlab.company.com/owner/repo.git"
+                    label="REMOTE GIT REPO URL (.git URL)"
+                    placeholder="https://github.com/owner/repo.git"
                     value={repoUrl}
                     onChange={(e) => setRepoUrl(e.target.value)}
                     required
@@ -355,12 +409,29 @@ export default function RepositoriesPage() {
                   />
                 </div>
 
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Input
+                    label="TARGET CODEBASE BRANCH"
+                    placeholder="e.g. main"
+                    value={urlBranch}
+                    onChange={(e) => setUrlBranch(e.target.value)}
+                    className="bg-[#0b0b14]/90 border-zinc-800 focus:border-cyber-cyan text-zinc-200"
+                  />
+                  <Input
+                    label="PRIMARY PROGRAMMING LANGUAGE"
+                    placeholder="e.g. Java, TypeScript, Python"
+                    value={urlLanguage}
+                    onChange={(e) => setUrlLanguage(e.target.value)}
+                    className="bg-[#0b0b14]/90 border-zinc-800 focus:border-cyber-cyan text-zinc-200"
+                  />
+                </div>
+
                 <div className="p-4 bg-[#0b0a14] border border-cyber-purple/20 flex items-start gap-3">
                   <Sparkles className="h-4.5 w-4.5 text-cyber-purple shrink-0 mt-0.5 animate-pulse" />
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-orbitron font-bold text-white uppercase tracking-wider">MANUAL ANALYSIS PROFILES</span>
+                    <span className="text-xs font-orbitron font-bold text-white uppercase tracking-wider">SECURE CLONE PROTOCOL</span>
                     <p className="text-[10px] text-zinc-500 font-mono leading-relaxed">
-                      Custom repositories must be scheduled periodically or analyzed using CLI scripts and API credentials.
+                      For public repositories, no credentials are required. For private repositories, make sure they are accessible or the token is embedded in the clone URL.
                     </p>
                   </div>
                 </div>
@@ -377,6 +448,87 @@ export default function RepositoriesPage() {
                   </Button>
                   <Button type="submit" size="sm" variant="primary" loading={isSubmitting} className="font-mono">
                     LINK & INITIALIZE AUDIT
+                  </Button>
+                </div>
+              </form>
+            )}
+
+            {/* TAB CONTENT: ZIP File Upload */}
+            {activeTab === "upload" && (
+              <form onSubmit={handleUploadSubmit} className="flex flex-col gap-6 text-left">
+                <p className="text-xs text-zinc-400 leading-relaxed font-sans font-medium">
+                  Upload a repository package directly from your local PC. Select a codebase ZIP archive to upload, extract, and start auditing.
+                </p>
+
+                <div className="grid gap-4 sm:grid-cols-2 mt-2">
+                  <Input
+                    label="DISPLAY MODULE IDENTIFIER"
+                    placeholder="e.g. uploaded-auth-service"
+                    value={uploadName}
+                    onChange={(e) => setUploadName(e.target.value)}
+                    className="bg-[#0b0b14]/90 border-zinc-800 focus:border-cyber-cyan text-zinc-200"
+                  />
+                  
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-orbitron font-bold text-zinc-400 tracking-wider uppercase">
+                      SELECT ZIP CODEBASE ARCHIVE *
+                    </label>
+                    <input
+                      type="file"
+                      accept=".zip"
+                      required
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          setUploadFile(e.target.files[0]);
+                          if (!uploadName) {
+                            setUploadName(e.target.files[0].name.replace(".zip", ""));
+                          }
+                        }
+                      }}
+                      className="bg-[#0b0b14]/90 border border-zinc-800 focus:border-cyber-cyan text-zinc-200 text-xs p-2 file:mr-4 file:py-1 file:px-3 file:border file:border-cyber-purple/40 file:bg-cyber-purple/10 file:text-white file:text-xs file:font-mono hover:file:bg-cyber-purple/20 transition-all font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Input
+                    label="TARGET CODEBASE BRANCH"
+                    placeholder="e.g. main"
+                    value={uploadBranch}
+                    onChange={(e) => setUploadBranch(e.target.value)}
+                    className="bg-[#0b0b14]/90 border-zinc-800 focus:border-cyber-cyan text-zinc-200"
+                  />
+                  <Input
+                    label="PRIMARY PROGRAMMING LANGUAGE"
+                    placeholder="e.g. Java, TypeScript, Python"
+                    value={uploadLanguage}
+                    onChange={(e) => setUploadLanguage(e.target.value)}
+                    className="bg-[#0b0b14]/90 border-zinc-800 focus:border-cyber-cyan text-zinc-200"
+                  />
+                </div>
+
+                <div className="p-4 bg-[#0b0a14] border border-cyber-purple/20 flex items-start gap-3">
+                  <Sparkles className="h-4.5 w-4.5 text-cyber-purple shrink-0 mt-0.5 animate-pulse" />
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-xs font-orbitron font-bold text-white uppercase tracking-wider">DIRECT FILE SYSTEM ENCLAVE</span>
+                    <p className="text-[10px] text-zinc-500 font-mono leading-relaxed">
+                      Your uploaded repository package is extracted into an encrypted and sandboxed volume workspace on the server, requiring no credentials or external internet configuration.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-zinc-800">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setIsAddModalOpen(false)}
+                    className="border-zinc-800 font-mono"
+                  >
+                    CANCEL
+                  </Button>
+                  <Button type="submit" size="sm" variant="primary" loading={isSubmitting} className="font-mono">
+                    UPLOAD & EXTRACT CODEBASE
                   </Button>
                 </div>
               </form>
