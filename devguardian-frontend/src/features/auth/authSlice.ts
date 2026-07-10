@@ -49,11 +49,32 @@ export const authSlice = createSlice({
         const userStr = localStorage.getItem("user");
         if (token && userStr) {
           try {
+            // Check if token is expired
+            const arrayToken = token.split('.');
+            if (arrayToken.length === 3) {
+              const tokenPayload = JSON.parse(atob(arrayToken[1]));
+              if (tokenPayload.exp && tokenPayload.exp * 1000 < Date.now()) {
+                authApi.logout();
+                state.user = null;
+                state.token = null;
+                state.isAuthenticated = false;
+                return;
+              }
+            } else {
+              authApi.logout();
+              state.user = null;
+              state.token = null;
+              state.isAuthenticated = false;
+              return;
+            }
             state.token = token;
             state.user = JSON.parse(userStr);
             state.isAuthenticated = true;
           } catch {
             authApi.logout();
+            state.user = null;
+            state.token = null;
+            state.isAuthenticated = false;
           }
         }
       }

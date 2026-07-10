@@ -14,12 +14,35 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+    
+    // Check if token is valid and not expired
+    let isTokenValid = false;
+    if (token) {
+      try {
+        const arrayToken = token.split('.');
+        if (arrayToken.length === 3) {
+          const tokenPayload = JSON.parse(atob(arrayToken[1]));
+          if (tokenPayload.exp && tokenPayload.exp * 1000 > Date.now()) {
+            isTokenValid = true;
+          }
+        }
+      } catch (e) {
+        // invalid token
+      }
+
+      if (!isTokenValid) {
+        // Clear invalid/expired token
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
+    }
+
     const isAuthRoute = pathname === "/" || pathname === "/login" || pathname === "/register";
 
-    if (!token && !isAuthRoute) {
+    if (!isTokenValid && !isAuthRoute) {
       // User is not logged in and trying to access a protected page
       router.replace("/login");
-    } else if (token && isAuthRoute && pathname !== "/") {
+    } else if (isTokenValid && isAuthRoute && pathname !== "/") {
       // User is logged in and trying to access login/register page
       router.replace("/dashboard");
     } else {

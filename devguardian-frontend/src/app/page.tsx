@@ -20,8 +20,10 @@ import {
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
+import { useAppSelector } from "@/hooks/useRedux";
 
 export default function LandingPage() {
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
   // Live Simulator States
   const [scanState, setScanState] = useState<"IDLE" | "CLONING" | "AUDITING" | "COMPILING" | "REMEDIATED">("IDLE");
   const [currentProgress, setCurrentProgress] = useState(0);
@@ -127,14 +129,24 @@ export default function LandingPage() {
           <a href="/dashboard" className="hover:text-cyber-cyan hover:shadow-neon-cyan transition-all">DASHBOARD</a>
         </nav>
         <div className="flex items-center gap-4">
-          <Link href="/login" className="font-orbitron text-xs font-bold text-muted-foreground hover:text-white transition-colors">
-            SIGN IN
-          </Link>
-          <Link href="/register">
-            <Button variant="primary" size="sm" className="shadow-lg shadow-cyber-cyan/20">
-              LAUNCH CONSOLE
-            </Button>
-          </Link>
+          {isAuthenticated ? (
+            <Link href="/dashboard">
+              <Button variant="primary" size="sm" className="shadow-lg shadow-cyber-cyan/20">
+                ENTER DASHBOARD
+              </Button>
+            </Link>
+          ) : (
+            <>
+              <Link href="/login" className="font-orbitron text-xs font-bold text-muted-foreground hover:text-white transition-colors">
+                SIGN IN
+              </Link>
+              <Link href="/register">
+                <Button variant="primary" size="sm" className="shadow-lg shadow-cyber-cyan/20">
+                  LAUNCH CONSOLE
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
       </header>
 
@@ -159,17 +171,28 @@ export default function LandingPage() {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 mb-20 w-full sm:w-auto">
-          <Link href="/register" className="w-full sm:w-auto">
-            <Button size="lg" variant="cyber" className="w-full group">
-              START FREE TRIAL
-              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Button>
-          </Link>
-          <Link href="/dashboard" className="w-full sm:w-auto">
-            <Button variant="secondary" size="lg" className="w-full">
-              ENTER SYSTEM DEMO
-            </Button>
-          </Link>
+          {isAuthenticated ? (
+            <Link href="/dashboard" className="w-full sm:w-auto">
+              <Button size="lg" variant="cyber" className="w-full group">
+                ENTER SECURITY CONSOLE
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Button>
+            </Link>
+          ) : (
+            <>
+              <Link href="/register" className="w-full sm:w-auto">
+                <Button size="lg" variant="cyber" className="w-full group">
+                  START FREE TRIAL
+                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </Button>
+              </Link>
+              <Link href="/dashboard" className="w-full sm:w-auto">
+                <Button variant="secondary" size="lg" className="w-full">
+                  ENTER SYSTEM DEMO
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* INTERACTIVE DEMO CONSOLE */}
