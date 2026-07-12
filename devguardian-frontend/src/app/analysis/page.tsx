@@ -194,7 +194,7 @@ const RemediationDiffModal: React.FC<DiffModalProps> = ({
     let match;
 
     const keywords = new Set([
-      "class", "public", "private", "protected", "return", "new", "throw", "try", 
+      "class", "public", "private", "protected", "return", "new", "throw", "try",
       "catch", "final", "void", "static", "if", "else", "true", "false"
     ]);
     const typeKeywords = new Set([
@@ -241,8 +241,8 @@ const RemediationDiffModal: React.FC<DiffModalProps> = ({
         <div className="absolute inset-0 cyber-grid-dot opacity-25 pointer-events-none" />
         <div className="tech-corner-accent scale-75 origin-top-left" />
 
-        <button 
-          onClick={onClose} 
+        <button
+          onClick={onClose}
           className="absolute top-4 right-4 h-9 w-9 border border-border/80 hover:border-cyber-cyan/35 bg-[#12121a]/60 hover:bg-secondary/40 text-muted-foreground hover:text-cyber-cyan flex items-center justify-center transition-all duration-200 cyber-btn-clip cursor-pointer z-20"
         >
           <X className="h-4.5 w-4.5" />
@@ -258,7 +258,7 @@ const RemediationDiffModal: React.FC<DiffModalProps> = ({
               <span className="text-[10px] text-muted-foreground uppercase font-mono tracking-wider">{category}</span>
             </div>
             <h2 className="text-lg font-black uppercase tracking-wider text-white font-orbitron mt-1.5">{title}</h2>
-            
+
             <div className="flex items-center gap-2 text-[10px] font-mono text-cyber-cyan bg-[#090e18] border border-cyber-cyan/20 px-3 py-1.5 mt-2 inline-flex">
               <span className="text-zinc-500">FILE DIRECTORY:</span>
               <span className="text-white">{filePath}:{lineNo}</span>
@@ -276,7 +276,7 @@ const RemediationDiffModal: React.FC<DiffModalProps> = ({
           <div className="space-y-3">
             <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground font-orbitron">Proposed Secure Diff Patch</h4>
             <div className="flex flex-col gap-4">
-              
+
               {/* Vulnerable Code block */}
               <div className="flex flex-col border border-cyber-pink/25 bg-[#240a12]/10 rounded-none font-mono text-[11px] leading-relaxed">
                 <div className="bg-[#240a12]/20 border-b border-cyber-pink/20 px-3 py-2 text-cyber-pink font-bold text-[8px] uppercase tracking-widest flex items-center justify-between font-orbitron select-none">
@@ -335,15 +335,15 @@ const RemediationDiffModal: React.FC<DiffModalProps> = ({
         </div>
 
         <div className="p-6 border-t border-border/80 bg-[#07070b]/90 flex gap-4 shrink-0 justify-end relative z-10 select-none">
-          <Button 
-            onClick={onClose} 
+          <Button
+            onClick={onClose}
             variant="secondary"
             size="sm"
             className="font-mono text-[10px]"
           >
             Close Panel
           </Button>
-          <Button 
+          <Button
             variant="primary"
             size="sm"
             className="flex items-center gap-1.5 shadow-[0_0_12px_rgba(0,240,255,0.3)] animate-pulse font-mono text-[10px]"
@@ -407,7 +407,7 @@ function AnalysisPageContent() {
     if (activeAnalysisId) {
       dispatch(fetchAnalysisIssues(activeAnalysisId));
     }
-  }, [activeAnalysisId, dispatch]);
+  }, [activeAnalysisId, activeAnalysis?.status, dispatch]);
 
   // Poll for analysis status updates if the current active analysis is in a "RUNNING" state
   useEffect(() => {
@@ -446,8 +446,8 @@ function AnalysisPageContent() {
 
   // Filter issues based on criteria
   const filteredIssues = issues.filter(issue => {
-    const matchesSearch = issue.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          issue.filePath.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = issue.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      issue.filePath.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = categoryFilter === "all" || issue.category.toLowerCase() === categoryFilter.toLowerCase();
     const matchesSeverity = severityFilter === "all" || issue.severity.toLowerCase() === severityFilter.toLowerCase();
     return matchesSearch && matchesCategory && matchesSeverity;
@@ -459,7 +459,7 @@ function AnalysisPageContent() {
       <div className="flex flex-1">
         <Sidebar currentPath="/analysis" />
         <main className="flex-1 p-6 md:p-8 overflow-y-auto w-full max-w-[1600px] mx-auto space-y-8">
-          
+
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-cyber-cyan/15 pb-6">
             <div className="text-left flex-1">
@@ -467,7 +467,7 @@ function AnalysisPageContent() {
                 <h1 className="text-2xl sm:text-3xl font-orbitron font-extrabold text-white uppercase tracking-wider leading-none">
                   SECURITY ANALYSIS ENGINE
                 </h1>
-                
+
                 {/* Repository Dropdown Selector */}
                 {repositories && repositories.length > 0 && (
                   <div className="relative inline-block text-left select-none font-mono">
@@ -490,7 +490,7 @@ function AnalysisPageContent() {
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-cyber-cyan">
                       <svg className="fill-current h-4.5 w-4.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
                       </svg>
                     </div>
                   </div>
@@ -554,22 +554,22 @@ function AnalysisPageContent() {
                   <Card className="border-cyber-cyan/35 bg-[#090e18]/85 p-6 relative overflow-hidden">
                     {/* Glowing corner decals */}
                     <div className="absolute top-0 right-0 w-64 h-64 bg-cyber-cyan/5 rounded-full blur-3xl pointer-events-none" />
-                    
+
                     <div className="flex items-start gap-4.5 text-left relative z-10">
                       <div className="h-11 w-11 border border-cyber-cyan bg-cyber-cyan/10 text-cyber-cyan flex items-center justify-center shrink-0 shadow-[0_0_12px_#00f0ff25]">
                         <Sparkles className="h-5.5 w-5.5 animate-pulse" />
                       </div>
-                      
+
                       <div className="flex-1 space-y-3">
                         <h3 className="text-xs font-orbitron font-extrabold text-white uppercase tracking-wider">
                           DevGuardian Automated Security Report
                         </h3>
-                        
+
                         <div className="text-xs text-zinc-300 leading-relaxed space-y-3 font-sans">
                           <p className="font-medium">
                             DevGuardian static scanner analyzed <strong className="text-white font-mono uppercase">{currentRepository?.name || "codebase"}</strong>. The audit is complete.
                           </p>
-                          
+
                           <ul className="space-y-1.5 text-zinc-400 font-medium">
                             <li className="flex items-center gap-2">
                               <span className="h-1.5 w-1.5 bg-cyber-cyan rounded-none shrink-0" />
@@ -584,11 +584,11 @@ function AnalysisPageContent() {
                               Status: Automated AI diff remediation patches are compiled and ready to deploy.
                             </li>
                           </ul>
-                          
+
                           <div className="pt-2 flex items-center gap-2 select-none">
-                            <Button 
-                              variant="secondary" 
-                              size="sm" 
+                            <Button
+                              variant="secondary"
+                              size="sm"
                               className="h-9 gap-1.5 border-zinc-800/80 hover:border-cyber-cyan text-zinc-300 hover:text-cyber-cyan font-mono text-[10px]"
                             >
                               <GitPullRequest className="h-4 w-4 shrink-0" />
@@ -607,7 +607,7 @@ function AnalysisPageContent() {
                 <section className="flex flex-col gap-6">
                   {/* Filter controls */}
                   <div className="flex flex-col lg:flex-row gap-5 items-center justify-between border-b border-zinc-800 pb-5">
-                    
+
                     {/* Search bar */}
                     <div className="relative w-full lg:w-80">
                       <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-zinc-500" />
