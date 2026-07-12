@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Workspaces and Logs ###
+workspace/
+**/workspace/
+*.log
+
+### Security Rules ver 2 ###
+devguardian-security-rules-v2/
