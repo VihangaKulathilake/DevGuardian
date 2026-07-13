@@ -82,7 +82,39 @@ Set the following environment variables on your system or inside your shell conf
 
 ---
 
-## 🚀 Running the Project
+## 🐳 Running with Docker (Quickest & Easiest)
+
+We have provided a fully containerized environment that configures the microservices, frontend, database, and message broker automatically.
+
+### Prerequisites
+*   Docker and Docker Compose installed.
+
+### Step 1: Spin Up the Entire Stack
+Navigate to the root directory (`d:/DevGuardian`) and run:
+```bash
+docker compose up -d --build
+```
+This single command will:
+1. Initialize the PostgreSQL database container and automatically spin up the 4 required databases.
+2. Spin up the RabbitMQ broker container.
+3. Build and package all 7 backend Spring Boot services in multi-stage Java 21 containers.
+4. Build and start the Next.js frontend container on port `3000`.
+
+### Step 2: Verify Status
+*   **Web Console Dashboard**: Open [http://localhost:3000](http://localhost:3000)
+*   **Eureka Discovery Dashboard**: Open [http://localhost:8761](http://localhost:8761) to see all services registered.
+*   **RabbitMQ Management Console**: Open [http://localhost:15672](http://localhost:15672) (User/Pass: `guest` / `guest`).
+
+To shut down the environment, run:
+```bash
+docker compose down -v
+```
+
+---
+
+## 🛠️ Local Development (Manual Setup)
+
+If you are modifying code locally and prefer running services outside of Docker, follow these steps:
 
 ### Prerequisites
 *   Java Development Kit (JDK) 21
@@ -107,7 +139,7 @@ cd devguardian-backend
 .\start-all.ps1
 ```
 
-*Note: The script automatically starts the Eureka Server first, waits for registration services, and then spins up the Gateway, Core Services, AI, and Notification modules.*
+*Note: The script automatically starts the Eureka Server first, waits for registration services, and then spins up the Gateway, Core Services, AI, and Notification modules. If you need to build the JAR files, use `.\mvnw.cmd clean package -DskipTests`.*
 
 ### Step 3: Run the Frontend Application
 In another terminal, navigate to the frontend directory and start the Next.js development server:
