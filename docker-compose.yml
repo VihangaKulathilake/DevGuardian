@@ -1,0 +1,215 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: devguardian-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - devguardian-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: devguardian-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    networks:
+      - devguardian-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  eureka-server:
+    build:
+      context: ./devguardian-backend
+      dockerfile: devguardian-eureka-server/Dockerfile
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      - EUREKA_INSTANCE_HOSTNAME=eureka-server
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - EUREKA_CLIENT_REGISTER_WITH_EUREKA=false
+      - EUREKA_CLIENT_FETCH_REGISTRY=false
+    networks:
+      - devguardian-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8761/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      # eureka server might take some time to boot, if actuator health is not enabled, we can use simple port check:
+      # test: ["CMD-SHELL", "curl -f http://localhost:8761 || exit 1"]
+
+  gateway:
+    build:
+      context: ./devguardian-backend
+      dockerfile: devguardian-gateway/Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      eureka-server:
+        condition: service_started
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+    networks:
+      - devguardian-network
+
+  auth-service:
+    build:
+      context: ./devguardian-backend
+      dockerfile: devguardian-auth-service/Dockerfile
+    container_name: auth-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/devguardian_auth
+      - POSTGRES_DB_USERNAME=postgres
+      - POSTGRES_DB_PASSWORD=password
+      - JWT_SECRET=yourjwtsecretkeystringmustbe32byteslong!!
+    networks:
+      - devguardian-network
+
+  repository-service:
+    build:
+      context: ./devguardian-backend
+      dockerfile: devguardian-repository-service/Dockerfile
+    container_name: repository-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    volumes:
+      - repos-data:/app/workspace/repos
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/devguardian_repository
+      - POSTGRES_DB_USERNAME=postgres
+      - POSTGRES_DB_PASSWORD=password
+      - DEVGUARDIAN_WORKSPACE_BASE_PATH=/app/workspace/repos
+      - GITHUB_CLIENT_ID=github_id
+      - GITHUB_CLIENT_SECRET=github_secret
+    networks:
+      - devguardian-network
+
+  analysis-service:
+    build:
+      context: ./devguardian-backend
+      dockerfile: devguardian-analysis-service/Dockerfile
+    container_name: analysis-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    volumes:
+      - repos-data:/app/workspace/repos
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/devguardian_analysis
+      - POSTGRES_DB_USERNAME=postgres
+      - POSTGRES_DB_PASSWORD=password
+      - RABBITMQ_HOST=rabbitmq
+      - DEVGUARDIAN_WORKSPACE_BASE_PATH=/app/workspace/repos
+    networks:
+      - devguardian-network
+
+  ai-service:
+    build:
+      context: ./devguardian-backend
+      dockerfile: devguardian-ai-service/Dockerfile
+    container_name: ai-service
+    ports:
+      - "8084:8084"
+    depends_on:
+      eureka-server:
+        condition: service_started
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - GROQ_API_KEY=groq_key
+      - GEMINI_API_KEY=gemini_key
+    networks:
+      - devguardian-network
+
+  notification-service:
+    build:
+      context: ./devguardian-backend
+      dockerfile: devguardian-notification-service/Dockerfile
+    container_name: notification-service
+    ports:
+      - "8085:8085"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/devguardian_notification
+      - POSTGRES_DB_USERNAME=postgres
+      - POSTGRES_DB_PASSWORD=password
+      - RABBITMQ_HOST=rabbitmq
+    networks:
+      - devguardian-network
+
+  frontend:
+    build:
+      context: ./devguardian-frontend
+      dockerfile: Dockerfile
+    container_name: devguardian-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - gateway
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
+    networks:
+      - devguardian-network
+
+networks:
+  devguardian-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  repos-data:
