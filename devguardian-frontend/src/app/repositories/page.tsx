@@ -37,13 +37,13 @@ export default function RepositoriesPage() {
   const [customName, setCustomName] = useState("");
   const [urlBranch, setUrlBranch] = useState("main");
   const [urlLanguage, setUrlLanguage] = useState("Auto");
-  
+
   // ZIP Upload Form State
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadName, setUploadName] = useState("");
   const [uploadBranch, setUploadBranch] = useState("main");
   const [uploadLanguage, setUploadLanguage] = useState("Auto");
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleUploadSubmit = async (e: React.FormEvent) => {
@@ -169,7 +169,7 @@ export default function RepositoriesPage() {
             <div className="p-5 border border-cyber-purple/35 bg-[#0a0715]/90 text-left relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-5 cyber-card-clip">
               {/* Dot Matrix overlay */}
               <div className="absolute inset-0 cyber-grid-dot opacity-20 pointer-events-none" />
-              
+
               <div className="flex gap-4 items-start relative z-10">
                 <div className="border border-cyber-purple bg-cyber-purple/10 text-cyber-purple shrink-0 h-11 w-11 flex items-center justify-center shadow-[0_0_12px_#8f00ff35]">
                   <GitFork className="h-5.5 w-5.5 shrink-0" />
@@ -212,7 +212,7 @@ export default function RepositoriesPage() {
                 Configure scanning triggers and secure code integrations across active repositories.
               </p>
             </div>
-            
+
             <div className="flex items-center gap-3 shrink-0">
               {isGithubConnected && (
                 <Button
@@ -228,7 +228,7 @@ export default function RepositoriesPage() {
               <Button
                 onClick={() => {
                   setIsAddModalOpen(true);
-                  setActiveTab(isGithubConnected ? "github" : "local");
+                  setActiveTab(isGithubConnected ? "github" : "url");
                 }}
                 variant="primary"
                 className="shadow-[0_0_15px_rgba(0,240,255,0.45)] flex items-center justify-center gap-1.5 py-2.5"
@@ -301,7 +301,7 @@ export default function RepositoriesPage() {
                   // Connected State Fallback inside Modal
                   <div className="flex flex-col items-center justify-center text-center p-8 bg-zinc-950/40 border border-zinc-900 rounded-none gap-5 relative overflow-hidden">
                     <div className="absolute inset-0 cyber-grid-dot opacity-20 pointer-events-none" />
-                    
+
                     <div className="h-14 w-14 border border-cyber-purple bg-cyber-purple/10 text-cyber-purple flex items-center justify-center shadow-[0_0_15px_#8f00ff35] animate-pulse">
                       <GitFork className="h-7 w-7" />
                     </div>
@@ -468,7 +468,7 @@ export default function RepositoriesPage() {
                     onChange={(e) => setUploadName(e.target.value)}
                     className="bg-[#0b0b14]/90 border-zinc-800 focus:border-cyber-cyan text-zinc-200"
                   />
-                  
+
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[10px] font-orbitron font-bold text-zinc-400 tracking-wider uppercase">
                       SELECT ZIP CODEBASE ARCHIVE *
