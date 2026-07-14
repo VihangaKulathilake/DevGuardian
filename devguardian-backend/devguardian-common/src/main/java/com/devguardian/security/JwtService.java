@@ -16,7 +16,7 @@ import java.util.function.Function;
 public class JwtService {
 
     // Get secret key from application.yaml
-    @Value("${jwt.secret}")
+    @Value("${jwt.secret:${JWT_SECRET:yourjwtsecretkeystringmustbe32byteslong!!}}")
     private String secretKey;
 
     // Get signing key

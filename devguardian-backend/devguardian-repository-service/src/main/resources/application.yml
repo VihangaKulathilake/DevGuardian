@@ -38,3 +38,7 @@ github:
   client-id: ${GITHUB_CLIENT_ID}
   client-secret: ${GITHUB_CLIENT_SECRET}
   redirect-uri: http://localhost:8080/api/github/callback
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000

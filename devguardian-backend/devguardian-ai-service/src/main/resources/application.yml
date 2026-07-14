@@ -24,3 +24,7 @@ gemini:
   api:
     key: ${GEMINI_API_KEY}
     model: gemini-1.5-flash
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000

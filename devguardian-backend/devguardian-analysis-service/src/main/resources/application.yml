@@ -35,3 +35,7 @@ eureka:
 devguardian:
   workspace:
     base-path: ../workspace/repos
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000

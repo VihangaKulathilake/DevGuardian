@@ -93,7 +93,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/devguardian_auth
       - POSTGRES_DB_USERNAME=postgres
       - POSTGRES_DB_PASSWORD=password
-      - JWT_SECRET=yourjwtsecretkeystringmustbe32byteslong!!
+      - JWT_SECRET=${JWT_SECRET:-yourjwtsecretkeystringmustbe32byteslong!!}
     networks:
       - devguardian-network
 
@@ -120,6 +120,7 @@ services:
       - DEVGUARDIAN_WORKSPACE_BASE_PATH=/app/workspace/repos
       - GITHUB_CLIENT_ID=github_id
       - GITHUB_CLIENT_SECRET=github_secret
+      - JWT_SECRET=${JWT_SECRET:-yourjwtsecretkeystringmustbe32byteslong!!}
     networks:
       - devguardian-network
 
@@ -147,6 +148,7 @@ services:
       - POSTGRES_DB_PASSWORD=password
       - RABBITMQ_HOST=rabbitmq
       - DEVGUARDIAN_WORKSPACE_BASE_PATH=/app/workspace/repos
+      - JWT_SECRET=${JWT_SECRET:-yourjwtsecretkeystringmustbe32byteslong!!}
     networks:
       - devguardian-network
 
@@ -165,6 +167,7 @@ services:
       - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
       - GROQ_API_KEY=groq_key
       - GEMINI_API_KEY=gemini_key
+      - JWT_SECRET=${JWT_SECRET:-yourjwtsecretkeystringmustbe32byteslong!!}
     networks:
       - devguardian-network
 
@@ -189,6 +192,7 @@ services:
       - POSTGRES_DB_USERNAME=postgres
       - POSTGRES_DB_PASSWORD=password
       - RABBITMQ_HOST=rabbitmq
+      - JWT_SECRET=${JWT_SECRET:-yourjwtsecretkeystringmustbe32byteslong!!}
     networks:
       - devguardian-network
 
