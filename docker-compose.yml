@@ -37,6 +37,19 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: devguardian-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - devguardian-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   eureka-server:
     build:
       context: ./devguardian-backend
@@ -162,9 +175,13 @@ services:
     depends_on:
       eureka-server:
         condition: service_started
+      redis:
+        condition: service_healthy
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
       - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
       - GROQ_API_KEY=${GROQ_API_KEY:-groq_key}
       - GEMINI_API_KEY=${GEMINI_API_KEY:-gemini_key}
       - JWT_SECRET=${JWT_SECRET:-yourjwtsecretkeystringmustbe32byteslong!!}

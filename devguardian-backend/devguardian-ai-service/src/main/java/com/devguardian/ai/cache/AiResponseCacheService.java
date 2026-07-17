@@ -1,24 +1,26 @@
 package com.devguardian.ai.cache;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 @Service
+@RequiredArgsConstructor
 public class AiResponseCacheService {
 
-    private final Map<String, String> cache = new ConcurrentHashMap<>();
+    private final StringRedisTemplate redisTemplate;
 
     public String get(String key) {
-        return cache.get(key);
+        return redisTemplate.opsForValue().get(key);
     }
 
     public void put(String key, String value) {
-        cache.put(key, value);
+        redisTemplate.opsForValue().set(key, value, 24, TimeUnit.HOURS);
     }
 
     public String buildKey(String issueType, String code) {
-        return issueType + ":" + code.hashCode();
+        return "devguardian:ai:" + issueType + ":" + code.hashCode();
     }
 }
