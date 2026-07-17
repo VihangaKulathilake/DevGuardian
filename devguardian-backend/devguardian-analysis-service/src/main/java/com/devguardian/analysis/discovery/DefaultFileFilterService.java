@@ -48,6 +48,40 @@ public class DefaultFileFilterService implements FileFilterService {
             ".h"
     );
 
+    private static final Set<String> CONFIG_AND_SENSITIVE_EXTENSIONS = Set.of(
+            ".properties",
+            ".yml",
+            ".yaml",
+            ".xml",
+            ".toml",
+            ".ini",
+            ".conf",
+            ".cfg",
+            ".json",
+            ".pem",
+            ".key",
+            ".p12",
+            ".pfx",
+            ".jks",
+            ".keystore",
+            ".ppk",
+            ".asc"
+    );
+
+    private static final Set<String> CONFIG_AND_SENSITIVE_EXACT_NAMES = Set.of(
+            "credentials",
+            ".git-credentials",
+            ".netrc",
+            ".npmrc",
+            ".pypirc",
+            ".htpasswd",
+            ".boto",
+            "id_rsa",
+            "id_dsa",
+            "id_ecdsa",
+            "id_ed25519"
+    );
+
     @Override
     public boolean shouldScan(Path file) {
 
@@ -55,22 +89,37 @@ public class DefaultFileFilterService implements FileFilterService {
 
         // Skip ignored directories
         for (String dir : IGNORED_DIRECTORIES) {
-
             if (normalized.contains("/" + dir + "/")) {
                 return false;
             }
-
         }
 
-        // Skip hidden files
-        if (file.getFileName().toString().startsWith(".")) {
-            return false;
+        String fileName = file.getFileName().toString();
+        String lower = fileName.toLowerCase();
+
+        // Skip hidden files, except for environment files (.env) or specified credentials/configs
+        if (fileName.startsWith(".")) {
+            if (!fileName.startsWith(".env") && !CONFIG_AND_SENSITIVE_EXACT_NAMES.contains(lower)) {
+                return false;
+            }
         }
 
-        String lower = file.getFileName().toString().toLowerCase();
+        // Allow supported source files
+        if (SUPPORTED_EXTENSIONS.stream().anyMatch(lower::endsWith)) {
+            return true;
+        }
 
-        // Only allow supported source files
-        return SUPPORTED_EXTENSIONS.stream()
-                .anyMatch(lower::endsWith);
+        // Allow configuration and sensitive files by extension
+        if (CONFIG_AND_SENSITIVE_EXTENSIONS.stream().anyMatch(lower::endsWith)) {
+            return true;
+        }
+
+        // Allow environment files (.env*)
+        if (lower.startsWith(".env")) {
+            return true;
+        }
+
+        // Allow exact matching config/sensitive filenames
+        return CONFIG_AND_SENSITIVE_EXACT_NAMES.contains(lower);
     }
 }

@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 public class TodoCommentRule implements AnalysisRule {
 
     private static final Pattern TODO_PATTERN =
-            Pattern.compile("(TODO|FIXME)", Pattern.CASE_INSENSITIVE);
+            Pattern.compile("\\b(TODO|FIXME)\\b", Pattern.CASE_INSENSITIVE);
 
     @Override
     public String getRuleCode() {

@@ -153,7 +153,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                     issue.setAnalysis(analysis);
                     if (issue.getCodeSnippet() == null || issue.getCodeSnippet().isBlank()) {
                         String fileContent = context.getFiles().get(issue.getFilePath());
-                        if (fileContent != null) {
+                        if (fileContent != null && issue.getLineNumber() != null) {
                             String[] lines = fileContent.split("\n");
                             int lineIdx = issue.getLineNumber() - 1;
                             if (lineIdx >= 0 && lineIdx < lines.length) {
