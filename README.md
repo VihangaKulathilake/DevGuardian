@@ -35,6 +35,7 @@ graph TD
         RepoDB[(devguardian_repository)] <--> Repo
         AnalysisDB[(devguardian_analysis)] <--> Analysis
         NotifDB[(devguardian_notification)] <--> Notification
+        Redis[(Redis Cache: Port 6379)] <--> AI
     end
 
     Auth -.->|Register| Eureka
@@ -50,7 +51,7 @@ graph TD
 *   **Authentication Service** (`port 8081`): Manages user accounts, login validation, and generates secure JWT tokens.
 *   **Repository Service** (`port 8082`): Interfaces with the GitHub API to list/import repositories and handles local git cloning via Eclipse JGit.
 *   **Analysis Service** (`port 8083`): Executes static analysis rules on code files. Fires asynchronous scanning tasks via event listeners.
-*   **AI Service** (`port 8084`): A stateless AI analyzer that consumes Groq and Gemini models to suggest explanations and patches for security findings.
+*   **AI Service** (`port 8084`): AI analyzer that consumes Groq and Gemini models to suggest explanations and patches for security findings. Integrates with **Redis** to cache response objects and avoid redundant LLM invocations.
 *   **Notification Service** (`port 8085`): Manages user system notifications and unread badges.
 
 ### 2. Frontend Application
@@ -63,6 +64,7 @@ graph TD
 1.  **Thread-Local Context Propagation**: Outgoing Feign client requests originating from asynchronous `@Async` scanner threads automatically inherit the JWT `Authorization` header of the initiating servlet thread through a custom `ThreadLocal` wrapper in `FeignClientInterceptor`.
 2.  **Shared Workspace Directory**: The Repository Service (cloning) and the Analysis Service (scanning) synchronize their file paths through a shared directory structure (`../workspace/repos`) relative to their execution directories.
 3.  **CORS Deduplication**: Browser-side CORS errors are prevented by configuring the API Gateway to act as the single source of truth for cross-origin credentials, merging duplicate headers with the `RETAIN_LAST` strategy.
+4.  **AI Response Caching (Redis)**: The AI service leverages Redis via `StringRedisTemplate` to cache LLM generated response values with a 24-hour TTL. Cache keys are namespaced as `devguardian:ai:<issue_type>:<hash>` to prevent cross-service collision.
 
 ---
 
@@ -79,6 +81,8 @@ Set the following environment variables on your system or inside your shell conf
 | `GITHUB_CLIENT_SECRET` | OAuth App client secret from GitHub Developer console | `github_client_secret` |
 | `GROQ_API_KEY` | Groq API Key for LLM-based code diagnostics | `gsk_...` |
 | `GEMINI_API_KEY` | Gemini API Key for fallback AI enrichment | `AIzaSy...` |
+| `SPRING_DATA_REDIS_HOST`| Redis cache hostname (when running manually) | `localhost` |
+| `SPRING_DATA_REDIS_PORT`| Redis cache port (when running manually) | `6379` |
 
 ---
 
@@ -96,7 +100,7 @@ docker compose up -d --build
 ```
 This single command will:
 1. Initialize the PostgreSQL database container and automatically spin up the 4 required databases.
-2. Spin up the RabbitMQ broker container.
+2. Spin up the RabbitMQ broker container and a Redis cache container.
 3. Build and package all 7 backend Spring Boot services in multi-stage Java 21 containers.
 4. Build and start the Next.js frontend container on port `3000`.
 
@@ -104,6 +108,7 @@ This single command will:
 *   **Web Console Dashboard**: Open [http://localhost:3000](http://localhost:3000)
 *   **Eureka Discovery Dashboard**: Open [http://localhost:8761](http://localhost:8761) to see all services registered.
 *   **RabbitMQ Management Console**: Open [http://localhost:15672](http://localhost:15672) (User/Pass: `guest` / `guest`).
+*   **Redis Cache Monitor**: Run `docker exec -it devguardian-redis redis-cli ping` (should return `PONG`).
 
 To shut down the environment, run:
 ```bash
@@ -120,6 +125,7 @@ If you are modifying code locally and prefer running services outside of Docker,
 *   Java Development Kit (JDK) 21
 *   Node.js v18+
 *   PostgreSQL Database Server
+*   Redis Cache Server (or run in background via `docker run -d --name local-redis -p 6379:6379 redis:alpine`)
 *   Git command-line client
 
 ### Step 1: Database Setup
