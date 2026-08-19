@@ -123,7 +123,10 @@ public class CloneServiceImpl implements CloneService {
     private void performClone(String url, File directory, String branch, String accessToken) throws GitAPIException {
         org.eclipse.jgit.api.CloneCommand cloneCommand = Git.cloneRepository()
                 .setURI(url)
-                .setDirectory(directory);
+                .setDirectory(directory)
+                .setDepth(1)
+                .setTimeout(120)
+                .setCloneSubmodules(false);
 
         if (branch != null && !branch.isBlank()) {
             cloneCommand.setBranch(branch);
