@@ -13,6 +13,11 @@ export interface RepositoryResponse {
   createdAt: string;
 }
 
+export interface RemoteBranchesResponse {
+  defaultBranch: string;
+  branches: string[];
+}
+
 export interface RepoState {
   repositories: RepositoryResponse[];
   currentRepository: RepositoryResponse | null;
@@ -23,3 +28,4 @@ export interface RepoState {
   githubLoading: boolean;
   githubError: string | null;
 }
+

@@ -8,8 +8,9 @@ import RepositoryList from "@/components/dashboard/RepositoryList";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
-import { Plus, GitBranch, Sparkles, GitFork, Search, Link2, LogOut, FolderOpen, Upload } from "lucide-react";
+import { Plus, GitBranch, Sparkles, GitFork, Search, Link2, LogOut, FolderOpen, Upload, RefreshCw, CheckCircle2, AlertTriangle } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
+import { repositoryApi } from "@/features/repository/repositoryApi";
 import {
   addRepository,
   fetchGithubRepositories,
@@ -37,6 +38,46 @@ export default function RepositoriesPage() {
   const [customName, setCustomName] = useState("");
   const [urlBranch, setUrlBranch] = useState("main");
   const [urlLanguage, setUrlLanguage] = useState("Auto");
+  const [discoveredBranches, setDiscoveredBranches] = useState<string[]>([]);
+  const [isDiscoveringBranches, setIsDiscoveringBranches] = useState(false);
+  const [branchDiscoveryError, setBranchDiscoveryError] = useState<string | null>(null);
+
+  // Auto-discover branches when repoUrl changes
+  useEffect(() => {
+    const trimmedUrl = repoUrl.trim();
+    if (!trimmedUrl || (!trimmedUrl.startsWith("http://") && !trimmedUrl.startsWith("https://"))) {
+      setDiscoveredBranches([]);
+      setBranchDiscoveryError(null);
+      return;
+    }
+
+    // Auto-fill module name if blank
+    const urlParts = trimmedUrl.split("/");
+    const lastPart = urlParts[urlParts.length - 1]?.replace(".git", "");
+    if (lastPart && !customName) {
+      setCustomName(lastPart);
+    }
+
+    const timer = setTimeout(async () => {
+      setIsDiscoveringBranches(true);
+      setBranchDiscoveryError(null);
+      try {
+        const res = await repositoryApi.getRemoteBranches(trimmedUrl);
+        if (res && res.branches && res.branches.length > 0) {
+          setDiscoveredBranches(res.branches);
+          setUrlBranch(res.defaultBranch || res.branches[0]);
+        }
+      } catch (err: any) {
+        setDiscoveredBranches([]);
+        const errorMsg = err.response?.data?.message || "Failed to query branches from remote repository.";
+        setBranchDiscoveryError(errorMsg);
+      } finally {
+        setIsDiscoveringBranches(false);
+      }
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [repoUrl]);
 
   // ZIP Upload Form State
   const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -95,16 +136,20 @@ export default function RepositoriesPage() {
     try {
       const urlParts = repoUrl.trim().split("/");
       const extractedName = customName.trim() || urlParts[urlParts.length - 1]?.replace(".git", "") || "url-repo";
+      const isGithub = repoUrl.includes("github.com");
+      const isGitlab = repoUrl.includes("gitlab.com");
+      const isBitbucket = repoUrl.includes("bitbucket.org");
+      const detectedProvider = isGithub ? "GITHUB" : isGitlab ? "GITLAB" : isBitbucket ? "BITBUCKET" : "OTHER";
 
       const resultAction = await dispatch(
         addRepository({
           name: extractedName,
           url: repoUrl.trim(),
-          provider: "OTHER",
-          visibility: "PRIVATE",
+          provider: detectedProvider,
+          visibility: "PUBLIC",
           branch: urlBranch.trim() || "main",
           language: urlLanguage.trim() || "Auto",
-          type: "BACKEND",
+          type: "GIT",
           scanFrequency: "DAILY",
         })
       );
@@ -410,13 +455,59 @@ export default function RepositoriesPage() {
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Input
-                    label="TARGET CODEBASE BRANCH"
-                    placeholder="e.g. main"
-                    value={urlBranch}
-                    onChange={(e) => setUrlBranch(e.target.value)}
-                    className="bg-[#0b0b14]/90 border-zinc-800 focus:border-cyber-cyan text-zinc-200"
-                  />
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-orbitron font-bold text-zinc-400 tracking-wider uppercase">
+                        TARGET CODEBASE BRANCH
+                      </label>
+                      {isDiscoveringBranches && (
+                        <span className="text-[9px] font-mono text-cyber-cyan flex items-center gap-1">
+                          <RefreshCw className="h-2.5 w-2.5 animate-spin" />
+                          Detecting branches...
+                        </span>
+                      )}
+                      {!isDiscoveringBranches && discoveredBranches.length > 0 && (
+                        <span className="text-[9px] font-mono text-cyber-green flex items-center gap-1">
+                          <CheckCircle2 className="h-2.5 w-2.5" />
+                          {discoveredBranches.length} branch{discoveredBranches.length > 1 ? "es" : ""} found
+                        </span>
+                      )}
+                    </div>
+
+                    {discoveredBranches.length > 0 ? (
+                      <div className="relative">
+                        <select
+                          value={urlBranch}
+                          onChange={(e) => setUrlBranch(e.target.value)}
+                          className="w-full px-4 py-2.5 bg-[#0b0b14]/90 border border-zinc-800 focus:border-cyber-cyan text-zinc-200 font-mono text-xs rounded-sm focus:outline-none transition-colors appearance-none cursor-pointer"
+                        >
+                          {discoveredBranches.map((branch) => (
+                            <option key={branch} value={branch} className="bg-[#0b0b14] text-white">
+                              {branch} {branch === "main" || branch === "master" ? "(Default Branch)" : ""}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400 text-xs font-mono">
+                          ▼
+                        </div>
+                      </div>
+                    ) : (
+                      <Input
+                        placeholder="e.g. main (auto-detected when URL entered)"
+                        value={urlBranch}
+                        onChange={(e) => setUrlBranch(e.target.value)}
+                        className="bg-[#0b0b14]/90 border-zinc-800 focus:border-cyber-cyan text-zinc-200"
+                      />
+                    )}
+
+                    {branchDiscoveryError && (
+                      <span className="text-[9px] font-mono text-cyber-pink flex items-center gap-1 mt-0.5">
+                        <AlertTriangle className="h-3 w-3 shrink-0" />
+                        {branchDiscoveryError}
+                      </span>
+                    )}
+                  </div>
+
                   <Input
                     label="PRIMARY PROGRAMMING LANGUAGE"
                     placeholder="e.g. Java, TypeScript, Python"

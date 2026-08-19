@@ -7,6 +7,5 @@ public interface CloneService {
 
     String cloneRepository(
             Repository repository,
-            GithubConnection githubConnection
-    );
+            GithubConnection githubConnection);
 }

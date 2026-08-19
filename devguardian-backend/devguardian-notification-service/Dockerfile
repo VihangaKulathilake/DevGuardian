@@ -17,7 +17,7 @@ COPY devguardian-common devguardian-common
 COPY devguardian-notification-service devguardian-notification-service
 
 # Build the Notification service (and its dependencies like devguardian-common)
-RUN mvn clean package -pl :devguardian-notification-service -am -DskipTests
+RUN --mount=type=cache,target=/root/.m2 mvn clean package -pl :devguardian-notification-service -am -DskipTests
 
 # Runner stage
 FROM eclipse-temurin:21-jre-jammy

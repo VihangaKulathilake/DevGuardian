@@ -4,6 +4,10 @@ public enum RepositoryType {
     GIT,
     SVN,
     MERCURIAL,
+    BACKEND,
+    FRONTEND,
+    FULLSTACK,
+    MOBILE,
+    IAC,
     OTHER
 }
-

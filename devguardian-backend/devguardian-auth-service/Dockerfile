@@ -17,7 +17,7 @@ COPY devguardian-common devguardian-common
 COPY devguardian-auth-service devguardian-auth-service
 
 # Build the Auth service (and its dependencies like devguardian-common)
-RUN mvn clean package -pl :devguardian-auth-service -am -DskipTests
+RUN --mount=type=cache,target=/root/.m2 mvn clean package -pl :devguardian-auth-service -am -DskipTests
 
 # Runner stage
 FROM eclipse-temurin:21-jre-jammy

@@ -17,7 +17,7 @@ COPY devguardian-common devguardian-common
 COPY devguardian-eureka-server devguardian-eureka-server
 
 # Build the Eureka server (and its dependencies like devguardian-common)
-RUN mvn clean package -pl :devguardian-eureka-server -am -DskipTests
+RUN --mount=type=cache,target=/root/.m2 mvn clean package -pl :devguardian-eureka-server -am -DskipTests
 
 # Runner stage
 FROM eclipse-temurin:21-jre-jammy

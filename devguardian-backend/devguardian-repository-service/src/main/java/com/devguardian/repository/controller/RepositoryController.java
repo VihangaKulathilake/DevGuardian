@@ -152,4 +152,19 @@ public class RepositoryController {
     ) {
         return repositoryService.uploadRepository(file, name, branch, language);
     }
+
+    @Operation(
+            summary = "Fetch remote repository branches",
+            description = "Inspects a public git repository URL to validate its availability and list all existing branches"
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Remote branches retrieved successfully"
+    )
+    @GetMapping("/remote-branches")
+    public com.devguardian.repository.dto.RemoteBranchesResponse getRemoteBranches(
+            @RequestParam("url") String url
+    ) {
+        return repositoryService.getRemoteBranches(url);
+    }
 }

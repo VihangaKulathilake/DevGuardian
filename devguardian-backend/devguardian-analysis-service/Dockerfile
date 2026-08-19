@@ -17,7 +17,7 @@ COPY devguardian-common devguardian-common
 COPY devguardian-analysis-service devguardian-analysis-service
 
 # Build the Analysis service (and its dependencies like devguardian-common)
-RUN mvn clean package -pl :devguardian-analysis-service -am -DskipTests
+RUN --mount=type=cache,target=/root/.m2 mvn clean package -pl :devguardian-analysis-service -am -DskipTests
 
 # Runner stage
 FROM eclipse-temurin:21-jre-jammy

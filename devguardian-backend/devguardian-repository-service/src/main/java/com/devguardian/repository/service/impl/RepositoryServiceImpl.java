@@ -17,15 +17,21 @@ import com.devguardian.repository.service.interfaces.CloneService;
 import com.devguardian.repository.service.interfaces.RepositoryService;
 import com.devguardian.security.CurrentUserUtil;
 import com.devguardian.common.exception.custom.ResourceNotFoundException;
+import com.devguardian.common.exception.custom.BusinessException;
 import com.devguardian.repository.config.WorkspaceProperties;
+import com.devguardian.repository.dto.RemoteBranchesResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.Ref;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
-
+import java.util.Collection;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -119,12 +125,10 @@ public class RepositoryServiceImpl implements RepositoryService {
 
         Long userId = currentUserUtil.getCurrentUser().getId();
 
-        GithubConnection connection =
-                githubConnectionService.getCurrentUserConnection();
+        GithubConnection connection = githubConnectionService.getCurrentUserConnection();
 
         // 1. Get GitHub repos
-        List<GithubRepositoryResponse> repos =
-                githubApiClient.getUserRepositories(connection.getAccessToken());
+        List<GithubRepositoryResponse> repos = githubApiClient.getUserRepositories(connection.getAccessToken());
 
         // 2. Find selected repo
         GithubRepositoryResponse selected = repos.stream()
@@ -166,7 +170,8 @@ public class RepositoryServiceImpl implements RepositoryService {
             if (repository.getProvider() == RepositoryProvider.LOCAL) {
                 java.io.File localDir = new java.io.File(repository.getCloneUrl());
                 if (!localDir.exists() || !localDir.isDirectory()) {
-                    throw new RuntimeException("Local repository directory does not exist or is not a directory: " + repository.getCloneUrl());
+                    throw new RuntimeException("Local repository directory does not exist or is not a directory: "
+                            + repository.getCloneUrl());
                 }
                 return;
             }
@@ -186,9 +191,8 @@ public class RepositoryServiceImpl implements RepositoryService {
                 java.io.PrintWriter pw = new java.io.PrintWriter(sw);
                 ex.printStackTrace(pw);
                 java.nio.file.Files.writeString(
-                    java.nio.file.Paths.get("d:/DevGuardian/devguardian-backend/clone_error.log"),
-                    "Clone ID: " + id + "\n" + sw.toString()
-                );
+                        java.nio.file.Paths.get("d:/DevGuardian/devguardian-backend/clone_error.log"),
+                        "Clone ID: " + id + "\n" + sw.toString());
             } catch (Exception e) {
                 // ignore
             }
@@ -255,9 +259,8 @@ public class RepositoryServiceImpl implements RepositoryService {
                 java.io.PrintWriter pw = new java.io.PrintWriter(sw);
                 e.printStackTrace(pw);
                 java.nio.file.Files.writeString(
-                    java.nio.file.Paths.get("d:/DevGuardian/devguardian-backend/upload_error.log"),
-                    "Upload error:\n" + sw.toString()
-                );
+                        java.nio.file.Paths.get("d:/DevGuardian/devguardian-backend/upload_error.log"),
+                        "Upload error:\n" + sw.toString());
             } catch (Exception ex) {
                 // ignore
             }
@@ -278,10 +281,12 @@ public class RepositoryServiceImpl implements RepositoryService {
 
     private void extractZip(java.io.File zipFile, java.io.File destDir) throws IOException {
         byte[] buffer = new byte[4096];
-        try (java.util.zip.ZipInputStream zis = new java.util.zip.ZipInputStream(new java.io.FileInputStream(zipFile))) {
+        try (java.util.zip.ZipInputStream zis = new java.util.zip.ZipInputStream(
+                new java.io.FileInputStream(zipFile))) {
             java.util.zip.ZipEntry zipEntry = zis.getNextEntry();
             while (zipEntry != null) {
-                // Ensure target file is within destination folder (guard against zip slip vulnerability)
+                // Ensure target file is within destination folder (guard against zip slip
+                // vulnerability)
                 java.io.File newFile = newFile(destDir, zipEntry);
                 if (zipEntry.isDirectory()) {
                     if (!newFile.isDirectory() && !newFile.mkdirs()) {
@@ -293,7 +298,7 @@ public class RepositoryServiceImpl implements RepositoryService {
                     if (!parent.isDirectory() && !parent.mkdirs()) {
                         throw new IOException("Failed to create directory " + parent);
                     }
-                    
+
                     // Write file content
                     try (java.io.FileOutputStream fos = new java.io.FileOutputStream(newFile)) {
                         int len;
@@ -329,5 +334,58 @@ public class RepositoryServiceImpl implements RepositoryService {
             }
         }
         directory.delete();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public RemoteBranchesResponse getRemoteBranches(String remoteUrl) {
+        if (remoteUrl == null || remoteUrl.trim().isEmpty()) {
+            throw new BusinessException("Remote repository URL cannot be empty");
+        }
+
+        String cleanedUrl = remoteUrl.trim();
+        try {
+            Collection<Ref> refs = Git.lsRemoteRepository()
+                    .setRemote(cleanedUrl)
+                    .setHeads(true)
+                    .call();
+
+            if (refs == null || refs.isEmpty()) {
+                throw new ResourceNotFoundException(
+                        "No branches found for repository. Please verify the URL is public and valid.");
+            }
+
+            List<String> branches = refs.stream()
+                    .map(Ref::getName)
+                    .filter(name -> name.startsWith("refs/heads/"))
+                    .map(name -> name.substring("refs/heads/".length()))
+                    .sorted()
+                    .toList();
+
+            if (branches.isEmpty()) {
+                throw new ResourceNotFoundException("No branches found in remote repository.");
+            }
+
+            String defaultBranch = "main";
+            if (branches.contains("main")) {
+                defaultBranch = "main";
+            } else if (branches.contains("master")) {
+                defaultBranch = "master";
+            } else {
+                defaultBranch = branches.get(0);
+            }
+
+            return RemoteBranchesResponse.builder()
+                    .defaultBranch(defaultBranch)
+                    .branches(branches)
+                    .build();
+
+        } catch (ResourceNotFoundException | BusinessException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            log.error("Failed to query remote branches for URL: {}", cleanedUrl, ex);
+            throw new BusinessException("Unable to access repository at " + cleanedUrl
+                    + ". Please ensure the repository exists, is public, and the URL is correct.");
+        }
     }
 }

@@ -17,7 +17,7 @@ COPY devguardian-common devguardian-common
 COPY devguardian-repository-service devguardian-repository-service
 
 # Build the Repository service (and its dependencies like devguardian-common)
-RUN mvn clean package -pl :devguardian-repository-service -am -DskipTests
+RUN --mount=type=cache,target=/root/.m2 mvn clean package -pl :devguardian-repository-service -am -DskipTests
 
 # Runner stage
 FROM eclipse-temurin:21-jre-jammy

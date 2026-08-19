@@ -17,7 +17,7 @@ COPY devguardian-common devguardian-common
 COPY devguardian-gateway devguardian-gateway
 
 # Build the Gateway service (and its dependencies like devguardian-common)
-RUN mvn clean package -pl :devguardian-gateway -am -DskipTests
+RUN --mount=type=cache,target=/root/.m2 mvn clean package -pl :devguardian-gateway -am -DskipTests
 
 # Runner stage
 FROM eclipse-temurin:21-jre-jammy

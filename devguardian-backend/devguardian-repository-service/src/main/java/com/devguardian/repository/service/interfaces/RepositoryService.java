@@ -22,5 +22,6 @@ public interface RepositoryService {
     RepositoryResponse importRepository(ImportRepositoryRequest request);
     void cloneRepository(Long id);
     RepositoryResponse uploadRepository(MultipartFile file, String name, String branch, String language);
+    com.devguardian.repository.dto.RemoteBranchesResponse getRemoteBranches(String remoteUrl);
 }
 

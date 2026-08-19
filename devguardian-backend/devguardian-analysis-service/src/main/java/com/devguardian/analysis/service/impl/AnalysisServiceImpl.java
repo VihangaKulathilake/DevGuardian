@@ -81,7 +81,9 @@ public class AnalysisServiceImpl implements AnalysisService {
             /*
              * Clone repository via repository-service
              */
-            repositoryClient.cloneRepository(repositoryId);
+            if (repository.getProvider() != com.devguardian.repository.enums.RepositoryProvider.LOCAL) {
+                repositoryClient.cloneRepository(repositoryId);
+            }
 
             /*
              * Create RUNNING analysis
@@ -94,9 +96,10 @@ public class AnalysisServiceImpl implements AnalysisService {
                                     .startedAt(LocalDateTime.now())
                                     .build()
                     );
+            analysisRepository.flush();
 
             /*
-             * Publish event
+             * Publish event after database transaction commits
              */
             String token = null;
             ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
@@ -104,15 +107,37 @@ public class AnalysisServiceImpl implements AnalysisService {
                 token = attributes.getRequest().getHeader("Authorization");
             }
 
-            rabbitTemplate.convertAndSend(
-                    com.devguardian.config.RabbitMQConfig.EXCHANGE_NAME,
-                    com.devguardian.config.RabbitMQConfig.ANALYSIS_STARTED_ROUTING_KEY,
-                    new AnalysisStartedEvent(
-                            analysis.getId(),
-                            repositoryId,
-                            token
-                    )
-            );
+            final Long analysisId = analysis.getId();
+            final String finalToken = token;
+
+            if (org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {
+                org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                        new org.springframework.transaction.support.TransactionSynchronization() {
+                            @Override
+                            public void afterCommit() {
+                                rabbitTemplate.convertAndSend(
+                                        com.devguardian.config.RabbitMQConfig.EXCHANGE_NAME,
+                                        com.devguardian.config.RabbitMQConfig.ANALYSIS_STARTED_ROUTING_KEY,
+                                        new AnalysisStartedEvent(
+                                                analysisId,
+                                                repositoryId,
+                                                finalToken
+                                        )
+                                );
+                            }
+                        }
+                );
+            } else {
+                rabbitTemplate.convertAndSend(
+                        com.devguardian.config.RabbitMQConfig.EXCHANGE_NAME,
+                        com.devguardian.config.RabbitMQConfig.ANALYSIS_STARTED_ROUTING_KEY,
+                        new AnalysisStartedEvent(
+                                analysisId,
+                                repositoryId,
+                                finalToken
+                        )
+                );
+            }
 
             return analysis;
         }
@@ -121,15 +146,37 @@ public class AnalysisServiceImpl implements AnalysisService {
         @Transactional
         public void executeAnalysis(Long analysisId) {
 
-            Analysis analysis = analysisRepository.findById(analysisId)
-                    .orElseThrow(() ->
-                            new ResourceNotFoundException(
-                                    "Analysis not found"
-                            ));
+            Analysis analysis = null;
+            for (int i = 0; i < 5; i++) {
+                var found = analysisRepository.findById(analysisId);
+                if (found.isPresent()) {
+                    analysis = found.get();
+                    break;
+                }
+                try {
+                    Thread.sleep(150);
+                } catch (InterruptedException ignored) {}
+            }
+
+            if (analysis == null) {
+                throw new ResourceNotFoundException("Analysis not found for ID: " + analysisId);
+            }
 
             try {
 
                 RepositoryResponse repository = repositoryClient.getRepository(analysis.getRepositoryId());
+
+                /*
+                 * STEP 0
+                 * Ensure repository files exist before scanning
+                 */
+                if (repository.getProvider() != com.devguardian.repository.enums.RepositoryProvider.LOCAL) {
+                    try {
+                        repositoryClient.cloneRepository(repository.getId());
+                    } catch (Exception e) {
+                        log.warn("Clone check during executeAnalysis for repo ID {} resulted in: {}", repository.getId(), e.getMessage());
+                    }
+                }
 
                 /*
                  * STEP 1
@@ -149,8 +196,9 @@ public class AnalysisServiceImpl implements AnalysisService {
                  * STEP 3
                  * Attach analysis and real code snippets to issues
                  */
+                final Analysis targetAnalysis = analysis;
                 issues.forEach(issue -> {
-                    issue.setAnalysis(analysis);
+                    issue.setAnalysis(targetAnalysis);
                     if (issue.getCodeSnippet() == null || issue.getCodeSnippet().isBlank()) {
                         String fileContent = context.getFiles().get(issue.getFilePath());
                         if (fileContent != null && issue.getLineNumber() != null) {

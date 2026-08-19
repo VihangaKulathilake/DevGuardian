@@ -54,6 +54,13 @@ export const repositoryApi = {
   async disconnectGithub(): Promise<void> {
     await api.delete("/api/github/disconnect");
   },
+
+  async getRemoteBranches(url: string): Promise<{ defaultBranch: string; branches: string[] }> {
+    const response = await api.get<{ defaultBranch: string; branches: string[] }>("/api/repositories/remote-branches", {
+      params: { url },
+    });
+    return response.data;
+  },
 };
 
 export default repositoryApi;

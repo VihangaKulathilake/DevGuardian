@@ -37,9 +37,10 @@ public class GitRepositoryScanner implements RepositoryScanner {
                 ? repository.getUrl()
                 : buildRepositoryPath(repository);
 
-        Path rootDirectory = Path.of(repositoryPath);
+        Path rootDirectory = resolveRepositoryDirectory(repository, repositoryPath);
 
-        if (!Files.exists(rootDirectory)) {
+        if (rootDirectory == null || !Files.exists(rootDirectory)) {
+            log.error("Repository source directory not found for repo ID {}. Tried path: {}", repository.getId(), repositoryPath);
             throw new RuntimeException(
                     "Repository source directory not found: "
                             + repositoryPath
@@ -90,7 +91,7 @@ public class GitRepositoryScanner implements RepositoryScanner {
         } catch (IOException ex) {
             log.error(
                     "Failed to traverse directory: {}",
-                    repositoryPath,
+                    rootDirectory,
                     ex
             );
         }
@@ -100,6 +101,53 @@ public class GitRepositoryScanner implements RepositoryScanner {
                 files,
                 fileSizes
         );
+    }
+
+    private Path resolveRepositoryDirectory(RepositoryResponse repository, String repositoryPath) {
+        if (repositoryPath != null && !repositoryPath.isBlank()) {
+            try {
+                Path directPath = Path.of(repositoryPath);
+                if (Files.exists(directPath) && Files.isDirectory(directPath)) {
+                    return directPath;
+                }
+            } catch (Exception ignored) {}
+        }
+
+        // Try candidate workspace roots
+        String relativeSuffix = repository.getUserId() + File.separator + repository.getId() + File.separator + "source";
+        String[] candidateBases = {
+                workspaceProperties.getBasePath(),
+                workspaceProperties.getResolvedBasePath(),
+                "workspace/repos",
+                "../workspace/repos",
+                "devguardian-backend/workspace/repos",
+                "../devguardian-backend/workspace/repos",
+                "../../workspace/repos"
+        };
+
+        for (String base : candidateBases) {
+            if (base != null && !base.isBlank()) {
+                try {
+                    Path candPath = Path.of(base, relativeSuffix);
+                    if (Files.exists(candPath) && Files.isDirectory(candPath)) {
+                        log.info("Resolved repository source directory at candidate path: {}", candPath.toAbsolutePath());
+                        return candPath;
+                    }
+                } catch (Exception ignored) {}
+            }
+        }
+
+        // If local provider and URL points to an absolute or relative directory on disk
+        if (repository.getUrl() != null && !repository.getUrl().isBlank()) {
+            try {
+                Path urlPath = Path.of(repository.getUrl());
+                if (Files.exists(urlPath) && Files.isDirectory(urlPath)) {
+                    return urlPath;
+                }
+            } catch (Exception ignored) {}
+        }
+
+        return null;
     }
 
     private String buildRepositoryPath(
