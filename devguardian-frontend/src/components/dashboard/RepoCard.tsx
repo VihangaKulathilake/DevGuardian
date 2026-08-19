@@ -2,7 +2,7 @@ import * as React from "react";
 import Card from "../ui/Card";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
-import { GitBranch, ShieldAlert, Clock } from "lucide-react";
+import { GitBranch, ShieldAlert, Clock, Trash2 } from "lucide-react";
 
 export interface RepoCardProps {
   repoName: string;
@@ -14,6 +14,7 @@ export interface RepoCardProps {
   infoIssues: number;
   onRunAnalysis?: () => void;
   onViewAnalysis?: () => void;
+  onDelete?: () => void;
 }
 
 export const RepoCard: React.FC<RepoCardProps> = ({
@@ -26,6 +27,7 @@ export const RepoCard: React.FC<RepoCardProps> = ({
   infoIssues,
   onRunAnalysis,
   onViewAnalysis,
+  onDelete,
 }) => {
   return (
     <Card
@@ -71,7 +73,7 @@ export const RepoCard: React.FC<RepoCardProps> = ({
           </Badge>
         </div>
 
-        <div className="flex gap-2.5">
+        <div className="flex items-center gap-2">
           <Button
             variant="secondary"
             size="sm"
@@ -95,6 +97,19 @@ export const RepoCard: React.FC<RepoCardProps> = ({
             >
               Scan
             </Button>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              title="Delete repository"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="h-8 w-8 flex items-center justify-center border border-zinc-800 bg-black/40 text-zinc-400 hover:text-cyber-pink hover:border-cyber-pink/50 hover:bg-cyber-pink/10 transition-all cursor-pointer shrink-0"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
           )}
         </div>
       </div>

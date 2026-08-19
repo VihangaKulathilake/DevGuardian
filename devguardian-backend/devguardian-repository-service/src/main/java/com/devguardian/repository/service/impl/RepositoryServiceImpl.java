@@ -118,6 +118,49 @@ public class RepositoryServiceImpl implements RepositoryService {
                 .orElseThrow(() -> new ResourceNotFoundException(Messages.REPOSITORY_NOT_FOUND));
 
         repositoryRepository.delete(repository);
+
+        try {
+            String basePath = workspaceProperties.getBasePath();
+            java.io.File repoFolder = new java.io.File(basePath + java.io.File.separator + userId + java.io.File.separator + id);
+            if (repoFolder.exists()) {
+                deleteDirectoryRecursively(repoFolder);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to delete repository files for id {}: {}", id, e.getMessage());
+        }
+    }
+
+    private void deleteDirectoryRecursively(java.io.File dir) {
+        if (dir == null || !dir.exists()) {
+            return;
+        }
+        try {
+            java.nio.file.Files.walkFileTree(dir.toPath(), new java.nio.file.SimpleFileVisitor<java.nio.file.Path>() {
+                @Override
+                public java.nio.file.FileVisitResult visitFile(java.nio.file.Path file, java.nio.file.attribute.BasicFileAttributes attrs) throws java.io.IOException {
+                    try {
+                        file.toFile().setWritable(true);
+                        java.nio.file.Files.deleteIfExists(file);
+                    } catch (Exception ignored) {
+                        file.toFile().delete();
+                    }
+                    return java.nio.file.FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public java.nio.file.FileVisitResult postVisitDirectory(java.nio.file.Path dirPath, java.io.IOException exc) throws java.io.IOException {
+                    try {
+                        dirPath.toFile().setWritable(true);
+                        java.nio.file.Files.deleteIfExists(dirPath);
+                    } catch (Exception ignored) {
+                        dirPath.toFile().delete();
+                    }
+                    return java.nio.file.FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (Exception e) {
+            log.warn("Failed to cleanly delete directory {}: {}", dir.getAbsolutePath(), e.getMessage());
+        }
     }
 
     @Override

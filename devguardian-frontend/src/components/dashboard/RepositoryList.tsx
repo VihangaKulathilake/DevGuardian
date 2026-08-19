@@ -2,15 +2,21 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import RepoCard from "./RepoCard";
+import Modal from "../ui/Modal";
+import Button from "../ui/Button";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
-import { fetchRepositories } from "@/features/repository/repositorySlice";
+import { fetchRepositories, removeRepository } from "@/features/repository/repositorySlice";
 import { triggerAnalysis } from "@/features/analysis/analysisSlice";
 import { analysisApi } from "@/features/analysis/analysisApi";
+import { AlertTriangle, Trash2 } from "lucide-react";
 
 export const RepositoryList: React.FC = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { repositories, loading, error } = useAppSelector((state) => state.repo);
+
+  const [deletingRepo, setDeletingRepo] = useState<{ id: number; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [repoDetails, setRepoDetails] = useState<Record<number, {
     lastAnalyzed: string;
@@ -96,6 +102,19 @@ export const RepositoryList: React.FC = () => {
     }
   };
 
+  const handleConfirmDelete = async () => {
+    if (!deletingRepo) return;
+    setIsDeleting(true);
+    try {
+      await dispatch(removeRepository(deletingRepo.id));
+      setDeletingRepo(null);
+    } catch (err) {
+      console.error("Failed to delete repository:", err);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -129,31 +148,88 @@ export const RepositoryList: React.FC = () => {
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {repositories.map((repo) => {
-        const details = repoDetails[repo.id] || {
-          lastAnalyzed: "Loading...",
-          critical: 0,
-          warning: 0,
-          info: 0,
-          status: "LOADING"
-        };
-        return (
-          <RepoCard
-            key={repo.id}
-            repoName={repo.name}
-            visibility={repo.visibility.toLowerCase() as "public" | "private"}
-            language={repo.language || "Unknown"}
-            lastAnalyzed={details.lastAnalyzed}
-            criticalIssues={details.critical}
-            warningIssues={details.warning}
-            infoIssues={details.info}
-            onRunAnalysis={() => handleRunAnalysis(repo.id)}
-            onViewAnalysis={() => router.push(`/analysis?repoId=${repo.id}`)}
-          />
-        );
-      })}
-    </div>
+    <>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {repositories.map((repo) => {
+          const details = repoDetails[repo.id] || {
+            lastAnalyzed: "Loading...",
+            critical: 0,
+            warning: 0,
+            info: 0,
+            status: "LOADING"
+          };
+          return (
+            <RepoCard
+              key={repo.id}
+              repoName={repo.name}
+              visibility={repo.visibility.toLowerCase() as "public" | "private"}
+              language={repo.language || "Unknown"}
+              lastAnalyzed={details.lastAnalyzed}
+              criticalIssues={details.critical}
+              warningIssues={details.warning}
+              infoIssues={details.info}
+              onRunAnalysis={() => handleRunAnalysis(repo.id)}
+              onViewAnalysis={() => router.push(`/analysis?repoId=${repo.id}`)}
+              onDelete={() => setDeletingRepo({ id: repo.id, name: repo.name })}
+            />
+          );
+        })}
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={!!deletingRepo}
+        onClose={() => !isDeleting && setDeletingRepo(null)}
+        title={
+          <div className="flex items-center gap-2 text-cyber-pink">
+            <AlertTriangle className="h-5 w-5" />
+            <span className="font-orbitron font-extrabold uppercase tracking-wider text-xs">
+              UNLINK REPOSITORY
+            </span>
+          </div>
+        }
+        size="sm"
+      >
+        <div className="space-y-5 text-left font-sans">
+          <p className="text-xs text-zinc-300 leading-relaxed">
+            Are you sure you want to delete and unlink{" "}
+            <strong className="text-white font-mono uppercase underline decoration-cyber-pink/50">
+              {deletingRepo?.name}
+            </strong>
+            ?
+          </p>
+          <div className="p-3.5 bg-cyber-pink/10 border border-cyber-pink/30 text-[11px] text-zinc-400 space-y-1">
+            <span className="font-bold text-cyber-pink uppercase font-mono tracking-wider block">
+              WARNING // PERMANENT ACTION
+            </span>
+            <p>
+              This will remove all associated vulnerability audits, security scan logs, and disk workspace caches.
+            </p>
+          </div>
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={isDeleting}
+              onClick={() => setDeletingRepo(null)}
+              className="border-zinc-800 text-zinc-400 hover:text-white font-mono text-xs cursor-pointer"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              disabled={isDeleting}
+              onClick={handleConfirmDelete}
+              className="bg-cyber-pink hover:bg-cyber-pink/80 text-white font-mono text-xs flex items-center gap-1.5 cursor-pointer"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              {isDeleting ? "Deleting..." : "Delete Repository"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 };
 
