@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 public class EmptyCatchBlockRule implements AnalysisRule {
 
     private static final Pattern EMPTY_CATCH_PATTERN =
-            Pattern.compile("catch\\s*\\([^)]*\\)\\s*\\{\\s*\\}");
+            Pattern.compile("catch\\s*(?:\\([^)]*\\))?\\s*\\{\\s*\\}");
 
     @Override
     public String getRuleCode() {

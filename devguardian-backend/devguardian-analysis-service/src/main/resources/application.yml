@@ -5,6 +5,14 @@ spring:
   application:
     name: analysis-service
 
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 15000
+            read-timeout: 180000
+
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}

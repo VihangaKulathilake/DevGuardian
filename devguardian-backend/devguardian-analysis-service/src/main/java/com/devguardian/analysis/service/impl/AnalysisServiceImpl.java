@@ -79,13 +79,6 @@ public class AnalysisServiceImpl implements AnalysisService {
             }
 
             /*
-             * Clone repository via repository-service
-             */
-            if (repository.getProvider() != com.devguardian.repository.enums.RepositoryProvider.LOCAL) {
-                repositoryClient.cloneRepository(repositoryId);
-            }
-
-            /*
              * Create RUNNING analysis
              */
             Analysis analysis =

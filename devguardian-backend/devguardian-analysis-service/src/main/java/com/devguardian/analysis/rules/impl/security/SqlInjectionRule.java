@@ -38,20 +38,25 @@ public class SqlInjectionRule extends AbstractLineScanRule {
 
     /** A string literal that begins a SQL statement. */
     private static final Pattern SQL_LITERAL_START = Pattern.compile(
-            "\"\\s*(?:SELECT\\s|INSERT\\s+INTO\\s|UPDATE\\s|DELETE\\s+FROM\\s|MERGE\\s+INTO\\s|WITH\\s)",
+            "[\"'`]\\s*(?:SELECT\\s|INSERT\\s+INTO\\s|UPDATE\\s|DELETE\\s+FROM\\s|MERGE\\s+INTO\\s|WITH\\s)",
             Pattern.CASE_INSENSITIVE);
 
-    /** {@code "literal" + expression} - captures the expression head. */
+    /** {@code "literal" + expression} or {@code 'literal' + expression} - captures the expression head. */
     private static final Pattern LITERAL_PLUS_EXPRESSION = Pattern.compile(
-            "\"\\s*\\+\\s*([A-Za-z_$][\\w$]*(?:\\.[\\w$]+)*(?:\\([^()]*\\))?)");
+            "[\"'`]\\s*\\+\\s*([A-Za-z_$][\\w$]*(?:\\.[\\w$]+)*(?:\\([^()]*\\))?)");
 
-    /** {@code expression + "literal"} - captures the expression tail. */
+    /** {@code expression + "literal"} or {@code expression + 'literal'} - captures the expression tail. */
     private static final Pattern EXPRESSION_PLUS_LITERAL = Pattern.compile(
-            "(?<![\"\\w$])([A-Za-z_$][\\w$]*(?:\\.[\\w$]+)*(?:\\([^()]*\\))?)\\s*\\+\\s*\"");
+            "(?<![\"'`\\w$])([A-Za-z_$][\\w$]*(?:\\.[\\w$]+)*(?:\\([^()]*\\))?)\\s*\\+\\s*[\"'`]");
 
     /** String.format("SELECT ... %s ...", args) / "...".formatted(args). */
     private static final Pattern FORMATTED_SQL = Pattern.compile(
             "(?:String\\.format\\s*\\(\\s*)?\"\\s*(?:SELECT|INSERT|UPDATE|DELETE|MERGE)\\b[^\"]*%s[^\"]*\"",
+            Pattern.CASE_INSENSITIVE);
+
+    /** ES6 template literal SQL with interpolation, e.g. `SELECT * FROM table WHERE col = ${param}` */
+    private static final Pattern TEMPLATE_SQL = Pattern.compile(
+            "`\\s*(?:SELECT|INSERT|UPDATE|DELETE|MERGE)\\b[^`]*\\$\\{([^}]+)\\}[^`]*`",
             Pattern.CASE_INSENSITIVE);
 
     /** Static expressions: ALL_CAPS constants, class constant refs, numbers. */
@@ -64,7 +69,7 @@ public class SqlInjectionRule extends AbstractLineScanRule {
                     + "\\.ordinal\\(\\)|\\.name\\(\\)|Enum\\.)");
 
     private static final Pattern LOG_STATEMENT = Pattern.compile(
-            "(?i)\\b(?:log(?:ger)?\\.(?:trace|debug|info|warn|error)|System\\.(?:out|err)\\.print)");
+            "(?i)\\b(?:log(?:ger)?\\.(?:trace|debug|info|warn|error)|System\\.(?:out|err)\\.print|console\\.(?:log|debug|info|warn|error))");
 
     @Override
     public String getRuleCode() {
@@ -78,7 +83,7 @@ public class SqlInjectionRule extends AbstractLineScanRule {
 
     @Override
     protected boolean appliesTo(String normalizedPath) {
-        return ScanFilters.isJavaSource(normalizedPath);
+        return ScanFilters.isSourceCode(normalizedPath);
     }
 
     @Override
@@ -117,7 +122,7 @@ public class SqlInjectionRule extends AbstractLineScanRule {
 
     private void analyzeStatement(String filePath, String statement, int lineNumber,
                                   List<Issue> issues) {
-        if (!SQL_LITERAL_START.matcher(statement).find()) {
+        if (!SQL_LITERAL_START.matcher(statement).find() && !TEMPLATE_SQL.matcher(statement).find()) {
             return;
         }
         // Logging a query is not an injection sink.
@@ -128,6 +133,7 @@ public class SqlInjectionRule extends AbstractLineScanRule {
         List<String> dynamicParts = new ArrayList<>();
         collectDynamicExpressions(LITERAL_PLUS_EXPRESSION.matcher(statement), dynamicParts);
         collectDynamicExpressions(EXPRESSION_PLUS_LITERAL.matcher(statement), dynamicParts);
+        collectDynamicExpressions(TEMPLATE_SQL.matcher(statement), dynamicParts);
 
         boolean formatted = FORMATTED_SQL.matcher(statement).find()
                 && (statement.contains("String.format") || statement.contains(".formatted("));
@@ -138,7 +144,7 @@ public class SqlInjectionRule extends AbstractLineScanRule {
 
         String evidence = formatted && dynamicParts.isEmpty()
                 ? "a String.format/formatted call with a %s specifier"
-                : "concatenation with dynamic expression(s): " + String.join(", ", dynamicParts);
+                : "concatenation or template interpolation with dynamic expression(s): " + String.join(", ", dynamicParts);
 
         issues.add(Issue.builder()
                 .ruleCode(getRuleCode())

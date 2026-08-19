@@ -68,7 +68,7 @@ public class WeakJwtSecretRule extends AbstractLineScanRule {
 
     @Override
     protected boolean appliesTo(String normalizedPath) {
-        return ScanFilters.isJavaSource(normalizedPath) || ScanFilters.isConfigFile(normalizedPath);
+        return ScanFilters.isSourceCode(normalizedPath) || ScanFilters.isConfigFile(normalizedPath);
     }
 
     @Override

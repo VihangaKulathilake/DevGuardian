@@ -97,6 +97,14 @@ public final class ScanFilters {
         return hasExtension(normalizedPath, ".java", ".kt", ".groovy", ".scala");
     }
 
+    public static boolean isSourceCode(String normalizedPath) {
+        return hasExtension(normalizedPath,
+                ".java", ".kt", ".groovy", ".scala",
+                ".js", ".ts", ".jsx", ".tsx", ".mjs", ".cjs",
+                ".py", ".php", ".cs", ".go", ".rb", ".rs",
+                ".c", ".cpp", ".h", ".swift");
+    }
+
     public static boolean isConfigFile(String normalizedPath) {
         return hasExtension(normalizedPath,
                 ".properties", ".yml", ".yaml", ".xml", ".toml", ".ini",

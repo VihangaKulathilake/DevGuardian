@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
 @Component
 public class WildcardCorsRule extends AbstractLineScanRule {
 
-    private static final Pattern JAVA_WILDCARD_CORS = Pattern.compile(
+    private static final Pattern CODE_WILDCARD_CORS = Pattern.compile(
             "@CrossOrigin\\s*(?:\\(\\s*\\)|(?!\\s*\\())"                              // bare annotation
                     + "|@CrossOrigin\\s*\\(\\s*(?:origins\\s*=\\s*)?(?:\\{\\s*)?\"\\*\""  // origins = "*" / {"*"}
                     + "|\\.(?:allowedOrigins|allowedOriginPatterns)\\s*\\(\\s*\"\\*\"\\s*\\)"
@@ -45,7 +45,9 @@ public class WildcardCorsRule extends AbstractLineScanRule {
                     + "\\s*\\(\\s*(?:List\\.of|Arrays\\.asList|Collections\\.singletonList|Set\\.of)"
                     + "\\s*\\(\\s*\"\\*\"\\s*\\)\\s*\\)"
                     + "|\\.(?:addAllowedOrigin|addAllowedOriginPattern)\\s*\\(\\s*\"\\*\"\\s*\\)"
-                    + "|(?:setHeader|addHeader)\\s*\\(\\s*\"Access-Control-Allow-Origin\"\\s*,\\s*\"\\*\"\\s*\\)");
+                    + "|(?:setHeader|addHeader|header)\\s*\\(\\s*[\"']Access-Control-Allow-Origin[\"']\\s*,\\s*[\"']\\*[\"']\\s*\\)"
+                    + "|origin\\s*:\\s*[\"']\\*[\"']"
+                    + "|cors\\s*\\(\\s*\\{\\s*origin\\s*:\\s*[\"']\\*[\"']");
 
     private static final Pattern CONFIG_WILDCARD_CORS = Pattern.compile(
             "(?i)^\\s*[\\w.\\-]*(?:allowed[.\\-]?origins?|cors[.\\-]?origins?|"
@@ -66,12 +68,12 @@ public class WildcardCorsRule extends AbstractLineScanRule {
 
     @Override
     protected boolean appliesTo(String normalizedPath) {
-        return ScanFilters.isJavaSource(normalizedPath) || ScanFilters.isConfigFile(normalizedPath);
+        return ScanFilters.isSourceCode(normalizedPath) || ScanFilters.isConfigFile(normalizedPath);
     }
 
     @Override
     protected void scanFile(String filePath, String content, List<Issue> issues) {
-        boolean java = ScanFilters.isJavaSource(filePath);
+        boolean sourceCode = ScanFilters.isSourceCode(filePath);
         boolean credentialed = ALLOWS_CREDENTIALS.matcher(content).find();
 
         String[] lines = content.split("\n", -1);
@@ -81,8 +83,8 @@ public class WildcardCorsRule extends AbstractLineScanRule {
             if (code.isBlank()) {
                 continue;
             }
-            boolean matched = java
-                    ? JAVA_WILDCARD_CORS.matcher(code).find()
+            boolean matched = sourceCode
+                    ? CODE_WILDCARD_CORS.matcher(code).find()
                     : CONFIG_WILDCARD_CORS.matcher(code).find();
             if (!matched) {
                 continue;

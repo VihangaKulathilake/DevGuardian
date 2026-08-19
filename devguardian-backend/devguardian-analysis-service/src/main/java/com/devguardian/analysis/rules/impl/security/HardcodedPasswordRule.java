@@ -34,13 +34,13 @@ import java.util.regex.Pattern;
 @Component
 public class HardcodedPasswordRule extends AbstractLineScanRule {
 
-    /** Java: identifier containing password/passwd/pwd assigned a string literal. */
-    private static final Pattern JAVA_ASSIGNMENT = Pattern.compile(
-            "(?i)\\b([\\w$]*(?:password|passwd|pwd)[\\w$]*)\\s*=\\s*\"([^\"]*)\"");
+    /** Code: identifier containing password/passwd/pwd assigned a string literal. */
+    private static final Pattern CODE_ASSIGNMENT = Pattern.compile(
+            "(?i)\\b([\\w$]*(?:password|passwd|pwd)[\\w$]*)\\s*[:=]\\s*[\"']([^\"']*)[\"']");
 
-    /** Java: comparison against a literal, e.g. password.equals("s3cret"). */
-    private static final Pattern JAVA_COMPARISON = Pattern.compile(
-            "(?i)\\b([\\w$]*(?:password|passwd|pwd)[\\w$]*)\\s*\\.\\s*(?:equals|equalsIgnoreCase|contentEquals)\\s*\\(\\s*\"([^\"]+)\"\\s*\\)");
+    /** Code: comparison against a literal, e.g. password.equals("s3cret") or password === 's3cret'. */
+    private static final Pattern CODE_COMPARISON = Pattern.compile(
+            "(?i)\\b([\\w$]*(?:password|passwd|pwd)[\\w$]*)\\s*(?:\\.\\s*(?:equals|equalsIgnoreCase|contentEquals)\\s*\\(\\s*[\"']([^\"']+)[\"']\\s*\\)|===?\\s*[\"']([^\"']+)[\"'])");
 
     /** Properties/YAML: key containing password assigned a value. */
     private static final Pattern CONFIG_ASSIGNMENT = Pattern.compile(
@@ -79,22 +79,22 @@ public class HardcodedPasswordRule extends AbstractLineScanRule {
 
     @Override
     protected boolean appliesTo(String normalizedPath) {
-        return ScanFilters.isJavaSource(normalizedPath) || ScanFilters.isConfigFile(normalizedPath);
+        return ScanFilters.isSourceCode(normalizedPath) || ScanFilters.isConfigFile(normalizedPath);
     }
 
     @Override
     protected void checkLine(String filePath, String code, int lineNumber, List<Issue> issues) {
-        if (ScanFilters.isJavaSource(filePath)) {
-            Matcher assignment = JAVA_ASSIGNMENT.matcher(code);
+        if (ScanFilters.isSourceCode(filePath)) {
+            Matcher assignment = CODE_ASSIGNMENT.matcher(code);
             if (assignment.find()
                     && report(filePath, lineNumber, assignment.group(1), assignment.group(2),
                               false, issues)) {
                 return;
             }
-            Matcher comparison = JAVA_COMPARISON.matcher(code);
+            Matcher comparison = CODE_COMPARISON.matcher(code);
             if (comparison.find()) {
-                report(filePath, lineNumber, comparison.group(1), comparison.group(2),
-                       true, issues);
+                String val = comparison.group(2) != null ? comparison.group(2) : comparison.group(3);
+                report(filePath, lineNumber, comparison.group(1), val, true, issues);
             }
         } else {
             Matcher config = CONFIG_ASSIGNMENT.matcher(code);
