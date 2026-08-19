@@ -302,13 +302,13 @@ export default function RepositoriesPage() {
             size="lg"
           >
             {/* Modal Tabs */}
-            <div className="flex border-b border-zinc-800 mb-6 bg-black/35 select-none font-mono overflow-x-auto scrollbar-none">
+            <div className="flex border-b border-zinc-700 mb-6 bg-[#0c0d16] select-none font-mono overflow-x-auto scrollbar-none">
               <button
                 type="button"
                 onClick={() => setActiveTab("github")}
-                className={`flex items-center gap-2 px-5 py-3 text-[10px] font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer shrink-0 ${activeTab === "github"
-                  ? "border-cyber-cyan text-cyber-cyan text-shadow-cyan"
-                  : "border-transparent text-zinc-500 hover:text-zinc-300"
+                className={`flex items-center gap-2 px-5 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer shrink-0 ${activeTab === "github"
+                  ? "border-cyber-cyan text-cyber-cyan text-shadow-cyan bg-cyber-cyan/5"
+                  : "border-transparent text-zinc-300 hover:text-white hover:bg-zinc-800/60"
                   }`}
               >
                 <GitFork className="h-4 w-4 shrink-0" />
@@ -318,9 +318,9 @@ export default function RepositoriesPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("url")}
-                className={`flex items-center gap-2 px-5 py-3 text-[10px] font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer shrink-0 ${activeTab === "url"
-                  ? "border-cyber-cyan text-cyber-cyan text-shadow-cyan"
-                  : "border-transparent text-zinc-500 hover:text-zinc-300"
+                className={`flex items-center gap-2 px-5 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer shrink-0 ${activeTab === "url"
+                  ? "border-cyber-cyan text-cyber-cyan text-shadow-cyan bg-cyber-cyan/5"
+                  : "border-transparent text-zinc-300 hover:text-white hover:bg-zinc-800/60"
                   }`}
               >
                 <Link2 className="h-4 w-4 shrink-0" />
@@ -329,9 +329,9 @@ export default function RepositoriesPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab("upload")}
-                className={`flex items-center gap-2 px-5 py-3 text-[10px] font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer shrink-0 ${activeTab === "upload"
-                  ? "border-cyber-cyan text-cyber-cyan text-shadow-cyan"
-                  : "border-transparent text-zinc-500 hover:text-zinc-300"
+                className={`flex items-center gap-2 px-5 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer shrink-0 ${activeTab === "upload"
+                  ? "border-cyber-cyan text-cyber-cyan text-shadow-cyan bg-cyber-cyan/5"
+                  : "border-transparent text-zinc-300 hover:text-white hover:bg-zinc-800/60"
                   }`}
               >
                 <Upload className="h-4 w-4 shrink-0" />

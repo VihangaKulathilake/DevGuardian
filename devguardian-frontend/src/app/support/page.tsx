@@ -160,7 +160,7 @@ export default function SupportPage() {
                       3. Automated Gemini Diff Patches
                     </h4>
                     <p className="text-xs text-zinc-400 leading-relaxed font-sans font-medium">
-                      When vulnerability scans flag source codes, the Gemini engine structures side-by-side patch layouts. Selecting apply builds and merges the secure codes directly back to repositories.
+                      When vulnerability scans flag source codes, the AI engine structures side-by-side patch layouts and actionable remediation guidance to help developers quickly secure their codebases.
                     </p>
                   </div>
                 </div>

@@ -9,7 +9,7 @@ import IssueCard from "@/components/dashboard/IssueCard";
 import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
-import { Play, Sparkles, GitPullRequest, Search, Terminal, X, ArrowRight, ShieldAlert, ShieldCheck } from "lucide-react";
+import { Play, Sparkles, GitPullRequest, Search, Terminal, X, ArrowRight, ShieldAlert, ShieldCheck, CheckCircle2, Filter, RotateCcw } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
 import { fetchRepositoryById, fetchRepositories } from "@/features/repository/repositorySlice";
 import {
@@ -339,17 +339,9 @@ const RemediationDiffModal: React.FC<DiffModalProps> = ({
             onClick={onClose}
             variant="secondary"
             size="sm"
-            className="font-mono text-[10px]"
+            className="font-mono text-xs px-5 py-2 cursor-pointer"
           >
             Close Panel
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            className="flex items-center gap-1.5 shadow-[0_0_12px_rgba(0,240,255,0.3)] animate-pulse font-mono text-[10px]"
-          >
-            Apply Fix Patch
-            <ArrowRight className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
@@ -552,9 +544,6 @@ function AnalysisPageContent() {
               {activeAnalysis && activeAnalysis.status === "COMPLETED" && (
                 <section>
                   <Card className="border-cyber-cyan/35 bg-[#090e18]/85 p-6 relative overflow-hidden">
-                    {/* Glowing corner decals */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-cyber-cyan/5 rounded-full blur-3xl pointer-events-none" />
-
                     <div className="flex items-start gap-4.5 text-left relative z-10">
                       <div className="h-11 w-11 border border-cyber-cyan bg-cyber-cyan/10 text-cyber-cyan flex items-center justify-center shrink-0 shadow-[0_0_12px_#00f0ff25]">
                         <Sparkles className="h-5.5 w-5.5 animate-pulse" />
@@ -581,20 +570,9 @@ function AnalysisPageContent() {
                             </li>
                             <li className="flex items-center gap-2">
                               <span className="h-1.5 w-1.5 bg-cyber-green rounded-none shrink-0" />
-                              Status: Automated AI diff remediation patches are compiled and ready to deploy.
+                              Status: Static analysis audit completed. All detected issues are indexed below.
                             </li>
                           </ul>
-
-                          <div className="pt-2 flex items-center gap-2 select-none">
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              className="h-9 gap-1.5 border-zinc-800/80 hover:border-cyber-cyan text-zinc-300 hover:text-cyber-cyan font-mono text-[10px]"
-                            >
-                              <GitPullRequest className="h-4 w-4 shrink-0" />
-                              APPLY REMEDIATIONS
-                            </Button>
-                          </div>
                         </div>
                       </div>
                     </div>
@@ -610,62 +588,62 @@ function AnalysisPageContent() {
 
                     {/* Search bar */}
                     <div className="relative w-full lg:w-80">
-                      <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-zinc-500" />
+                      <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-zinc-400" />
                       <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search issues by keyword..."
-                        className="w-full pl-10 pr-4 py-2.5 text-xs rounded-none border border-zinc-800 bg-[#07070b]/90 text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-cyber-cyan/50 focus:ring-1 focus:ring-cyber-cyan/35 transition-colors font-mono"
+                        className="w-full pl-10 pr-4 py-2.5 text-xs rounded-none border border-zinc-700 bg-[#07070b]/90 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-cyber-cyan/60 focus:ring-1 focus:ring-cyber-cyan/40 transition-colors font-mono"
                       />
                     </div>
 
                     <div className="flex items-center gap-4 flex-wrap w-full lg:w-auto select-none font-mono">
                       {/* Category Filter Tab Selector */}
-                      <div className="flex border border-zinc-800 bg-black/45 p-0.5 text-[9px] font-bold uppercase tracking-wider">
+                      <div className="flex border border-zinc-700/80 bg-[#0d0f18] p-1 text-[10px] font-bold uppercase tracking-wider gap-1">
                         <button
                           onClick={() => setCategoryFilter("all")}
-                          className={`px-3 py-1.5 transition-colors cursor-pointer ${categoryFilter === "all" ? "bg-cyber-cyan text-black" : "text-zinc-500 hover:text-zinc-300"}`}
+                          className={`px-3.5 py-1.5 transition-all cursor-pointer ${categoryFilter === "all" ? "bg-cyber-cyan text-black font-extrabold shadow-[0_0_10px_rgba(0,240,255,0.35)]" : "text-zinc-300 hover:text-white hover:bg-zinc-800/90"}`}
                         >
                           All Classes
                         </button>
                         <button
                           onClick={() => setCategoryFilter("security")}
-                          className={`px-3 py-1.5 transition-colors cursor-pointer ${categoryFilter === "security" ? "bg-cyber-cyan text-black" : "text-zinc-500 hover:text-zinc-300"}`}
+                          className={`px-3.5 py-1.5 transition-all cursor-pointer ${categoryFilter === "security" ? "bg-cyber-cyan text-black font-extrabold shadow-[0_0_10px_rgba(0,240,255,0.35)]" : "text-zinc-300 hover:text-white hover:bg-zinc-800/90"}`}
                         >
                           Security
                         </button>
                         <button
                           onClick={() => setCategoryFilter("quality")}
-                          className={`px-3 py-1.5 transition-colors cursor-pointer ${categoryFilter === "quality" ? "bg-cyber-cyan text-black" : "text-zinc-500 hover:text-zinc-300"}`}
+                          className={`px-3.5 py-1.5 transition-all cursor-pointer ${categoryFilter === "quality" ? "bg-cyber-cyan text-black font-extrabold shadow-[0_0_10px_rgba(0,240,255,0.35)]" : "text-zinc-300 hover:text-white hover:bg-zinc-800/90"}`}
                         >
                           Code Quality
                         </button>
                       </div>
 
                       {/* Severity Filter Tab Selector */}
-                      <div className="flex border border-zinc-800 bg-black/45 p-0.5 text-[9px] font-bold uppercase tracking-wider">
+                      <div className="flex border border-zinc-700/80 bg-[#0d0f18] p-1 text-[10px] font-bold uppercase tracking-wider gap-1">
                         <button
                           onClick={() => setSeverityFilter("all")}
-                          className={`px-3 py-1.5 transition-colors cursor-pointer ${severityFilter === "all" ? "bg-cyber-cyan text-black" : "text-zinc-500 hover:text-zinc-300"}`}
+                          className={`px-3.5 py-1.5 transition-all cursor-pointer ${severityFilter === "all" ? "bg-cyber-cyan text-black font-extrabold shadow-[0_0_10px_rgba(0,240,255,0.35)]" : "text-zinc-300 hover:text-white hover:bg-zinc-800/90"}`}
                         >
                           All Levels
                         </button>
                         <button
                           onClick={() => setSeverityFilter("critical")}
-                          className={`px-3 py-1.5 transition-colors cursor-pointer ${severityFilter === "critical" ? "bg-cyber-cyan text-black" : "text-zinc-500 hover:text-zinc-300"}`}
+                          className={`px-3.5 py-1.5 transition-all cursor-pointer ${severityFilter === "critical" ? "bg-cyber-cyan text-black font-extrabold shadow-[0_0_10px_rgba(0,240,255,0.35)]" : "text-zinc-300 hover:text-white hover:bg-zinc-800/90"}`}
                         >
                           Critical
                         </button>
                         <button
                           onClick={() => setSeverityFilter("high")}
-                          className={`px-3 py-1.5 transition-colors cursor-pointer ${severityFilter === "high" ? "bg-cyber-cyan text-black" : "text-zinc-500 hover:text-zinc-300"}`}
+                          className={`px-3.5 py-1.5 transition-all cursor-pointer ${severityFilter === "high" ? "bg-cyber-cyan text-black font-extrabold shadow-[0_0_10px_rgba(0,240,255,0.35)]" : "text-zinc-300 hover:text-white hover:bg-zinc-800/90"}`}
                         >
                           High
                         </button>
                         <button
                           onClick={() => setSeverityFilter("low")}
-                          className={`px-3 py-1.5 transition-colors cursor-pointer ${severityFilter === "low" ? "bg-cyber-cyan text-black" : "text-zinc-500 hover:text-zinc-300"}`}
+                          className={`px-3.5 py-1.5 transition-all cursor-pointer ${severityFilter === "low" ? "bg-cyber-cyan text-black font-extrabold shadow-[0_0_10px_rgba(0,240,255,0.35)]" : "text-zinc-300 hover:text-white hover:bg-zinc-800/90"}`}
                         >
                           Low
                         </button>
@@ -675,9 +653,79 @@ function AnalysisPageContent() {
 
                   {/* Issues Grid */}
                   {filteredIssues.length === 0 ? (
-                    <div className="text-center py-16 text-xs font-mono text-zinc-500 border border-dashed border-zinc-800 bg-[#0b0b14]/20 uppercase tracking-widest select-none">
-                      {isScanning ? "// Engine scan in progress..." : "// No vulnerability issues identified."}
-                    </div>
+                    isScanning ? (
+                      <div className="flex flex-col items-center justify-center text-center py-16 px-6 border border-cyber-cyan/30 bg-[#060812]/80 cyber-card-clip relative overflow-hidden space-y-4">
+                        <div className="absolute inset-0 cyber-grid-dot opacity-20 pointer-events-none" />
+                        <div className="h-14 w-14 border border-cyber-cyan bg-cyber-cyan/10 flex items-center justify-center text-cyber-cyan shadow-[0_0_16px_rgba(0,240,255,0.3)] relative z-10 animate-pulse">
+                          <Terminal className="h-7 w-7" />
+                        </div>
+                        <div className="space-y-1 relative z-10">
+                          <h3 className="text-sm font-orbitron font-extrabold text-white uppercase tracking-wider">
+                            SECURITY AUDIT SCAN IN PROGRESS
+                          </h3>
+                          <p className="text-xs text-zinc-400 font-sans max-w-md leading-relaxed">
+                            Traversing codebase AST, inspecting configuration profiles, and evaluating security and quality rules...
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] font-mono text-cyber-cyan bg-cyber-cyan/10 border border-cyber-cyan/30 px-3 py-1 uppercase tracking-widest relative z-10">
+                          <span className="h-1.5 w-1.5 rounded-full bg-cyber-cyan animate-ping" />
+                          PARSING REPOSITORY FILES
+                        </div>
+                      </div>
+                    ) : issues.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center text-center py-16 px-6 border border-[#00ff66]/30 bg-[#05140b]/80 cyber-card-clip relative overflow-hidden space-y-4 shadow-[0_0_25px_rgba(0,255,102,0.08)]">
+                        <div className="absolute inset-0 cyber-grid-dot opacity-20 pointer-events-none" />
+                        <div className="h-16 w-16 border border-[#00ff66] bg-[#00ff66]/10 flex items-center justify-center text-[#00ff66] shadow-[0_0_20px_rgba(0,255,102,0.35)] relative z-10">
+                          <ShieldCheck className="h-8 w-8" />
+                        </div>
+                        <div className="space-y-1.5 relative z-10">
+                          <div className="flex items-center justify-center gap-2">
+                            <span className="h-2 w-2 rounded-full bg-[#00ff66] shadow-[0_0_8px_#00ff66]" />
+                            <h3 className="text-sm font-orbitron font-extrabold text-white uppercase tracking-wider">
+                              ALL SECURITY & QUALITY CHECKS PASSED
+                            </h3>
+                          </div>
+                          <p className="text-xs text-zinc-400 font-sans max-w-lg leading-relaxed">
+                            No vulnerability issues, exposed secrets, architecture deviations, or code smells were identified in this codebase.
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3 pt-1 relative z-10">
+                          <div className="inline-flex items-center gap-2 px-3 py-1 text-[10px] font-mono font-bold tracking-wider uppercase bg-[#00ff66]/15 text-[#00ff66] border border-[#00ff66]/40 select-none">
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            AUDIT VERIFIED // 100% HEALTHY
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center text-center py-16 px-6 border border-dashed border-zinc-800 bg-[#0b0b14]/50 cyber-card-clip relative overflow-hidden space-y-4">
+                        <div className="absolute inset-0 cyber-grid-dot opacity-10 pointer-events-none" />
+                        <div className="h-12 w-12 border border-zinc-700 bg-zinc-900/60 flex items-center justify-center text-zinc-400 relative z-10">
+                          <Filter className="h-6 w-6" />
+                        </div>
+                        <div className="space-y-1.5 relative z-10">
+                          <h3 className="text-xs font-orbitron font-extrabold text-white uppercase tracking-wider">
+                            NO MATCHING ISSUES FOUND
+                          </h3>
+                          <p className="text-xs text-zinc-400 font-sans max-w-md leading-relaxed">
+                            No detected issues match your active filter criteria
+                            {searchQuery ? ` ("${searchQuery}")` : ""}. Try adjusting or clearing your filters.
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => {
+                            setSearchQuery("");
+                            setCategoryFilter("all");
+                            setSeverityFilter("all");
+                          }}
+                          className="border-zinc-700 text-zinc-300 hover:text-white hover:border-cyber-cyan font-mono text-xs py-1.5 px-4 relative z-10 gap-2 cursor-pointer"
+                        >
+                          <RotateCcw className="h-3.5 w-3.5" />
+                          RESET ALL FILTERS
+                        </Button>
+                      </div>
+                    )
                   ) : (
                     <div className="grid gap-6 md:grid-cols-2">
                       {filteredIssues.map((issue) => (

@@ -535,9 +535,9 @@ function RecommendationPageContent() {
                     <div className="flex gap-3 text-left">
                       <ShieldAlert className="h-5 w-5 text-cyber-cyan shrink-0 mt-0.5" />
                       <div className="space-y-1">
-                        <span className="text-[9px] font-bold font-orbitron text-white uppercase tracking-widest block">AI PR VALIDATION PASS</span>
+                        <span className="text-[9px] font-bold font-orbitron text-white uppercase tracking-widest block">SECURE REMEDIATION GUIDE</span>
                         <p className="text-[11px] text-zinc-400 font-sans leading-relaxed">
-                          Remediations are pre-compiled and run through internal static check rules automatically before submission.
+                          Review the proposed secure code diff above and apply the recommended changes directly to your repository source files.
                         </p>
                       </div>
                     </div>
@@ -547,19 +547,20 @@ function RecommendationPageContent() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between font-sans text-xs bg-[#0b0b14] border border-border/60 px-4 py-2.5">
                       <div className="flex items-center gap-2">
-                        <CheckCircle className="h-4.5 w-4.5 text-cyber-green shrink-0" />
-                        <span className="text-[9px] font-bold text-zinc-400 uppercase font-orbitron tracking-wider">STATUS</span>
+                        <CheckCircle className="h-4.5 w-4.5 text-cyber-cyan shrink-0" />
+                        <span className="text-[9px] font-bold text-zinc-400 uppercase font-orbitron tracking-wider">GUIDANCE</span>
                       </div>
-                      <span className="text-[10px] font-bold text-cyber-green uppercase font-orbitron tracking-wider">PRE-VALIDATED</span>
+                      <span className="text-[10px] font-bold text-cyber-cyan uppercase font-orbitron tracking-wider">READY FOR REVIEW</span>
                     </div>
 
                     <Button 
-                      variant="primary" 
+                      variant="secondary" 
                       size="md"
-                      className="shadow-[0_0_15px_rgba(0,240,255,0.45)] flex items-center justify-center gap-1.5 animate-pulse w-full py-3"
+                      onClick={() => router.push(repoId ? `/analysis?repoId=${repoId}` : '/analysis')}
+                      className="border-zinc-700 hover:border-cyber-cyan text-zinc-200 hover:text-white flex items-center justify-center gap-2 w-full py-3 font-mono text-xs cursor-pointer"
                     >
-                      APPLY AUTONOMOUS PATCH
-                      <ArrowRight className="h-4 w-4" />
+                      <ArrowLeft className="h-4 w-4" />
+                      BACK TO ANALYSIS
                     </Button>
                   </div>
                 </div>

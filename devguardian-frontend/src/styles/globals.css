@@ -118,14 +118,6 @@
   position: relative;
 }
 
-.cyber-grid-bg::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 50% 50%, transparent 10%, #050508 85%);
-  pointer-events: none;
-}
-
 /* Dotted Cyber Matrix */
 .cyber-grid-dot {
   background-size: 24px 24px;
