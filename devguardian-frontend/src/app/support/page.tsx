@@ -95,29 +95,29 @@ export default function SupportPage() {
                 techCorners={true}
                 className="border-cyber-cyan/15"
               >
-                <div className="grid gap-3 sm:grid-cols-2 mt-2 text-left font-mono text-xs">
+                <div className="grid gap-3 sm:grid-cols-2 mt-2 text-left text-xs">
                   <div className="p-3 bg-[#050509] border border-zinc-800/80 space-y-1">
-                    <span className="text-cyber-pink font-bold block">// SQL Injection (A03:2021)</span>
+                    <span className="text-cyber-pink font-bold font-mono block">SQL Injection (A03:2021)</span>
                     <p className="text-[11px] text-zinc-400 font-sans">Detects unparameterized string concatenations and template literals in DB queries.</p>
                   </div>
                   <div className="p-3 bg-[#050509] border border-zinc-800/80 space-y-1">
-                    <span className="text-cyber-pink font-bold block">// Command Injection (A03:2021)</span>
+                    <span className="text-cyber-pink font-bold font-mono block">Command Injection (A03:2021)</span>
                     <p className="text-[11px] text-zinc-400 font-sans">Flags unsanitized inputs passed to child_process exec/spawn and Runtime.exec.</p>
                   </div>
                   <div className="p-3 bg-[#050509] border border-zinc-800/80 space-y-1">
-                    <span className="text-cyber-pink font-bold block">// Path Traversal (A01:2021)</span>
+                    <span className="text-cyber-pink font-bold font-mono block">Path Traversal (A01:2021)</span>
                     <p className="text-[11px] text-zinc-400 font-sans">Detects dynamic file lookups that may expose restricted server files.</p>
                   </div>
                   <div className="p-3 bg-[#050509] border border-zinc-800/80 space-y-1">
-                    <span className="text-cyber-pink font-bold block">// Cross-Site Scripting (A03:2021)</span>
+                    <span className="text-cyber-pink font-bold font-mono block">Cross-Site Scripting (A03:2021)</span>
                     <p className="text-[11px] text-zinc-400 font-sans">Identifies unsafe DOM sinks like innerHTML, dangerouslySetInnerHTML, and eval.</p>
                   </div>
                   <div className="p-3 bg-[#050509] border border-zinc-800/80 space-y-1">
-                    <span className="text-cyber-yellow font-bold block">// Hardcoded Credentials (A07:2021)</span>
+                    <span className="text-cyber-yellow font-bold font-mono block">Hardcoded Credentials (A07:2021)</span>
                     <p className="text-[11px] text-zinc-400 font-sans">Catches hardcoded passwords, tokens, API keys, and insecure default secrets.</p>
                   </div>
                   <div className="p-3 bg-[#050509] border border-zinc-800/80 space-y-1">
-                    <span className="text-cyber-yellow font-bold block">// Weak Cryptography (A02:2021)</span>
+                    <span className="text-cyber-yellow font-bold font-mono block">Weak Cryptography (A02:2021)</span>
                     <p className="text-[11px] text-zinc-400 font-sans">Flags deprecated cryptographic algorithms like MD5, SHA-1, DES, and RC4.</p>
                   </div>
                 </div>
