@@ -388,14 +388,25 @@ public class RepositoryServiceImpl implements RepositoryService {
 
         String cleanedUrl = remoteUrl.trim();
         try {
-            Collection<Ref> refs = Git.lsRemoteRepository()
+            org.eclipse.jgit.api.LsRemoteCommand lsRemoteCommand = Git.lsRemoteRepository()
                     .setRemote(cleanedUrl)
-                    .setHeads(true)
-                    .call();
+                    .setHeads(true);
+
+            // Pass user's GitHub OAuth token if available (allows accessing user's own private repos via URL)
+            try {
+                GithubConnection connection = githubConnectionService.getCurrentUserConnection();
+                if (connection != null && connection.getAccessToken() != null && !connection.getAccessToken().isBlank()) {
+                    lsRemoteCommand.setCredentialsProvider(
+                            new org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider(connection.getAccessToken(), "")
+                    );
+                }
+            } catch (Exception ignored) {}
+
+            Collection<Ref> refs = lsRemoteCommand.call();
 
             if (refs == null || refs.isEmpty()) {
                 throw new ResourceNotFoundException(
-                        "No branches found for repository. Please verify the URL is public and valid.");
+                        "No branches found for repository. Please verify the URL exists and is accessible.");
             }
 
             List<String> branches = refs.stream()
@@ -428,7 +439,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         } catch (Exception ex) {
             log.error("Failed to query remote branches for URL: {}", cleanedUrl, ex);
             throw new BusinessException("Unable to access repository at " + cleanedUrl
-                    + ". Please ensure the repository exists, is public, and the URL is correct.");
+                    + ". If this is a private repository, please connect your GitHub account in the integration banner.");
         }
     }
 }

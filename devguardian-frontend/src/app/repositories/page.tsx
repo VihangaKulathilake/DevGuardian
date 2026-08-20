@@ -501,10 +501,25 @@ export default function RepositoriesPage() {
                     )}
 
                     {branchDiscoveryError && (
-                      <span className="text-[9px] font-mono text-cyber-pink flex items-center gap-1 mt-0.5">
-                        <AlertTriangle className="h-3 w-3 shrink-0" />
-                        {branchDiscoveryError}
-                      </span>
+                      <div className="p-3 bg-cyber-pink/10 border border-cyber-pink/30 text-[11px] text-zinc-300 space-y-1.5 mt-2 rounded-none">
+                        <div className="flex items-center gap-1.5 text-cyber-pink font-bold font-mono">
+                          <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                          <span>ACCESS DENIED // AUTHENTICATION REQUIRED</span>
+                        </div>
+                        <p className="text-[10px] text-zinc-400 font-mono leading-relaxed">
+                          {branchDiscoveryError}
+                        </p>
+                        {!isGithubConnected && repoUrl.includes("github.com") && (
+                          <button
+                            type="button"
+                            onClick={handleConnectGithub}
+                            className="text-[10px] text-cyber-cyan hover:underline font-mono font-bold flex items-center gap-1 pt-1 cursor-pointer"
+                          >
+                            <GitFork className="h-3 w-3" />
+                            Connect GitHub to access your private repositories →
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
 
@@ -522,7 +537,7 @@ export default function RepositoriesPage() {
                   <div className="flex flex-col gap-0.5">
                     <span className="text-xs font-orbitron font-bold text-white uppercase tracking-wider">SECURE CLONE PROTOCOL</span>
                     <p className="text-[10px] text-zinc-500 font-mono leading-relaxed">
-                      For public repositories, no credentials are required. For private repositories, make sure they are accessible or the token is embedded in the clone URL.
+                      Public repositories require no credentials. For your own private repositories, connect your GitHub integration or import directly from the GitHub tab.
                     </p>
                   </div>
                 </div>
@@ -537,7 +552,14 @@ export default function RepositoriesPage() {
                   >
                     CANCEL
                   </Button>
-                  <Button type="submit" size="sm" variant="primary" loading={isSubmitting} className="font-mono">
+                  <Button
+                    type="submit"
+                    size="sm"
+                    variant="primary"
+                    loading={isSubmitting}
+                    disabled={isSubmitting || !!branchDiscoveryError || isDiscoveringBranches || !repoUrl.trim()}
+                    className="font-mono disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                     LINK & INITIALIZE AUDIT
                   </Button>
                 </div>
