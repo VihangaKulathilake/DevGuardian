@@ -48,6 +48,10 @@ spring:
           uri: lb://notification-service
           predicates:
             - Path=/api/v1/notifications/**, /api/notifications/**
+        - id: notification-service-ws
+          uri: lb://notification-service
+          predicates:
+            - Path=/ws-notifications/**
 
 eureka:
   instance:

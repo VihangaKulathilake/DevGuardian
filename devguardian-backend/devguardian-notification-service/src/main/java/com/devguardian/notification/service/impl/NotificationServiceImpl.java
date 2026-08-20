@@ -7,6 +7,7 @@ import com.devguardian.notification.entity.Notification;
 import com.devguardian.notification.mapper.NotificationMapper;
 import com.devguardian.notification.repository.NotificationRepository;
 import com.devguardian.notification.service.NotificationService;
+import com.devguardian.notification.config.NotificationWebSocketHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,11 +19,16 @@ public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository repository;
     private final NotificationMapper mapper;
+    private final NotificationWebSocketHandler webSocketHandler;
 
     @Override
     public NotificationResponse create(NotificationRequest request) {
         Notification notification = mapper.toEntity(request);
-        return mapper.toResponse(repository.save(notification));
+        NotificationResponse response = mapper.toResponse(repository.save(notification));
+        if (request.getUserId() != null) {
+            webSocketHandler.sendNotificationToUser(String.valueOf(request.getUserId()), response);
+        }
+        return response;
     }
 
     @Override

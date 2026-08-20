@@ -5,6 +5,8 @@ import { notificationApi } from "@/features/notification/notificationApi";
 import { NotificationResponse } from "@/features/notification/notificationTypes";
 import { cn } from "@/lib/utils";
 
+import { useNotificationSocket } from "@/hooks/useNotificationSocket";
+
 export const NotificationDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [notifications, setNotifications] = React.useState<NotificationResponse[]>([]);
@@ -30,14 +32,24 @@ export const NotificationDropdown: React.FC = () => {
     }
   }, [userId]);
 
+  // Initial fetch on login/mount
   React.useEffect(() => {
     if (userId) {
       fetchNotifications();
-      // Poll every 30 seconds for new notifications
-      const interval = setInterval(fetchNotifications, 30000);
-      return () => clearInterval(interval);
     }
   }, [userId, fetchNotifications]);
+
+  // Real-time WebSocket listener (replaces HTTP polling)
+  useNotificationSocket({
+    userId,
+    onNotification: (newNotification) => {
+      setNotifications((prev) => [
+        newNotification,
+        ...prev.filter((n) => n.id !== newNotification.id),
+      ]);
+      setUnreadCount((prev) => prev + 1);
+    },
+  });
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -83,19 +95,23 @@ export const NotificationDropdown: React.FC = () => {
   const formatDistanceToNow = (dateString: string) => {
     if (!dateString) return "";
     try {
-      // Replace space with T to ensure standard ISO 8601 compliance across all browsers (e.g., Safari/Firefox)
-      const normalizedDate = typeof dateString === "string" ? dateString.replace(" ", "T") : dateString;
-      const date = new Date(normalizedDate);
+      let normalized = typeof dateString === "string" ? dateString.trim().replace(" ", "T") : String(dateString);
+      // If timestamp is ISO without timezone offset (e.g. 2026-08-19T23:32:14), parse as UTC
+      if (!normalized.endsWith("Z") && !/[+-]\d{2}(?::?\d{2})?$/.test(normalized)) {
+        normalized += "Z";
+      }
+      const date = new Date(normalized);
       if (isNaN(date.getTime())) {
         return "";
       }
       const now = new Date();
-      const diffMs = now.getTime() - date.getTime();
-      const diffMins = Math.floor(diffMs / 60000);
+      const diffMs = Math.max(0, now.getTime() - date.getTime());
+      const diffSecs = Math.floor(diffMs / 1000);
+      const diffMins = Math.floor(diffSecs / 60);
       const diffHours = Math.floor(diffMins / 60);
       const diffDays = Math.floor(diffHours / 24);
 
-      if (diffMins < 1) return "Just now";
+      if (diffSecs < 45) return "Just now";
       if (diffMins < 60) return `${diffMins}m ago`;
       if (diffHours < 24) return `${diffHours}h ago`;
       return `${diffDays}d ago`;
