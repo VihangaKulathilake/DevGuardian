@@ -7,7 +7,7 @@ import Sidebar from "@/components/navbar/Sidebar";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
-import { User, Shield, GitFork, LogOut, Radio, Lock, CheckCircle2, AlertTriangle, Sparkles } from "lucide-react";
+import { User, Shield, GitFork, LogOut, Radio, Lock, CheckCircle2, AlertTriangle, Sparkles, Cpu, Zap } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
 import { logout } from "@/features/auth/authSlice";
 import {
@@ -16,6 +16,8 @@ import {
   disconnectGithubAccount,
 } from "@/features/repository/repositorySlice";
 import AppFooter from "@/components/common/AppFooter";
+import { aiApi } from "@/features/ai/aiApi";
+import { ModelStatus } from "@/features/ai/aiTypes";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -23,9 +25,40 @@ export default function SettingsPage() {
   const { user } = useAppSelector((state) => state.auth);
   const { isGithubConnected, githubLoading } = useAppSelector((state) => state.repo);
 
+  const [models, setModels] = React.useState<ModelStatus[]>([]);
+  const [activeProvider, setActiveProvider] = React.useState<string>("groq");
+  const [switchingModel, setSwitchingModel] = React.useState(false);
+
   React.useEffect(() => {
     dispatch(fetchGithubRepositories());
+    loadModels();
   }, [dispatch]);
+
+  const loadModels = async () => {
+    try {
+      const list = await aiApi.getAvailableModels();
+      if (list && list.length > 0) {
+        setModels(list);
+        const active = list.find((m) => m.active);
+        if (active) setActiveProvider(active.providerId);
+      }
+    } catch (e) {
+      console.warn("Error loading models in settings:", e);
+    }
+  };
+
+  const handleSwitchModel = async (providerId: string) => {
+    setSwitchingModel(true);
+    try {
+      await aiApi.setActiveModel(providerId);
+      setActiveProvider(providerId);
+      await loadModels();
+    } catch (e) {
+      console.error("Failed to switch active model:", e);
+    } finally {
+      setSwitchingModel(false);
+    }
+  };
 
   const handleConnectGithub = () => {
     dispatch(connectGithubAccount());
@@ -54,7 +87,7 @@ export default function SettingsPage() {
               ACCOUNT & NODE SETTINGS
             </h1>
             <p className="text-xs font-mono text-zinc-500 uppercase tracking-widest">
-              Manage authenticated user identity, active GitHub integration nodes, and security sessions.
+              Manage authenticated user identity, active AI model routing, GitHub integration nodes, and security sessions.
             </p>
           </div>
 
@@ -112,6 +145,91 @@ export default function SettingsPage() {
                         {user?.role || "USER"}
                       </Badge>
                       <span className="text-[10px] text-zinc-400">Security Operator</span>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* AI Multi-Model Routing Engine */}
+              <Card
+                title={
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4.5 w-4.5 text-cyber-cyan" />
+                    <span>AI Model Routing & Auto-Failover Engine</span>
+                  </div>
+                }
+                subtitle="Configure primary LLM provider and automated rate-limit failover."
+                techCorners={true}
+                className="border-cyber-cyan/15"
+              >
+                <div className="space-y-4 mt-2 text-left">
+                  <div className="p-3.5 bg-[#050509] border border-zinc-800 space-y-1.5">
+                    <div className="flex items-center gap-2 text-cyber-green text-xs font-bold font-orbitron">
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span>INTELLIGENT RATE-LIMIT FAILOVER ACTIVE</span>
+                    </div>
+                    <p className="text-[11px] text-zinc-400 font-sans leading-relaxed">
+                      If your primary AI provider reaches its rate limit (HTTP 429) or quota threshold, DevGuardian automatically routes remediation requests to your secondary backup engine with zero downtime.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {/* Groq Card */}
+                    <div className={`p-4 border transition-all ${activeProvider === "groq" ? "border-cyber-cyan bg-cyber-cyan/5 shadow-[0_0_12px_rgba(0,240,255,0.15)]" : "border-zinc-800 bg-[#0b0b14]"}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Zap className="h-4 w-4 text-cyber-cyan" />
+                          <span className="font-orbitron font-bold text-xs text-white">GROQ (LLAMA 3.3 70B)</span>
+                        </div>
+                        {activeProvider === "groq" ? (
+                          <Badge variant="success">PRIMARY</Badge>
+                        ) : (
+                          <Badge variant="neutral">BACKUP</Badge>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-zinc-400 font-sans mb-3">
+                        Ultra-fast LPU inference (500+ tokens/sec) for instant code patch synthesis.
+                      </p>
+                      {activeProvider !== "groq" && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          disabled={switchingModel}
+                          onClick={() => handleSwitchModel("groq")}
+                          className="w-full font-mono text-[11px] border-zinc-700 hover:border-cyber-cyan text-zinc-300 hover:text-white"
+                        >
+                          SET AS PRIMARY MODEL
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* Gemini Card */}
+                    <div className={`p-4 border transition-all ${activeProvider === "gemini" ? "border-cyber-purple bg-cyber-purple/5 shadow-[0_0_12px_rgba(143,0,255,0.15)]" : "border-zinc-800 bg-[#0b0b14]"}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="h-4 w-4 text-cyber-purple" />
+                          <span className="font-orbitron font-bold text-xs text-white">GOOGLE GEMINI 2.0 FLASH</span>
+                        </div>
+                        {activeProvider === "gemini" ? (
+                          <Badge variant="info">PRIMARY</Badge>
+                        ) : (
+                          <Badge variant="neutral">BACKUP</Badge>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-zinc-400 font-sans mb-3">
+                        Advanced AST reasoning and deep context code vulnerability auditing.
+                      </p>
+                      {activeProvider !== "gemini" && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          disabled={switchingModel}
+                          onClick={() => handleSwitchModel("gemini")}
+                          className="w-full font-mono text-[11px] border-zinc-700 hover:border-cyber-purple text-zinc-300 hover:text-white"
+                        >
+                          SET AS PRIMARY MODEL
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -216,8 +334,10 @@ export default function SettingsPage() {
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-zinc-500 uppercase tracking-wider">AI ASSISTANT</span>
-                      <span className="text-cyber-purple text-[10px] font-bold">GEMINI 2.5 FLASH</span>
+                      <span className="text-[10px] text-zinc-500 uppercase tracking-wider">PRIMARY AI</span>
+                      <span className="text-cyber-purple text-[10px] font-bold uppercase">
+                        {activeProvider === "gemini" ? "GEMINI 2.0 FLASH" : "GROQ LLAMA 3.3"}
+                      </span>
                     </div>
                   </div>
 

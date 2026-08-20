@@ -1,20 +1,18 @@
 package com.devguardian.ai.client.llm;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
-import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 import java.util.Map;
 
-@Component
 @Slf4j
+@Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "ai.provider", havingValue = "gemini")
 public class GeminiProvider implements LlmProvider {
 
     private final WebClient webClient;
@@ -22,15 +20,34 @@ public class GeminiProvider implements LlmProvider {
     @Value("${gemini.api.key:}")
     private String apiKey;
 
-    @Value("${gemini.model:gemini-1.5-flash}")
+    @Value("${gemini.model:gemini-2.0-flash}")
     private String model;
+
+    @Override
+    public String getProviderId() {
+        return "gemini";
+    }
+
+    @Override
+    public String getDisplayName() {
+        return "Google Gemini 2.0 Flash (" + model + ")";
+    }
+
+    @Override
+    public String getModelName() {
+        return model;
+    }
+
+    @Override
+    public boolean isConfigured() {
+        return apiKey != null && !apiKey.isBlank() && !apiKey.equalsIgnoreCase("gemini_key");
+    }
 
     @Override
     @SuppressWarnings("unchecked")
     public String generate(String prompt) {
-
-        if (apiKey == null || apiKey.isBlank()) {
-            throw new IllegalStateException("Gemini API key is missing.");
+        if (!isConfigured()) {
+            throw new IllegalStateException("Gemini API key is not configured.");
         }
 
         Map<String, Object> body = Map.of(
@@ -53,10 +70,10 @@ public class GeminiProvider implements LlmProvider {
                 .block();
 
         if (response == null) {
-            throw new RuntimeException("Empty response from Gemini.");
+            throw new RuntimeException("Empty response from Gemini API.");
         }
 
-        log.debug("Gemini Response : {}", response);
+        log.debug("Gemini Response: {}", response);
 
         List<Map<String, Object>> candidates =
                 (List<Map<String, Object>>) response.get("candidates");
@@ -72,10 +89,5 @@ public class GeminiProvider implements LlmProvider {
                 (List<Map<String, Object>>) content.get("parts");
 
         return (String) parts.get(0).get("text");
-    }
-
-    @Override
-    public String getModelName() {
-        return model;
     }
 }

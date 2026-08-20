@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Suspense } from "react";
+import { Suspense, useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Navbar from "@/components/navbar/Navbar";
 import Sidebar from "@/components/navbar/Sidebar";
@@ -14,14 +14,20 @@ import {
   ArrowRight, 
   ShieldAlert, 
   FileCode,
-  CheckCircle
+  CheckCircle,
+  AlertTriangle,
+  RefreshCw,
+  Cpu,
+  Zap
 } from "lucide-react";
 import AppFooter from "@/components/common/AppFooter";
+import { aiApi } from "@/features/ai/aiApi";
+import { ModelStatus, AiIssueResponse } from "@/features/ai/aiTypes";
 
 function RecommendationPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [diffMode, setDiffMode] = React.useState<'unified' | 'split'>('unified');
+  const [diffMode, setDiffMode] = useState<'unified' | 'split'>('unified');
 
   const title = searchParams.get("title") || "Vulnerability Alert";
   const description = searchParams.get("description") || "No description provided.";
@@ -36,27 +42,19 @@ function RecommendationPageContent() {
 
   const baseLine = parseInt(lineNo, 10) || 1;
 
-  // Prepare custom, realistic snippets
-  let originalCode = `try {\n    // Code that might fail\n} catch (Exception e) {\n    // Empty block\n}`;
-  let fixedCode = `try {\n    // Code that might fail\n} catch (Exception e) {\n    log.error("Execution failed", e);\n    throw new CustomException("Failed to run task", e);\n}`;
-  
-  interface DiffLine {
-    type: 'added' | 'deleted' | 'normal';
-    text: string;
-    originalLineNo?: number;
-    fixedLineNo?: number;
-  }
+  // AI Model State
+  const [availableModels, setAvailableModels] = useState<ModelStatus[]>([]);
+  const [selectedProvider, setSelectedProvider] = useState<string>("groq");
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [aiResult, setAiResult] = useState<AiIssueResponse | null>(null);
 
-  let unifiedLines: DiffLine[] = [];
-
-  // Centralized dynamic patch generator
+  // Centralized dynamic patch generator fallback
   const generateFixedCode = (rule: string, original: string) => {
     if (!original || original.trim() === "") {
       return "No recommended patch available.";
     }
     const trimmed = original.trim();
 
-    // 1. SQL Injection Fix
     if (rule.toLowerCase().includes("sql_injection") || rule.toLowerCase().includes("sql")) {
       if (trimmed.includes("+")) {
         const varMatch = trimmed.match(/(String\s+\w+\s*=\s*)"([^"]+)"\s*\+\s*(\w+)/);
@@ -70,7 +68,6 @@ function RecommendationPageContent() {
       return `String query = "SELECT * FROM users WHERE username = ?";\nPreparedStatement preparedStatement = connection.prepareStatement(query);\npreparedStatement.setString(1, username);\nResultSet resultSet = preparedStatement.executeQuery();`;
     }
 
-    // 2. Hardcoded Secret / API Key / Password Fix
     if (rule.toLowerCase().includes("secret") || rule.toLowerCase().includes("password") || rule.toLowerCase().includes("key") || rule.toLowerCase().includes("credential") || rule.toLowerCase().includes("jwt")) {
       const secretMatch = trimmed.match(/(String\s+)?(\w+)\s*=\s*["']([^"']+)["']/);
       if (secretMatch) {
@@ -82,36 +79,91 @@ function RecommendationPageContent() {
       return `String secretKey = System.getenv("DEVGUARDIAN_SECRET_KEY"); // Read securely from system environment`;
     }
 
-    // 3. Debug Mode Fix
     if (rule.toLowerCase().includes("debug")) {
-      if (trimmed.includes("debug=true")) {
-        return trimmed.replace("debug=true", "debug=false");
-      }
-      if (trimmed.includes("debug = true")) {
-        return trimmed.replace("debug = true", "debug = false");
-      }
+      if (trimmed.includes("debug=true")) return trimmed.replace("debug=true", "debug=false");
+      if (trimmed.includes("debug = true")) return trimmed.replace("debug = true", "debug = false");
       return `debug=false // Disable development diagnostics in production`;
     }
 
-    // 4. Empty Catch Block Fix
     if (rule.toLowerCase().includes("empty_catch") || rule.toLowerCase().includes("catch")) {
       return `} catch (Exception e) {\n    log.error("Execution failed", e);\n    throw new CustomException("Failed to run task", e);\n}`;
     }
 
-    // Fallback default fix suggestion
     return trimmed + `\n// Refactored dynamically using secure coding guidelines.`;
   };
 
-  // If a real codeSnippet is passed from the database, use it!
+  // Load available AI models from backend
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        const list = await aiApi.getAvailableModels();
+        if (list && list.length > 0) {
+          setAvailableModels(list);
+          const active = list.find(m => m.active);
+          if (active) {
+            setSelectedProvider(active.providerId);
+          }
+        }
+      } catch (e) {
+        console.warn("Could not fetch available AI models:", e);
+      }
+    };
+    fetchModels();
+  }, []);
+
+  // Fetch AI Enrichment
+  const fetchAiEnrichment = useCallback(async (provider: string) => {
+    setIsAiLoading(true);
+    try {
+      const res = await aiApi.enrichIssue({
+        issueType: ruleCode || title,
+        fileName: filePath,
+        codeSnippet: codeSnippet || `// Issue at ${filePath}:${lineNo}`,
+        description: description,
+        preferredProvider: provider,
+      });
+      if (res) {
+        setAiResult(res);
+      }
+    } catch (err: any) {
+      console.warn("AI enrichment failed, falling back to AST heuristics:", err);
+    } finally {
+      setIsAiLoading(false);
+    }
+  }, [ruleCode, title, filePath, lineNo, codeSnippet, description]);
+
+  useEffect(() => {
+    fetchAiEnrichment(selectedProvider);
+  }, [fetchAiEnrichment, selectedProvider]);
+
+  const handleProviderChange = (newProvider: string) => {
+    setSelectedProvider(newProvider);
+    fetchAiEnrichment(newProvider);
+  };
+
+  // Prepare custom snippets
+  let originalCode = codeSnippet && codeSnippet.trim() !== "" 
+    ? codeSnippet 
+    : `try {\n    // Code that might fail\n} catch (Exception e) {\n    // Empty block\n}`;
+  
+  let fixedCode = aiResult?.recommendation && aiResult.recommendation.trim().length > 10
+    ? aiResult.recommendation
+    : generateFixedCode(ruleCode, originalCode);
+
+  interface DiffLine {
+    type: 'added' | 'deleted' | 'normal';
+    text: string;
+    originalLineNo?: number;
+    fixedLineNo?: number;
+  }
+
+  let unifiedLines: DiffLine[] = [];
   if (codeSnippet && codeSnippet.trim() !== "") {
-    originalCode = codeSnippet;
-    fixedCode = generateFixedCode(ruleCode, codeSnippet);
     unifiedLines = [
       { type: 'deleted', text: originalCode, originalLineNo: baseLine },
       { type: 'added', text: fixedCode, fixedLineNo: baseLine }
     ];
   } else {
-    // Legacy static fallback to ensure compatibility with previously recorded scans
     if (title.toLowerCase().includes("sql injection")) {
       originalCode = `String query = "SELECT * FROM users WHERE username = " + username;\nStatement statement = connection.createStatement();\nResultSet resultSet = statement.executeQuery(query);`;
       fixedCode = `String query = "SELECT * FROM users WHERE username = ?";\nPreparedStatement preparedStatement = connection.prepareStatement(query);\npreparedStatement.setString(1, username);\nResultSet resultSet = preparedStatement.executeQuery();`;
@@ -124,49 +176,19 @@ function RecommendationPageContent() {
         { type: 'deleted', text: `ResultSet resultSet = statement.executeQuery(query);`, originalLineNo: baseLine + 2 },
         { type: 'added', text: `ResultSet resultSet = preparedStatement.executeQuery();`, fixedLineNo: baseLine + 3 }
       ];
-    } else if (title.toLowerCase().includes("secret") || title.toLowerCase().includes("key") || title.toLowerCase().includes("password") || title.toLowerCase().includes("credential")) {
-      originalCode = `String secretKey = "stripe_api_key_placeholder_12345"; // Hardcoded credentials`;
-      fixedCode = `String secretKey = System.getenv("DEVGUARDIAN_SECRET_KEY"); // Read from env variables`;
-      unifiedLines = [
-        { type: 'deleted', text: `String secretKey = "stripe_api_key_placeholder_12345"; // Hardcoded credentials`, originalLineNo: baseLine },
-        { type: 'added', text: `String secretKey = System.getenv("DEVGUARDIAN_SECRET_KEY"); // Read from env variables`, fixedLineNo: baseLine }
-      ];
-    } else if (filePath.endsWith(".properties") || filePath.endsWith(".env") || title.toLowerCase().includes("debug")) {
-      originalCode = `debug=true\nspring.datasource.password="admin123"`;
-      fixedCode = `debug=false\nspring.datasource.password=\${DATABASE_PASSWORD}`;
-      unifiedLines = [
-        { type: 'deleted', text: `debug=true`, originalLineNo: baseLine },
-        { type: 'added', text: `debug=false`, fixedLineNo: baseLine },
-        { type: 'deleted', text: `spring.datasource.password="admin123"`, originalLineNo: baseLine + 1 },
-        { type: 'added', text: `spring.datasource.password=\${DATABASE_PASSWORD}`, fixedLineNo: baseLine + 1 }
-      ];
-    } else if (title.toLowerCase().includes("large file")) {
-      originalCode = `// Large file detected: ${filePath}\n// Tracking large files directly in git degrades clone and scan performance.`;
-      fixedCode = `# Add to your .gitignore to exclude this file from repository tracking\n${filePath}`;
-      unifiedLines = [
-        { type: 'deleted', text: `// Large file detected: ${filePath}`, originalLineNo: baseLine },
-        { type: 'added', text: `# Exclude large files/data from Git tracking in .gitignore`, fixedLineNo: baseLine },
-        { type: 'added', text: `${filePath}`, fixedLineNo: baseLine + 1 }
-      ];
     } else {
-      originalCode = `// TODO: Implement user verification logic`;
-      fixedCode = `if (user.isVerified()) {\n    proceedToDashboard();\n} else {\n    throw new UnauthorizedException();\n}`;
       unifiedLines = [
-        { type: 'deleted', text: `// TODO: Implement user verification logic`, originalLineNo: baseLine },
-        { type: 'added', text: `if (user.isVerified()) {`, fixedLineNo: baseLine },
-        { type: 'added', text: `    proceedToDashboard();`, fixedLineNo: baseLine + 1 },
-        { type: 'added', text: `} else {`, fixedLineNo: baseLine + 2 },
-        { type: 'added', text: `    throw new UnauthorizedException();`, fixedLineNo: baseLine + 3 },
-        { type: 'added', text: `}`, fixedLineNo: baseLine + 4 }
+        { type: 'deleted', text: originalCode, originalLineNo: baseLine },
+        { type: 'added', text: fixedCode, fixedLineNo: baseLine }
       ];
     }
   }
 
   const handleBack = () => {
-    router.push(`/analysis?repoId=${repoId}`);
+    router.push(repoId ? `/analysis?repoId=${repoId}` : `/analysis`);
   };
 
-  // Safe syntax highlight builder matching the theme
+  // Syntax highlighter
   const highlightLine = (line: string) => {
     if (!line || line.trim() === "") return <span>&nbsp;</span>;
 
@@ -193,7 +215,7 @@ function RecommendationPageContent() {
     };
 
     while ((match = tokenRegex.exec(line)) !== null) {
-      const [token, comment, string, word, other] = match;
+      const [token, comment, string, word] = match;
       if (comment !== undefined) {
         html += `<span class="text-zinc-500 font-normal font-mono">${escapeHtml(comment)}</span>`;
       } else if (string !== undefined) {
@@ -216,19 +238,8 @@ function RecommendationPageContent() {
     return <span dangerouslySetInnerHTML={{ __html: html }} />;
   };
 
-  const parseRecommendation = (text: string) => {
-    const steps = text
-      .split(/\. |\n|; /)
-      .map(s => s.trim())
-      .filter(s => s.length > 3);
-    
-    if (steps.length === 0) {
-      return [text];
-    }
-    return steps;
-  };
-
-  const steps = parseRecommendation(recommendation);
+  const activeModelDisplay = aiResult?.modelName || (selectedProvider === "gemini" ? "Google Gemini 2.0 Flash" : "Groq (Llama 3.3 70B)");
+  const displayExplanation = aiResult?.explanation || description;
   const originalLines = originalCode.split('\n');
   const fixedLines = fixedCode.split('\n');
 
@@ -259,7 +270,10 @@ function RecommendationPageContent() {
         <div className="flex flex-col border border-cyber-green/20 bg-[#051e12]/5 rounded-none overflow-hidden">
           <div className="bg-[#051e12]/20 border-b border-cyber-green/25 px-4 py-2.5 text-cyber-green font-bold text-[10px] uppercase tracking-widest flex items-center justify-between font-orbitron select-none">
             <span>Secured Patch</span>
-            <span className="text-cyber-green animate-pulse">GEMINI AUTO-FIX</span>
+            <span className="text-cyber-green flex items-center gap-1">
+              <Sparkles className="h-3 w-3 animate-pulse" />
+              {activeModelDisplay}
+            </span>
           </div>
           <div className="bg-black/60 p-4 overflow-x-auto min-h-[160px] scrollbar-thin">
             {fixedLines.map((line, idx) => (
@@ -326,23 +340,72 @@ function RecommendationPageContent() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#030306] cyber-grid-bg">
+    <div className="flex flex-col min-h-screen bg-[#030306] cyber-grid-bg text-foreground">
       <Navbar />
       <div className="flex flex-1">
         <Sidebar currentPath="/analysis" />
-        <main className="flex-1 p-6 md:p-8 space-y-8 overflow-y-auto max-w-[1600px] mx-auto w-full">
-          {/* Breadcrumb Back Button */}
-          <div>
+        <main className="flex-1 p-6 md:p-8 space-y-8 overflow-y-auto max-w-[1600px] mx-auto w-full text-left">
+          
+          {/* Top Back Button & Model Selector Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <Button 
               variant="secondary" 
               size="sm" 
               onClick={handleBack}
-              className="flex items-center gap-2 border-cyber-cyan/35 text-cyber-cyan hover:shadow-[0_0_10px_rgba(0,240,255,0.25)]"
+              className="flex items-center gap-2 border-cyber-cyan/35 text-cyber-cyan hover:shadow-[0_0_10px_rgba(0,240,255,0.25)] font-mono text-xs"
             >
               <ArrowLeft className="h-4 w-4" />
-              BACK TO ANALYSIS OVERVIEW
+              BACK TO ANALYSIS COCKPIT
             </Button>
+
+            {/* AI Model Switcher */}
+            <div className="flex items-center gap-3 bg-[#0a0a14] border border-cyber-cyan/30 px-3.5 py-1.5 font-mono text-xs shadow-[0_0_10px_rgba(0,240,255,0.1)]">
+              <div className="flex items-center gap-1.5 text-cyber-cyan">
+                {isAiLoading ? (
+                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Sparkles className="h-3.5 w-3.5 animate-pulse" />
+                )}
+                <span className="text-[10px] font-orbitron font-bold uppercase tracking-wider text-zinc-400">
+                  AI ENGINE:
+                </span>
+              </div>
+
+              <select
+                value={selectedProvider}
+                onChange={(e) => handleProviderChange(e.target.value)}
+                className="bg-transparent text-white font-mono text-xs focus:outline-none cursor-pointer border-b border-cyber-cyan/40 pb-0.5"
+              >
+                <option value="groq" className="bg-[#0b0b14] text-white">Groq (Meta Llama 3.3 70B)</option>
+                <option value="gemini" className="bg-[#0b0b14] text-white">Google Gemini 2.0 Flash</option>
+              </select>
+            </div>
           </div>
+
+          {/* Failover Alert Banner (Only shown if rate-limit failover occurred) */}
+          {aiResult?.fallbackTriggered && (
+            <div className="p-4 bg-[#ffbd2e]/10 border border-[#ffbd2e]/40 flex items-start gap-3.5 animate-in fade-in-50 duration-200">
+              <AlertTriangle className="h-5 w-5 text-[#ffbd2e] shrink-0 mt-0.5 animate-pulse" />
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-orbitron font-bold text-xs text-[#ffbd2e] uppercase tracking-wider">
+                    AUTOMATIC RATE-LIMIT FAILOVER ACTIVATED
+                  </span>
+                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 bg-[#ffbd2e]/20 text-[#ffbd2e] border border-[#ffbd2e]/30">
+                    ZERO DOWNTIME
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-300 font-sans leading-relaxed">
+                  {aiResult.fallbackReason || "Primary AI model encountered rate limits. DevGuardian automatically switched to the secondary backup engine."}
+                </p>
+                <div className="flex items-center gap-3 pt-1 text-[10px] font-mono text-zinc-400">
+                  <span>Primary: <strong className="text-white">{aiResult.primaryModel || "Groq"}</strong></span>
+                  <span>•</span>
+                  <span>Active Engine: <strong className="text-cyber-green">{aiResult.modelName || "Gemini 2.0"}</strong></span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Header & Path Banner */}
           <div className="border-b border-cyber-cyan/15 pb-6 space-y-4">
@@ -350,7 +413,7 @@ function RecommendationPageContent() {
               <Badge variant={severity.toLowerCase() === "critical" || severity.toLowerCase() === "high" ? "error" : "warning"}>
                 {severity}
               </Badge>
-              <span className="text-zinc-600 font-mono select-none">//</span>
+              <span className="text-zinc-600 font-mono select-none">•</span>
               <span className="text-[10px] font-mono font-bold tracking-widest text-muted-foreground uppercase">{category}</span>
             </div>
             
@@ -358,7 +421,7 @@ function RecommendationPageContent() {
               {title}
             </h1>
 
-            {/* Structured Filepath Metadata Bar */}
+            {/* Filepath Metadata Bar */}
             <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-cyber-cyan bg-[#090e18]/80 border border-cyber-cyan/30 p-3 w-full">
               <div className="flex items-center gap-1.5">
                 <span className="text-zinc-500 uppercase text-[9px] font-bold tracking-widest font-orbitron">FILE PATH:</span>
@@ -369,68 +432,52 @@ function RecommendationPageContent() {
                 <span className="text-cyber-pink px-2.5 py-0.5 bg-black/40 border border-zinc-800 font-mono text-xs">{lineNo}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-zinc-500 uppercase text-[9px] font-bold tracking-widest font-orbitron">RULE TRIGGERED:</span>
+                <span className="text-zinc-500 uppercase text-[9px] font-bold tracking-widest font-orbitron">RULE CODE:</span>
                 <span className="text-zinc-300 px-2.5 py-0.5 bg-black/40 border border-zinc-800 font-mono text-xs">{ruleCode}</span>
               </div>
             </div>
           </div>
 
-          {/* Row 1: Summary & Telemetry overview (Side by Side) */}
+          {/* Row 1: Summary & Telemetry */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-            {/* Vulnerability Summary Details */}
             <div className="lg:col-span-2">
               <Card 
-                title="Vulnerability Summary" 
-                subtitle="EXPLANATORY DIAGNOSIS"
+                title="Vulnerability Summary & Diagnosis" 
+                subtitle="AUTOMATED AST EXPLANATION"
                 techCorners={true}
                 className="border-cyber-cyan/15 h-full"
               >
                 <div className="bg-[#0b0b14] border border-border/80 p-5 rounded-none h-full flex flex-col justify-center">
                   <span className="text-[9px] font-bold text-cyber-pink block uppercase tracking-wider font-orbitron mb-2">IDENTIFIED ISSUE</span>
                   <p className="text-sm text-zinc-100 leading-relaxed font-sans font-medium antialiased">
-                    {description}
+                    {displayExplanation}
                   </p>
                 </div>
               </Card>
             </div>
 
-            {/* Threat Telemetry metrics */}
             <div className="lg:col-span-1">
               <Card 
-                title="Threat Telemetry" 
-                subtitle="SCAN METRICS ANALYSIS"
+                title="Active AI Router" 
+                subtitle="LLM ORCHESTRATION"
                 techCorners={true}
                 className="border-cyber-cyan/15 h-full"
               >
-                <div className="space-y-4">
-                  {/* Score Impact Display */}
-                  <div className="bg-[#0b0b14] border border-border/80 p-4 rounded-none space-y-2">
-                    <div className="flex justify-between items-center text-[10px] font-orbitron font-bold text-cyber-pink tracking-wider">
-                      <span>SCAN SCORE IMPACT</span>
-                      <span>-18 POINTS</span>
+                <div className="space-y-3 font-mono text-xs">
+                  <div className="p-3 bg-[#05050a] border border-border/80 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-zinc-500 uppercase">ACTIVE MODEL</span>
+                      <span className="text-cyber-green text-[10px] font-bold">{activeModelDisplay}</span>
                     </div>
-                    {/* Glowing progress/severity bar */}
-                    <div className="w-full bg-[#181829] h-2 rounded-full overflow-hidden relative">
-                      <div 
-                        className="bg-gradient-to-r from-cyber-purple via-cyber-pink to-cyber-pink h-full rounded-full animate-pulse shadow-[0_0_8px_#ff007f]" 
-                        style={{ width: '80%' }} 
-                      />
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-zinc-500 uppercase">ROUTING POLICY</span>
+                      <span className="text-cyber-cyan text-[10px] font-bold">AUTO-FAILOVER ON 429</span>
                     </div>
-                    <div className="flex justify-between text-[9px] text-zinc-500 font-mono">
-                      <span>SEVERITY: CRITICAL</span>
-                      <span>HIGH THREAT WEIGHT</span>
-                    </div>
-                  </div>
-
-                  {/* Other Telemetry Info */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-[#05050a] border border-border/80 p-3 flex flex-col justify-between">
-                      <span className="text-[9px] text-zinc-500 font-mono font-bold uppercase">COMPLIANCE REF</span>
-                      <span className="text-white font-orbitron font-extrabold text-xs tracking-wider mt-1.5">OWASP_A1_2026</span>
-                    </div>
-                    <div className="bg-[#05050a] border border-border/80 p-3 flex flex-col justify-between">
-                      <span className="text-[9px] text-zinc-500 font-mono font-bold uppercase">AUTONOMOUS FIX</span>
-                      <span className="text-cyber-green font-orbitron font-extrabold text-xs tracking-wider uppercase animate-pulse mt-1.5">READY</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-zinc-500 uppercase">STANDBY BACKUP</span>
+                      <span className="text-zinc-400 text-[10px]">
+                        {selectedProvider === "gemini" ? "Groq (Llama 3.3)" : "Google Gemini 2.0"}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -438,7 +485,7 @@ function RecommendationPageContent() {
             </div>
           </div>
 
-          {/* Row 2: Full-width proposed secure diff patch (Spacious Workspace) */}
+          {/* Row 2: Diff Patch */}
           <div>
             <Card 
               title={
@@ -476,98 +523,6 @@ function RecommendationPageContent() {
                 {diffMode === 'split' ? renderSplitView() : renderUnifiedView()}
               </div>
             </Card>
-          </div>
-
-          {/* Row 3: Gemini AI Remediation Details & Action Panel */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-            
-            {/* Guide details */}
-            <div className="lg:col-span-2 space-y-4">
-              <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground font-orbitron flex items-center gap-1.5 select-none">
-                <Sparkles className="h-4 w-4 text-cyber-cyan animate-pulse" />
-                Gemini Automated Audit Remediation Guide
-              </h4>
-              
-              <div className="glow-card-flow p-[1.5px] shadow-lg cyber-card-clip">
-                <div className="bg-[#07070c] p-6 relative z-10 space-y-6">
-                  <div className="absolute inset-0 cyber-grid-dot opacity-15 pointer-events-none" />
-                  
-                  {/* AI Classification Analysis */}
-                  <div className="border-l-2 border-cyber-cyan pl-4 py-2 bg-[#090e18]/80 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-cyber-cyan/5 to-transparent pointer-events-none" />
-                    <span className="text-[9px] text-cyber-cyan font-bold block uppercase tracking-wider font-orbitron mb-1.5">AI CLASSIFICATION DIAGNOSIS</span>
-                    <p className="text-xs font-sans text-zinc-200 leading-relaxed font-semibold antialiased">
-                      The static scanning engine flagged this code under <span className="text-white underline decoration-cyber-cyan/50 decoration-2 underline-offset-2">{title}</span>. 
-                      Failure to bind constants or secure keys leaves environment credentials exposed to context lookups.
-                    </p>
-                  </div>
-                  
-                  {/* Step-by-step checklist recommendation */}
-                  <div className="bg-[#0b0b14] border border-border/80 p-5 rounded-none font-sans text-sm leading-relaxed text-zinc-100 space-y-4">
-                    <span className="text-[9px] font-bold text-cyber-cyan block uppercase tracking-wider font-orbitron">REMEDIATION INSTRUCTIONS & CHECKLIST</span>
-                    <div className="space-y-3 font-sans">
-                      {steps.map((step, idx) => (
-                        <div key={idx} className="flex items-start gap-3">
-                          <div className="flex items-center justify-center h-5 w-5 rounded-full bg-cyber-cyan/10 border border-cyber-cyan/30 text-cyber-cyan shrink-0 font-mono text-[10px] font-bold">
-                            {idx + 1}
-                          </div>
-                          <p className="text-zinc-200 antialiased text-xs font-medium leading-relaxed pt-0.5">
-                            {step.endsWith('.') ? step : step + '.'}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* AI validation & CTAs side panel */}
-            <div className="lg:col-span-1 lg:mt-7">
-              <Card 
-                title="Patch Action Console" 
-                subtitle="DEPLOYMENT PRE-VALIDATION"
-                techCorners={true}
-                className="border-cyber-cyan/15"
-              >
-                <div className="space-y-6">
-                  {/* Info block */}
-                  <div className="bg-[#05050a] border border-border/80 p-4 space-y-3 relative overflow-hidden">
-                    <div className="flex gap-3 text-left">
-                      <ShieldAlert className="h-5 w-5 text-cyber-cyan shrink-0 mt-0.5" />
-                      <div className="space-y-1">
-                        <span className="text-[9px] font-bold font-orbitron text-white uppercase tracking-widest block">SECURE REMEDIATION GUIDE</span>
-                        <p className="text-[11px] text-zinc-400 font-sans leading-relaxed">
-                          Review the proposed secure code diff above and apply the recommended changes directly to your repository source files.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions Console */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between font-sans text-xs bg-[#0b0b14] border border-border/60 px-4 py-2.5">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="h-4.5 w-4.5 text-cyber-cyan shrink-0" />
-                        <span className="text-[9px] font-bold text-zinc-400 uppercase font-orbitron tracking-wider">GUIDANCE</span>
-                      </div>
-                      <span className="text-[10px] font-bold text-cyber-cyan uppercase font-orbitron tracking-wider">READY FOR REVIEW</span>
-                    </div>
-
-                    <Button 
-                      variant="secondary" 
-                      size="md"
-                      onClick={() => router.push(repoId ? `/analysis?repoId=${repoId}` : '/analysis')}
-                      className="border-zinc-700 hover:border-cyber-cyan text-zinc-200 hover:text-white flex items-center justify-center gap-2 w-full py-3 font-mono text-xs cursor-pointer"
-                    >
-                      <ArrowLeft className="h-4 w-4" />
-                      BACK TO ANALYSIS
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            </div>
-            
           </div>
 
           <AppFooter />

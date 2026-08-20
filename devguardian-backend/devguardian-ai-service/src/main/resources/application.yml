@@ -22,13 +22,13 @@ ai:
 
 groq:
   api:
-    key: ${GROQ_API_KEY}
-    model: llama-3.1-8b-instant
+    key: ${GROQ_API_KEY:}
+    model: ${GROQ_MODEL:llama-3.3-70b-versatile}
 
 gemini:
   api:
-    key: ${GEMINI_API_KEY}
-    model: gemini-1.5-flash
+    key: ${GEMINI_API_KEY:}
+    model: ${GEMINI_MODEL:gemini-2.0-flash}
 
 jwt:
   secret: ${JWT_SECRET}

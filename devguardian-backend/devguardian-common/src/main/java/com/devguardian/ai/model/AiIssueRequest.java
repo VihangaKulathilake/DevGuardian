@@ -9,4 +9,5 @@ public class AiIssueRequest {
     private String fileName;
     private String codeSnippet;
     private String description;
+    private String preferredProvider;
 }

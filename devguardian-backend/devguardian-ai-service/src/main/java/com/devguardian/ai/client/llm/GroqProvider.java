@@ -3,7 +3,6 @@ package com.devguardian.ai.client.llm;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
@@ -16,11 +15,6 @@ import java.util.Map;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@ConditionalOnProperty(
-        name = "ai.provider",
-        havingValue = "groq",
-        matchIfMissing = true
-)
 public class GroqProvider implements LlmProvider {
 
     private final WebClient webClient;
@@ -28,31 +22,46 @@ public class GroqProvider implements LlmProvider {
     @Value("${groq.api.key:}")
     private String apiKey;
 
-    @Value("${groq.model:llama-3.1-8b-instant}")
+    @Value("${groq.model:llama-3.3-70b-versatile}")
     private String model;
+
+    @Override
+    public String getProviderId() {
+        return "groq";
+    }
+
+    @Override
+    public String getDisplayName() {
+        return "Groq (Meta Llama 3.3 70B)";
+    }
+
+    @Override
+    public String getModelName() {
+        return model;
+    }
+
+    @Override
+    public boolean isConfigured() {
+        return apiKey != null && !apiKey.isBlank() && !apiKey.equalsIgnoreCase("groq_key");
+    }
 
     @Override
     @SuppressWarnings("unchecked")
     public String generate(String prompt) {
-
-        if (apiKey == null || apiKey.isBlank()) {
-            throw new IllegalStateException("Groq API key is missing.");
+        if (!isConfigured()) {
+            throw new IllegalStateException("Groq API key is not configured.");
         }
 
         Map<String, Object> body = Map.of(
                 "model", model,
                 "messages", List.of(
                         Map.of(
-                                "role",
-                                "system",
-                                "content",
-                                "You are a senior software security engineer."
+                                "role", "system",
+                                "content", "You are a senior software security engineer and automated code remediation expert."
                         ),
                         Map.of(
-                                "role",
-                                "user",
-                                "content",
-                                prompt
+                                "role", "user",
+                                "content", prompt
                         )
                 ),
                 "temperature", 0.2
@@ -65,18 +74,17 @@ public class GroqProvider implements LlmProvider {
                 .retrieve()
                 .onStatus(
                         HttpStatusCode::isError,
-                        clientResponse ->
-                                clientResponse.bodyToMono(String.class)
-                                        .map(RuntimeException::new)
+                        clientResponse -> clientResponse.bodyToMono(String.class)
+                                .map(bodyStr -> new RuntimeException("Groq API error [" + clientResponse.statusCode() + "]: " + bodyStr))
                 )
                 .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
                 .block();
 
         if (response == null) {
-            throw new RuntimeException("Empty response received from Groq.");
+            throw new RuntimeException("Empty response received from Groq API.");
         }
 
-        log.debug("Groq Response : {}", response);
+        log.debug("Groq Response: {}", response);
 
         List<Map<String, Object>> choices =
                 (List<Map<String, Object>>) response.get("choices");
@@ -93,10 +101,5 @@ public class GroqProvider implements LlmProvider {
         }
 
         return (String) message.get("content");
-    }
-
-    @Override
-    public String getModelName() {
-        return model;
     }
 }
