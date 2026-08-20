@@ -18,6 +18,7 @@ import {
   fetchAnalysisIssues,
 } from "@/features/analysis/analysisSlice";
 import { IssueResponse } from "@/features/analysis/analysisTypes";
+import AppFooter from "@/components/common/AppFooter";
 
 // SVG Score Circle Component
 interface ScoreCircleProps {
@@ -783,6 +784,8 @@ function AnalysisPageContent() {
               </a>
             </div>
           )}
+
+          <AppFooter />
         </main>
       </div>
     </div>

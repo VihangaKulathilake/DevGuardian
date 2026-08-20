@@ -16,6 +16,7 @@ import {
   FileCode,
   CheckCircle
 } from "lucide-react";
+import AppFooter from "@/components/common/AppFooter";
 
 function RecommendationPageContent() {
   const searchParams = useSearchParams();
@@ -568,6 +569,8 @@ function RecommendationPageContent() {
             </div>
             
           </div>
+
+          <AppFooter />
         </main>
       </div>
     </div>

@@ -19,6 +19,7 @@ import {
   disconnectGithubAccount,
   uploadRepository,
 } from "@/features/repository/repositorySlice";
+import AppFooter from "@/components/common/AppFooter";
 
 export default function RepositoriesPage() {
   const dispatch = useAppDispatch();
@@ -647,6 +648,8 @@ export default function RepositoriesPage() {
               </form>
             )}
           </Modal>
+
+          <AppFooter />
         </main>
       </div>
     </div>

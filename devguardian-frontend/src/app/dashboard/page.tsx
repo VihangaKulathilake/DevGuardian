@@ -15,6 +15,7 @@ import { fetchRepositories } from "@/features/repository/repositorySlice";
 import { analysisApi } from "@/features/analysis/analysisApi";
 import { IssueResponse } from "@/features/analysis/analysisTypes";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from "recharts";
+import AppFooter from "@/components/common/AppFooter";
 
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
@@ -356,6 +357,7 @@ export default function DashboardPage() {
             </Card>
           </div>
 
+          <AppFooter />
         </main>
       </div>
     </div>
