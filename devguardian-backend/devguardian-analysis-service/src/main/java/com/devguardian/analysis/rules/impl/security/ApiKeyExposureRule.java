@@ -50,7 +50,7 @@ public class ApiKeyExposureRule extends AbstractLineScanRule {
 
     /** Named key assignment; value shape is verified separately. */
     private static final Pattern NAMED_KEY_ASSIGNMENT = Pattern.compile(
-            "(?i)\\b([\\w.\\-]*(?:api[_\\-]?key|apikey|client[_\\-]?secret|"
+            "(?i)\\b([\\w.\\-]*(?:api[_\\-]?key|apikey|client[_\\-.]?secret|"
                     + "stripe[_\\-]?key|sendgrid[_\\-]?key|twilio[_\\-]?(?:key|sid))[\\w.\\-]*)"
                     + "\\s*[:=]\\s*[\"']?([A-Za-z0-9\\-_./+=]{16,})[\"']?");
 

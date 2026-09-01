@@ -38,7 +38,10 @@ public class HardcodedSecretRule extends AbstractLineScanRule {
     private static final Pattern SECRET_ASSIGNMENT = Pattern.compile(
             "(?i)\\b([\\w$.\\-]*(?:secret|token|private[_\\-]?key|signing[_\\-]?key|"
                     + "access[_\\-]?key|auth[_\\-]?key|encryption[_\\-]?key)[\\w$.\\-]*)"
-                    + "\\s*[:=]\\s*[\"']([^\"']+)[\"']");
+                    // Quotes are optional: .properties files use unquoted values while
+                    // Java/JS/YAML files use quoted string literals. The lazy [^"'\r\n]+?
+                    // stops at the end of the line (anchored by \s*$) in both cases.
+                    + "\\s*[:=]\\s*[\"']?([^\"'\\r\\n]+?)[\"']?\\s*$");
 
     /** Names describing token plumbing rather than token values. */
     private static final Pattern NON_SECRET_NAME = Pattern.compile(
