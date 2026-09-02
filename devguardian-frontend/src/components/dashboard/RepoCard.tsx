@@ -2,7 +2,7 @@ import * as React from "react";
 import Card from "../ui/Card";
 import Badge from "../ui/Badge";
 import Button from "../ui/Button";
-import { GitBranch, ShieldAlert, Clock, Trash2 } from "lucide-react";
+import { GitBranch, Clock, Trash2, ShieldAlert, AlertTriangle, Info } from "lucide-react";
 
 export interface RepoCardProps {
   repoName: string;
@@ -29,28 +29,36 @@ export const RepoCard: React.FC<RepoCardProps> = ({
   onViewAnalysis,
   onDelete,
 }) => {
+  const total = criticalIssues + warningIssues + infoIssues;
+
+  // Proportional widths for the mini stacked bar
+  const critW = total > 0 ? (criticalIssues / total) * 100 : 0;
+  const warnW = total > 0 ? (warningIssues / total) * 100 : 0;
+  const infoW = total > 0 ? (infoIssues / total) * 100 : 0;
+
   return (
     <Card
       onClick={onViewAnalysis}
-      className="hover:border-cyber-cyan/50 cursor-pointer transition-all duration-300 p-6 flex flex-col justify-between h-full group"
+      className="hover:border-cyber-cyan/50 cursor-pointer transition-all duration-300 p-5 flex flex-col justify-between h-full group"
       techCorners={true}
     >
+      {/* Header */}
       <div>
         <div className="flex items-center justify-between gap-3 mb-2">
           <h4 className="text-sm font-bold truncate text-white flex items-center gap-2 group-hover:text-cyber-cyan transition-colors font-orbitron tracking-wider">
-            <GitBranch className="h-4.5 w-4.5 text-cyber-cyan group-hover:animate-pulse" />
+            <GitBranch className="h-4 w-4 text-cyber-cyan shrink-0 group-hover:animate-pulse" />
             {repoName}
           </h4>
-          <Badge variant="neutral">{visibility}</Badge>
+          <Badge variant="neutral" className="shrink-0 text-xs px-2.5 py-0.5">{visibility}</Badge>
         </div>
 
-        <div className="flex items-center gap-2 text-[10px] font-mono uppercase text-muted-foreground mb-4">
-          <span>{language}</span>
+        <div className="flex items-center gap-2 text-xs font-mono uppercase text-zinc-400 mb-4">
+          <span className="font-semibold text-zinc-300">{language}</span>
           {lastAnalyzed && (
             <>
-              <span>•</span>
-              <span className="flex items-center gap-1">
-                <Clock className="h-3 w-3 text-cyber-cyan" />
+              <span className="text-zinc-600">•</span>
+              <span className="flex items-center gap-1.5 text-zinc-300">
+                <Clock className="h-3.5 w-3.5 text-cyber-cyan" />
                 {lastAnalyzed}
               </span>
             </>
@@ -58,38 +66,110 @@ export const RepoCard: React.FC<RepoCardProps> = ({
         </div>
       </div>
 
-      <div className="mt-4">
-        {/* Issue badges summary */}
-        <div className="flex gap-2 flex-wrap mb-5">
-          <Badge variant="error" className="flex items-center gap-1">
-            <ShieldAlert className="h-3 w-3" />
-            {criticalIssues} Critical
-          </Badge>
-          <Badge variant="warning" className="flex items-center gap-1">
-            {warningIssues} Warning
-          </Badge>
-          <Badge variant="info" className="flex items-center gap-1">
-            {infoIssues} Info
-          </Badge>
+      {/* Issue count grid — large, high-contrast numbers & legible labels */}
+      <div className="mt-auto">
+        <div className="grid grid-cols-3 gap-2.5 mb-3.5">
+          {/* Critical */}
+          <div className="flex flex-col items-center justify-center py-3 px-1.5 bg-[#1a040a]/90 border border-[#ff0055]/30 rounded-sm">
+            <ShieldAlert className="h-4 w-4 text-[#ff0055] mb-1 shrink-0" />
+            <span
+              className={`font-black font-mono leading-none tabular-nums text-2xl ${
+                criticalIssues > 0 ? "text-[#ff0055]" : "text-zinc-500"
+              }`}
+            >
+              {criticalIssues}
+            </span>
+            <span className="text-[11px] font-bold font-mono uppercase tracking-wider text-rose-300 mt-1.5 text-center leading-tight">
+              Critical
+            </span>
+          </div>
+
+          {/* Warning / Medium */}
+          <div className="flex flex-col items-center justify-center py-3 px-1.5 bg-[#191200]/90 border border-[#ff9900]/30 rounded-sm">
+            <AlertTriangle className="h-4 w-4 text-[#ff9900] mb-1 shrink-0" />
+            <span
+              className={`font-black font-mono leading-none tabular-nums text-2xl ${
+                warningIssues > 0 ? "text-[#ff9900]" : "text-zinc-500"
+              }`}
+            >
+              {warningIssues}
+            </span>
+            <span className="text-[11px] font-bold font-mono uppercase tracking-wider text-amber-300 mt-1.5 text-center leading-tight">
+              Warning
+            </span>
+          </div>
+
+          {/* Info / Low */}
+          <div className="flex flex-col items-center justify-center py-3 px-1.5 bg-[#030c18]/90 border border-[#00a8ff]/30 rounded-sm">
+            <Info className="h-4 w-4 text-[#00a8ff] mb-1 shrink-0" />
+            <span
+              className={`font-black font-mono leading-none tabular-nums text-2xl ${
+                infoIssues > 0 ? "text-[#00a8ff]" : "text-zinc-500"
+              }`}
+            >
+              {infoIssues}
+            </span>
+            <span className="text-[11px] font-bold font-mono uppercase tracking-wider text-cyan-300 mt-1.5 text-center leading-tight">
+              Info
+            </span>
+          </div>
         </div>
 
+        {/* Proportional stacked bar */}
+        {total > 0 && (
+          <div className="h-[3.5px] w-full flex mb-3.5 overflow-hidden rounded-full bg-zinc-900">
+            {critW > 0 && (
+              <div
+                className="h-full bg-[#ff0055] shadow-[0_0_4px_#ff0055]"
+                style={{ width: `${critW}%` }}
+              />
+            )}
+            {warnW > 0 && (
+              <div
+                className="h-full bg-[#ff9900] shadow-[0_0_4px_#ff9900]"
+                style={{ width: `${warnW}%` }}
+              />
+            )}
+            {infoW > 0 && (
+              <div
+                className="h-full bg-[#00a8ff]"
+                style={{ width: `${infoW}%` }}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Total count line */}
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-xs font-mono text-zinc-300 uppercase tracking-wider">
+            {total > 0 ? (
+              <>
+                <strong className="text-white font-bold">{total}</strong> total issue{total !== 1 ? "s" : ""} found
+              </>
+            ) : (
+              <span className="text-[#00ff66] font-bold">No issues found ✓</span>
+            )}
+          </span>
+        </div>
+
+        {/* Actions */}
         <div className="flex items-center gap-2">
           <Button
             variant="secondary"
             size="sm"
-            className="flex-1"
+            className="flex-1 font-mono text-xs py-2"
             onClick={(e) => {
               e.stopPropagation();
               onViewAnalysis?.();
             }}
           >
-            Report
+            View Report
           </Button>
           {onRunAnalysis && (
             <Button
               size="sm"
               variant="primary"
-              className="px-4 shrink-0"
+              className="px-4 shrink-0 font-mono text-xs py-2"
               onClick={(e) => {
                 e.stopPropagation();
                 onRunAnalysis();
@@ -118,4 +198,3 @@ export const RepoCard: React.FC<RepoCardProps> = ({
 };
 
 export default RepoCard;
-

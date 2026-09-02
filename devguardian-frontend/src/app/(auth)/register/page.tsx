@@ -28,22 +28,22 @@ export default function RegisterPage() {
 
   return (
     <div className="w-full flex flex-col items-center">
-      {/* Icon Cockpit Header */}
+      {/* Header */}
       <div className="flex flex-col items-center mb-6 text-center select-none">
         <div className="h-12 w-12 rounded-none border border-cyber-pink bg-cyber-pink/10 flex items-center justify-center text-cyber-pink shadow-[0_0_15px_rgba(255,0,127,0.3)] mb-4 animate-pulse">
           <ShieldCheck className="h-7 w-7" />
         </div>
         
         <h1 className="text-lg font-orbitron font-extrabold text-white tracking-widest uppercase flex items-center gap-2">
-          PROVISION ACCESS NODE
+          Create Account
           <span className="h-2 w-2 rounded-full bg-cyber-pink animate-ping shrink-0" />
         </h1>
         <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mt-1">
-          CREATING AUTHORIZED IDENTITIES
+          Join DevGuardian
         </p>
       </div>
 
-      {/* Register Form content */}
+      {/* Register Form */}
       <div className="w-full">
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {error && (
@@ -55,7 +55,7 @@ export default function RegisterPage() {
           <Input
             label="Full Name"
             type="text"
-            placeholder="Agent John Doe"
+            placeholder="John Doe"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -65,7 +65,7 @@ export default function RegisterPage() {
           <Input
             label="Email Address"
             type="email"
-            placeholder="agent@company.com"
+            placeholder="you@company.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -73,7 +73,7 @@ export default function RegisterPage() {
           />
           
           <Input
-            label="Security Passkey"
+            label="Password"
             type="password"
             placeholder="••••••••"
             value={password}
@@ -83,7 +83,7 @@ export default function RegisterPage() {
           />
 
           <p className="text-[9px] font-mono text-zinc-500 leading-relaxed uppercase tracking-wider mt-1 select-none">
-            // BY GENERATING KEY, YOU CONSENT TO SECURE POLICY PROTOCOLS AND AUDITING DIRECTIVES.
+            // BY CREATING AN ACCOUNT, YOU AGREE TO OUR TERMS OF SERVICE AND PRIVACY POLICY.
           </p>
 
           <Button 
@@ -92,34 +92,34 @@ export default function RegisterPage() {
             variant="cyber"
             className="w-full mt-3 py-3 shadow-[0_0_15px_rgba(143,0,255,0.4)] relative overflow-hidden group"
           >
-            <span className="relative z-10">GENERATE AUTHORIZED ID</span>
+            <span className="relative z-10">Create Account</span>
           </Button>
         </form>
 
-        {/* Separator line */}
+        {/* Separator */}
         <div className="relative my-7 text-center select-none font-mono">
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t border-zinc-800" />
           </div>
           <span className="relative bg-[#07070b] px-3.5 text-[9px] font-bold text-zinc-500 uppercase tracking-widest">
-            OR PROVISION WITH REPO PLATFORM
+            OR CONTINUE WITH
           </span>
         </div>
 
-        {/* GitHub Sign in */}
+        {/* GitHub Sign up */}
         <Button 
           variant="secondary" 
           className="w-full flex items-center justify-center gap-2 py-3 border-zinc-800/80 hover:border-cyber-cyan hover:shadow-[0_0_10px_rgba(0,240,255,0.2)] text-zinc-300 hover:text-cyber-cyan font-mono"
         >
           <GitFork className="h-4.5 w-4.5 shrink-0" />
-          SIGN UP WITH GITHUB WORKSPACE
+          Continue with GitHub
         </Button>
 
         {/* Nav to login */}
         <p className="text-center text-xs font-mono text-zinc-500 mt-8 select-none">
-          ALREADY AUTHORIZED AT THIS GATE?{" "}
+          Already have an account?{" "}
           <Link href="/login" className="text-cyber-cyan hover:text-cyber-cyan/80 font-bold uppercase tracking-wider transition-colors ml-1.5">
-            VERIFY CREDENTIALS
+            Sign In
           </Link>
         </p>
       </div>

@@ -15,14 +15,14 @@ export default function AuthLayout({
       
       {/* Side HUD Telemetry graphics (decorations) */}
       <div className="absolute top-8 left-8 hidden lg:flex flex-col gap-1 font-mono text-[10px] text-cyber-cyan/40 select-none">
-        <span>[ SYSTEM BOOT SEQUENCE: ONLINE ]</span>
-        <span>[ SECURITY PROTOCOL: SHIELD_ACTIVE ]</span>
-        <span>[ DOCK NODE: DEVGUARDIAN_AUTH_GATE ]</span>
+        <span>[ DEVGUARDIAN v2.0 ]</span>
+        <span>[ SECURITY MONITORING: ACTIVE ]</span>
+        <span>[ AUTHENTICATION PORTAL ]</span>
       </div>
       
       <div className="absolute bottom-8 right-8 hidden lg:flex flex-col gap-1 font-mono text-[10px] text-cyber-pink/40 select-none text-right">
-        <span>SYS.LOC: CLOUD_SECURE_COCKPIT</span>
-        <span>COMPLIANCE LEVEL: OWASP_2026_STABLE</span>
+        <span>CLOUD-NATIVE PLATFORM</span>
+        <span>OWASP 2026 COMPLIANT</span>
         <span>© 2026 DEVGUARDIAN. ALL RIGHTS RESERVED.</span>
       </div>
 

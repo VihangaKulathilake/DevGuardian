@@ -152,7 +152,7 @@ export default function DashboardPage() {
           {/* Header */}
           <div className="border-b border-cyber-cyan/15 pb-6 select-none text-left">
             <h1 className="text-2xl sm:text-3xl font-orbitron font-extrabold text-white uppercase tracking-wider mb-2 leading-none">
-              SECURITY TELEMETRY CENTRAL
+              Security Dashboard
             </h1>
             <p className="text-xs font-mono text-zinc-500 uppercase tracking-widest">
               Real-time code threat analysis, metric history, and codebase health status.
@@ -261,7 +261,7 @@ export default function DashboardPage() {
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="text-xs font-mono text-zinc-500 animate-pulse">Loading telemetry chart...</div>
+                  <div className="text-xs font-mono text-zinc-500 animate-pulse">Loading chart...</div>
                 )}
               </ChartContainer>
 
@@ -323,8 +323,8 @@ export default function DashboardPage() {
 
             {/* Recent Activity Panel */}
             <Card 
-              title="Audit Activity Logs" 
-              subtitle="Scan transactions across workspace repositories"
+              title="Recent Activity" 
+              subtitle="Latest scan events across your repositories"
               className="border-cyber-cyan/15 text-left"
             >
               <div className="flex flex-col gap-5 max-h-[350px] overflow-y-auto pr-1 scrollbar-thin mt-2">

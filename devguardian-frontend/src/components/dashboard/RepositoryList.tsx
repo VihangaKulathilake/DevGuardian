@@ -134,7 +134,7 @@ export const RepositoryList: React.FC = () => {
   if (error) {
     return (
       <div className="text-center py-12 font-mono text-xs uppercase tracking-wider text-cyber-pink border border-cyber-pink/20 bg-cyber-pink/5">
-        SYS_ERROR: {error}
+        Error loading repositories: {error}
       </div>
     );
   }
@@ -142,7 +142,7 @@ export const RepositoryList: React.FC = () => {
   if (!repositories || repositories.length === 0) {
     return (
       <div className="text-center py-16 font-mono text-xs uppercase tracking-wider text-muted-foreground border border-dashed border-border/80 bg-card/10 cyber-card-clip">
-        NO WORKSPACE REPOSITORIES LINKED YET
+        No repositories added yet
       </div>
     );
   }
@@ -183,9 +183,9 @@ export const RepositoryList: React.FC = () => {
         title={
           <div className="flex items-center gap-2 text-cyber-pink">
             <AlertTriangle className="h-5 w-5" />
-            <span className="font-orbitron font-extrabold uppercase tracking-wider text-xs">
-              UNLINK REPOSITORY
-            </span>
+              <span className="font-orbitron font-extrabold uppercase tracking-wider text-xs">
+                Delete Repository
+              </span>
           </div>
         }
         size="sm"
@@ -200,7 +200,7 @@ export const RepositoryList: React.FC = () => {
           </p>
           <div className="p-3.5 bg-cyber-pink/10 border border-cyber-pink/30 text-[11px] text-zinc-400 space-y-1">
             <span className="font-bold text-cyber-pink uppercase font-mono tracking-wider block">
-              WARNING // PERMANENT ACTION
+              Warning — This cannot be undone
             </span>
             <p>
               This will remove all associated vulnerability audits, security scan logs, and disk workspace caches.

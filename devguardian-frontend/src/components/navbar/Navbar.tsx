@@ -67,7 +67,7 @@ export const Navbar: React.FC = () => {
       <div ref={containerRef} className="hidden md:flex max-w-sm w-full relative">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 z-10" />
         <Input
-          placeholder="SEARCH SYSTEM DIRECTORY..."
+          placeholder="Search repositories..."
           className="pl-10 py-2 bg-black/45 text-[10px] uppercase font-mono tracking-wider border-border/80"
           mono={true}
           value={searchQuery}
@@ -83,7 +83,7 @@ export const Navbar: React.FC = () => {
           <div className="absolute top-[calc(100%+8px)] left-0 w-full bg-[#07070c]/95 backdrop-blur-md border border-cyber-cyan/30 shadow-[0_4px_20px_rgba(0,240,255,0.15)] z-50 text-left font-mono select-none">
             {/* Header Matrix label */}
             <div className="px-4 py-2 border-b border-cyber-cyan/15 bg-black/35 text-[8px] font-bold text-cyber-cyan/60 tracking-widest uppercase">
-              SYSTEM TARGET INDEX
+              REPOSITORIES
             </div>
 
             {/* Results container */}
@@ -114,7 +114,7 @@ export const Navbar: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 text-cyber-cyan text-[8px] font-bold tracking-widest transition-opacity shrink-0">
-                      <span>AUDIT</span>
+                      <span>ANALYZE</span>
                       <Terminal className="h-3 w-3" />
                     </div>
                   </button>

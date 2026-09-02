@@ -11,7 +11,7 @@ export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
       <span
         ref={ref}
         className={cn(
-          "inline-flex items-center px-3 py-0.5 text-[9px] font-bold tracking-wider font-mono uppercase transition-all duration-300 relative border shrink-0",
+          "inline-flex items-center px-3 py-0.5 text-[11px] font-bold tracking-wider font-mono uppercase transition-all duration-300 relative border shrink-0",
           "clip-path-none", // clean digital chip
           {
             // success -> Neon Green

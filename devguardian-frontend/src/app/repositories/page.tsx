@@ -222,7 +222,7 @@ export default function RepositoriesPage() {
                 </div>
                 <div className="flex flex-col gap-1">
                   <h4 className="text-xs font-orbitron font-extrabold text-white uppercase tracking-wider">
-                    INTEGRATION REQUIRED: LINK CODEBASE HOST
+                    Connect GitHub
                   </h4>
                   <p className="text-[11px] text-zinc-400 font-sans leading-relaxed max-w-3xl">
                     Unlock full DevSecOps automation. Authenticate GitHub integrations to index projects instantly, automatically check code on incoming pull requests, and commit secure AI remedies.
@@ -235,7 +235,7 @@ export default function RepositoriesPage() {
                 className="shrink-0 border-cyber-purple/40 text-cyber-purple hover:text-white hover:border-cyber-purple shadow-[0_0_8px_#8f00ff20] relative z-10 font-mono py-2"
                 onClick={handleConnectGithub}
               >
-                CONNECT GITHUB NODE
+                CONNECT GITHUB
               </Button>
             </div>
           )}
@@ -245,7 +245,7 @@ export default function RepositoriesPage() {
             <div className="text-left">
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl sm:text-3xl font-orbitron font-extrabold text-white uppercase tracking-wider leading-none">
-                  LINKED CODEBASE AUDITS
+                  Repositories
                 </h1>
                 {isGithubConnected && (
                   <span className="inline-flex items-center px-3 py-0.5 text-[9px] font-bold tracking-wider font-mono uppercase bg-[#051e12]/80 text-[#00ff66] border border-[#00ff66]/35 shadow-[0_0_8px_rgba(0,255,102,0.15)] select-none">
@@ -268,7 +268,7 @@ export default function RepositoriesPage() {
                   className="border-zinc-800 text-zinc-400 hover:bg-cyber-pink/10 hover:border-cyber-pink/40 hover:text-cyber-pink flex items-center gap-1.5 py-2.5 font-mono"
                 >
                   <LogOut className="h-3.5 w-3.5" />
-                  DISCONNECT NODE
+                   DISCONNECT
                 </Button>
               )}
               <Button
@@ -297,7 +297,7 @@ export default function RepositoriesPage() {
             title={
               <div className="flex items-center gap-2 text-white">
                 <GitBranch className="h-5 w-5 text-cyber-cyan" />
-                <span className="font-orbitron font-extrabold uppercase tracking-wider text-xs">LINK SYSTEM CODEBASE</span>
+                <span className="font-orbitron font-extrabold uppercase tracking-wider text-xs">Add Repository</span>
               </div>
             }
             size="lg"
@@ -353,14 +353,14 @@ export default function RepositoriesPage() {
                     </div>
                     <div className="space-y-1.5">
                       <h4 className="text-xs font-orbitron font-extrabold text-white uppercase tracking-wider">
-                        OAUTH INTEGRATION REQUIRED
+                        GitHub Not Connected
                       </h4>
                       <p className="text-[11px] text-zinc-400 font-sans max-w-sm leading-relaxed">
                         Link your workspace directory to GitHub to index repository databases and search codebases directly.
                       </p>
                     </div>
                     <Button onClick={handleConnectGithub} className="w-full sm:w-auto py-2.5 font-mono">
-                      AUTHENTICATE CREDENTIALS
+                      CONNECT GITHUB
                     </Button>
                   </div>
                 ) : (
@@ -387,7 +387,7 @@ export default function RepositoriesPage() {
                     {githubLoading ? (
                       <div className="flex flex-col items-center justify-center py-16 gap-3">
                         <div className="h-7 w-7 border-2 border-cyber-cyan border-t-transparent animate-spin rounded-full" />
-                        <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest animate-pulse">Syncing codebase index...</span>
+                        <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest animate-pulse">Loading repositories...</span>
                       </div>
                     ) : unimportedRepos.length === 0 ? (
                       <div className="text-center py-12 text-xs font-mono text-zinc-500 border border-dashed border-zinc-800 bg-[#0b0b14]/20 uppercase tracking-wider">
@@ -406,7 +406,7 @@ export default function RepositoriesPage() {
                               <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-mono">
                                 <span className="uppercase text-cyber-cyan font-bold">{repo.default_branch || "main"}</span>
                                 <span>•</span>
-                                <span>{repo.private ? "PRIVATE KEYED" : "PUBLIC ROUTE"}</span>
+                                <span>{repo.private ? "PRIVATE" : "PUBLIC"}</span>
                               </div>
                             </div>
                             <Button
@@ -439,7 +439,7 @@ export default function RepositoriesPage() {
 
                 <div className="grid gap-4 sm:grid-cols-2 mt-2">
                   <Input
-                    label="DISPLAY MODULE IDENTIFIER"
+                    label="Repository Name"
                     placeholder="e.g. remote-auth-microservice"
                     value={customName}
                     onChange={(e) => setCustomName(e.target.value)}
@@ -459,7 +459,7 @@ export default function RepositoriesPage() {
                   <div className="flex flex-col gap-1.5">
                     <div className="flex items-center justify-between">
                       <label className="text-[10px] font-orbitron font-bold text-zinc-400 tracking-wider uppercase">
-                        TARGET CODEBASE BRANCH
+                        Branch
                       </label>
                       {isDiscoveringBranches && (
                         <span className="text-[9px] font-mono text-cyber-cyan flex items-center gap-1">
@@ -505,7 +505,7 @@ export default function RepositoriesPage() {
                       <div className="p-3 bg-cyber-pink/10 border border-cyber-pink/30 text-[11px] text-zinc-300 space-y-1.5 mt-2 rounded-none">
                         <div className="flex items-center gap-1.5 text-cyber-pink font-bold font-mono">
                           <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                          <span>ACCESS DENIED // AUTHENTICATION REQUIRED</span>
+                          <span>Repository Not Accessible</span>
                         </div>
                         <p className="text-[10px] text-zinc-400 font-mono leading-relaxed">
                           {branchDiscoveryError}
@@ -536,7 +536,7 @@ export default function RepositoriesPage() {
                 <div className="p-4 bg-[#0b0a14] border border-cyber-purple/20 flex items-start gap-3">
                   <Sparkles className="h-4.5 w-4.5 text-cyber-purple shrink-0 mt-0.5 animate-pulse" />
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-orbitron font-bold text-white uppercase tracking-wider">SECURE CLONE PROTOCOL</span>
+                    <span className="text-xs font-orbitron font-bold text-white uppercase tracking-wider">Private Repositories</span>
                     <p className="text-[10px] text-zinc-500 font-mono leading-relaxed">
                       Public repositories require no credentials. For your own private repositories, connect your GitHub integration or import directly from the GitHub tab.
                     </p>
@@ -561,7 +561,7 @@ export default function RepositoriesPage() {
                     disabled={isSubmitting || !!branchDiscoveryError || isDiscoveringBranches || !repoUrl.trim()}
                     className="font-mono disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    LINK & INITIALIZE AUDIT
+                    ADD REPOSITORY
                   </Button>
                 </div>
               </form>
@@ -576,7 +576,7 @@ export default function RepositoriesPage() {
 
                 <div className="grid gap-4 sm:grid-cols-2 mt-2">
                   <Input
-                    label="DISPLAY MODULE IDENTIFIER"
+                    label="Repository Name"
                     placeholder="e.g. uploaded-auth-service"
                     value={uploadName}
                     onChange={(e) => setUploadName(e.target.value)}
@@ -585,7 +585,7 @@ export default function RepositoriesPage() {
 
                   <div className="flex flex-col gap-1.5">
                     <label className="text-[10px] font-orbitron font-bold text-zinc-400 tracking-wider uppercase">
-                      SELECT ZIP CODEBASE ARCHIVE *
+                      Select ZIP File *
                     </label>
                     <input
                       type="file"
@@ -606,7 +606,7 @@ export default function RepositoriesPage() {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Input
-                    label="TARGET CODEBASE BRANCH"
+                    label="Branch"
                     placeholder="e.g. main"
                     value={uploadBranch}
                     onChange={(e) => setUploadBranch(e.target.value)}
@@ -624,7 +624,7 @@ export default function RepositoriesPage() {
                 <div className="p-4 bg-[#0b0a14] border border-cyber-purple/20 flex items-start gap-3">
                   <Sparkles className="h-4.5 w-4.5 text-cyber-purple shrink-0 mt-0.5 animate-pulse" />
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-orbitron font-bold text-white uppercase tracking-wider">DIRECT FILE SYSTEM ENCLAVE</span>
+                    <span className="text-xs font-orbitron font-bold text-white uppercase tracking-wider">Local Upload</span>
                     <p className="text-[10px] text-zinc-500 font-mono leading-relaxed">
                       Your uploaded repository package is extracted into an encrypted and sandboxed volume workspace on the server, requiring no credentials or external internet configuration.
                     </p>
@@ -642,7 +642,7 @@ export default function RepositoriesPage() {
                     CANCEL
                   </Button>
                   <Button type="submit" size="sm" variant="primary" loading={isSubmitting} className="font-mono">
-                    UPLOAD & EXTRACT CODEBASE
+                    UPLOAD REPOSITORY
                   </Button>
                 </div>
               </form>
