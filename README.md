@@ -59,6 +59,85 @@ graph TD
 
 ---
 
+## 🛡️ Security & Quality Rule Engine
+
+DevGuardian features an extensible static analysis engine that evaluates source code and configuration files across **Security Standards (OWASP Top 10, CWE)**, **Clean Code Principles**, and **Software Architecture Best Practices**.
+
+Findings are categorized into three core metrics:
+
+```mermaid
+graph LR
+    Engine[Analysis Engine] --> Sec[1. Security Index]
+    Engine --> Qual[2. Code Legibility]
+    Engine --> Arch[3. Structural Design]
+
+    Sec --> |OWASP Top 10 / CWE / Secrets| R1[Injection, JWT, API Keys, Passwords, Cryptography]
+    Qual --> |Clean Code / SEI CERT| R2[Empty Catches, Deep Nesting, God Classes, Long Methods]
+    Arch --> |Architecture & Config| R3[Layer Violations, Duplicate Configs, Debug Flags]
+```
+
+### 1. 🔒 Security Index Rules (OWASP Top 10 & CWE)
+Evaluates code against critical vulnerabilities, credential leaks, and insecure network transports.
+
+| Rule Code | Rule Name | Security Standard / CWE | Severity | What It Detects |
+| :--- | :--- | :--- | :--- | :--- |
+| `SQL_INJECTION_RULE` | SQL Injection Detection | **OWASP A03:2021** (Injection)<br>**CWE-89** | `HIGH` | Dynamic SQL queries constructed via string concatenation / formatting instead of parameterized queries. |
+| `COMMAND_INJECTION_RULE` | OS Command Injection | **OWASP A03:2021** (Injection)<br>**CWE-78** | `CRITICAL` | `Runtime.getRuntime().exec()` or `ProcessBuilder` invoked with unsanitized dynamic user parameters. |
+| `XSS_RULE` | Cross-Site Scripting (XSS) | **OWASP A03:2021** (Injection)<br>**CWE-79** | `HIGH` | Unescaped HTML rendering, reflected inputs, or dangerous DOM assignments (`innerHTML`, `dangerouslySetInnerHTML`). |
+| `PATH_TRAVERSAL_RULE` | Path Traversal | **OWASP A01:2021** (Broken Access Control)<br>**CWE-22** | `HIGH` | Unrestricted file system paths using `../` allowing arbitrary file reading or writing. |
+| `HARDCODED_PASSWORD_RULE` | Hardcoded Password | **OWASP A07:2021** (Auth Failures)<br>**CWE-798**, **CWE-259** | `HIGH` | Plaintext passwords committed in code, `.properties`, or `.yaml` files. |
+| `HARDCODED_SECRET_RULE` | Hardcoded Secret Detection | **OWASP A07:2021** (Auth Failures)<br>**CWE-798** | `CRITICAL` | Exposed JWT signing secrets, encryption keys, private tokens, and OAuth secrets in source or config. |
+| `API_KEY_EXPOSURE_RULE` | API Key Exposure | **OWASP A07:2021** (Auth Failures)<br>**CWE-798** | `CRITICAL` | Leaked third-party credentials (Stripe `sk_live_`, Google `AIza`, GitHub `ghp_`, OpenAI `sk-`, SendGrid `SG.`, etc.). |
+| `AWS_CREDENTIAL_RULE` | AWS Credential Detection | **OWASP A07:2021** (Auth Failures)<br>**CWE-798** | `CRITICAL` | Hardcoded AWS Access Key IDs (`AKIA...`, `ASIA...`) and 40-character secret keys. |
+| `WEAK_JWT_SECRET_RULE` | Weak JWT Secret | **OWASP A02:2021** (Cryptographic Failures)<br>**CWE-326** | `HIGH` | Low-entropy, dictionary-based, or short (< 256-bit) HMAC signing secrets allowing offline token forgery. |
+| `WEAK_CRYPTOGRAPHY_RULE` | Weak Cryptography | **OWASP A02:2021** (Cryptographic Failures)<br>**CWE-327**, **CWE-328** | `MEDIUM` | Broken or obsolete algorithms (MD5, SHA-1, DES, 3DES, RC4, or AES in insecure ECB mode). |
+| `SENSITIVE_FILE_RULE` | Sensitive File Exposure | **OWASP A05:2021** (Misconfiguration)<br>**CWE-552** | `HIGH` | Committed `.pem`, `.key`, `.env`, keystore (`.jks`), or database dumps in version control. |
+| `WILDCARD_CORS_RULE` | Overly Permissive CORS | **OWASP A05:2021** (Misconfiguration)<br>**CWE-942** | `MEDIUM` | Wildcard CORS origin (`*`) enabled alongside credential support (`allowCredentials = true`). |
+| `INSECURE_HTTP_URL_RULE` | Insecure HTTP Communication | **OWASP A02:2021** (Cryptographic Failures)<br>**CWE-319** | `MEDIUM` | Plaintext `http://` public endpoints transmitting data without TLS/SSL encryption. |
+
+---
+
+### 2. ⚡ Code Legibility & Clean Code Rules
+Evaluates code hygiene, readability, complexity, and maintainability.
+
+| Rule Code | Rule Name | Standard / Principle | Severity | What It Detects |
+| :--- | :--- | :--- | :--- | :--- |
+| `EMPTY_CATCH_BLOCK_RULE` | Empty Catch Block | **SEI CERT ERR00-J**<br>**CWE-391** | `MEDIUM` | Swallowed exceptions with empty catch bodies (`catch (Exception e) {}`), causing silent failures. |
+| `DEEP_NESTING_RULE` | Deep Control Flow Nesting | **Clean Code** / Complexity | `LOW` | Control statements (`if`, `for`, `while`) nested beyond acceptable cognitive limits (> 3–4 levels). |
+| `LONG_METHOD_RULE` | Long Method Detection | **Single Responsibility (SRP)** | `LOW` | Excessively long methods (> 60–80 lines) doing too many tasks. |
+| `GOD_CLASS_RULE` | God Class Detection | **SOLID (SRP)** / Modularity | `MEDIUM` | Bloated classes containing excessive fields, methods, and responsibilities. |
+| `LARGE_FILE_RULE` | Large File Detection | **Maintainability** | `LOW` | Source files exceeding recommended line thresholds, signaling poor modularity. |
+| `TODO_COMMENT_RULE` | Technical Debt Tracker | **Code Hygiene** | `LOW` | Unresolved `TODO`, `FIXME`, or `HACK` comments lingering in production code. |
+| `LAYER_VIOLATION_RULE` | Architectural Layer Violation | **Layered Architecture** | `MEDIUM` | Direct dependencies that skip layers (e.g. Controller directly accessing Repository without Service). |
+| `CONTROLLER_REPOSITORY_ACCESS_RULE` | Controller-to-Repository Access | **Clean Architecture** | `MEDIUM` | `@Controller` / `@RestController` classes holding direct `@Autowired` repository instances. |
+
+---
+
+### 3. 🏗️ Structural Design & Configuration Rules
+Evaluates environment setup, configuration consistency, and operational safety.
+
+| Rule Code | Rule Name | Standard / CWE | Severity | What It Detects |
+| :--- | :--- | :--- | :--- | :--- |
+| `DEBUG_MODE_RULE` | Debug Mode Detection | **OWASP A05:2021**<br>**CWE-215** | `MEDIUM` | Debug mode enabled in production profiles (`debug=true`, `app.debug=true`), leaking stack traces. |
+| `DUPLICATE_CONFIGURATION_RULE` | Duplicate Configuration Key | **Configuration Hygiene** | `LOW` | Conflicting or duplicated property keys defined across `.properties` or `.yaml` files. |
+
+---
+
+### 📊 Score Calculation Model
+
+Scores start at **100** and decrease proportionally based on detected issue category weights and severity multipliers:
+
+$$\text{Score} = \max\left(0, 100 - \sum (\text{Category Weight} \times \text{Severity Weight})\right)$$
+
+*   **Category Weights**: `SECRET_MANAGEMENT` (30), `SECURITY` (25), `DEPENDENCY` (20), `CONFIGURATION` (10), `CODE_QUALITY` (5).
+*   **Severity Weights**: `CRITICAL` (4×), `HIGH` (3×), `MEDIUM` (2×), `LOW` (1×).
+
+*   **Security Index**: Driven by `SECURITY` and `SECRET_MANAGEMENT` findings.
+*   **Code Legibility**: Driven by `CODE_QUALITY` and `DEPENDENCY` findings.
+*   **Structural Design**: Driven by `CONFIGURATION` findings.
+
+---
+
 ## 🛠️ Key Technical Implementations
 
 1.  **Thread-Local Context Propagation**: Outgoing Feign client requests originating from asynchronous `@Async` scanner threads automatically inherit the JWT `Authorization` header of the initiating servlet thread through a custom `ThreadLocal` wrapper in `FeignClientInterceptor`.
