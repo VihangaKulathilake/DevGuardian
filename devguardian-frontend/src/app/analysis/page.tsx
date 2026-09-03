@@ -107,16 +107,61 @@ const RadarScanner: React.FC = () => {
       <div className="absolute top-[-20%] left-[-20%] w-64 h-64 bg-cyber-cyan/10 rounded-full blur-[100px] pointer-events-none animate-pulse" />
       <div className="absolute bottom-[-20%] right-[-20%] w-64 h-64 bg-cyber-purple/10 rounded-full blur-[100px] pointer-events-none animate-pulse" />
 
-      {/* Pulsing Radar Circle */}
-      <div className="relative w-48 h-48 flex items-center justify-center shrink-0 border border-cyber-cyan/10 rounded-full bg-[#05050a]/40">
-        <div className="absolute inset-0 rounded-full border border-cyber-cyan/20 animate-ping opacity-35" />
-        <div className="absolute inset-4 rounded-full border border-cyber-cyan/35 animate-pulse" />
-        <div className="absolute inset-12 rounded-full border border-cyber-cyan/50" />
-        <div className="absolute w-24 h-0.5 bg-gradient-to-r from-transparent to-cyber-cyan origin-left animate-radar-sweep" style={{ transformOrigin: '0% 50%' }} />
+      {/* Modern High-Tech Holographic Radar Scanner */}
+      <div className="relative w-48 h-48 sm:w-52 sm:h-52 shrink-0 flex items-center justify-center select-none">
+        {/* Outer ambient glow */}
+        <div className="absolute inset-0 rounded-full bg-cyber-cyan/10 blur-md pointer-events-none" />
 
-        <div className="h-12 w-12 rounded-full bg-[#080814] border border-cyber-cyan flex items-center justify-center text-cyber-cyan shadow-[0_0_12px_rgba(0,240,255,0.4)] relative z-10">
-          <Terminal className="h-5 w-5 animate-pulse" />
+        {/* Tactical Outer Boundary */}
+        <div className="absolute inset-0 rounded-full border border-cyber-cyan/35 shadow-[0_0_20px_rgba(0,240,255,0.2)] bg-[#04040a]/90" />
+        <div className="absolute inset-1 rounded-full border border-dashed border-cyber-cyan/25 animate-[spin_60s_linear_infinite]" />
+
+        {/* Concentric Range Rings */}
+        <div className="absolute inset-6 rounded-full border border-cyber-cyan/20" />
+        <div className="absolute inset-12 rounded-full border border-cyber-cyan/30 border-dashed animate-[spin_40s_linear_infinite_reverse]" />
+        <div className="absolute inset-18 rounded-full border border-cyber-cyan/40" />
+
+        {/* Tactical Crosshair Lines (Accurately Centered) */}
+        <div className="absolute top-1/2 left-0 right-0 h-[1px] -translate-y-1/2 bg-gradient-to-r from-transparent via-cyber-cyan/40 to-transparent pointer-events-none" />
+        <div className="absolute left-1/2 top-0 bottom-0 w-[1px] -translate-x-1/2 bg-gradient-to-b from-transparent via-cyber-cyan/40 to-transparent pointer-events-none" />
+        {/* Diagonal Crosshairs */}
+        <div className="absolute top-1/2 left-0 right-0 h-[1px] -translate-y-1/2 bg-gradient-to-r from-transparent via-cyber-cyan/20 to-transparent rotate-45 pointer-events-none" />
+        <div className="absolute top-1/2 left-0 right-0 h-[1px] -translate-y-1/2 bg-gradient-to-r from-transparent via-cyber-cyan/20 to-transparent -rotate-45 pointer-events-none" />
+
+        {/* Smooth Conic Radar Sweep Beam (Accurately Centered & Rotated) */}
+        <div
+          className="absolute inset-0 rounded-full animate-radar-sweep pointer-events-none overflow-hidden"
+          style={{
+            background:
+              "conic-gradient(from 0deg at 50% 50%, rgba(0, 240, 255, 0.45) 0deg, rgba(0, 240, 255, 0.15) 30deg, rgba(0, 240, 255, 0.02) 60deg, transparent 90deg, transparent 360deg)",
+          }}
+        >
+          {/* Laser-sharp leading sweep needle emanating from center (50% 50%) to top boundary */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[2px] h-1/2 bg-gradient-to-t from-cyber-cyan via-white to-cyber-cyan shadow-[0_0_10px_#00f0ff,0_0_20px_#00f0ff]" />
         </div>
+
+        {/* Pulsing Target Threat Blips */}
+        <div className="absolute top-10 right-12 h-2 w-2 rounded-full bg-cyber-pink shadow-[0_0_8px_#ff007f] animate-ping" />
+        <div className="absolute top-10 right-12 h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_4px_#ff007f]" />
+
+        <div className="absolute bottom-12 left-10 h-2 w-2 rounded-full bg-cyber-green shadow-[0_0_8px_#00ff66] animate-pulse" />
+        <div className="absolute bottom-12 left-10 h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_4px_#00ff66]" />
+
+        {/* Concentric Ping Ripple Animation */}
+        <div className="absolute inset-0 rounded-full border border-cyber-cyan/40 animate-ping opacity-25 pointer-events-none" />
+
+        {/* Center Node Hub */}
+        <div className="relative z-10 h-12 w-12 rounded-full bg-[#080816] border border-cyber-cyan flex items-center justify-center text-cyber-cyan shadow-[0_0_16px_rgba(0,240,255,0.6)]">
+          <Terminal className="h-5 w-5 animate-pulse text-cyber-cyan" />
+        </div>
+
+        {/* HUD Telemetry Labels */}
+        <span className="absolute top-1.5 left-1/2 -translate-x-1/2 text-[8px] font-mono text-cyber-cyan/80 tracking-widest uppercase font-bold">
+          SCAN ACTIVE
+        </span>
+        <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 text-[7px] font-mono text-zinc-500 tracking-wider">
+          AZM: 360°
+        </span>
       </div>
 
       {/* Terminal Log Console */}
