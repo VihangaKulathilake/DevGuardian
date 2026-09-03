@@ -8,10 +8,11 @@ import RepositoryList from "@/components/dashboard/RepositoryList";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
-import { Plus, GitBranch, Sparkles, GitFork, Search, Link2, LogOut, FolderOpen, Upload, RefreshCw, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Plus, GitBranch, Sparkles, GitFork, Search, Link2, LogOut, Upload, RefreshCw, CheckCircle2, AlertTriangle } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
 import { repositoryApi } from "@/features/repository/repositoryApi";
 import {
+  fetchRepositories,
   addRepository,
   fetchGithubRepositories,
   connectGithubAccount,
@@ -19,16 +20,24 @@ import {
   disconnectGithubAccount,
   uploadRepository,
 } from "@/features/repository/repositorySlice";
+import { fetchDashboardSummary } from "@/features/analysis/analysisSlice";
 import AppFooter from "@/components/common/AppFooter";
 
 export default function RepositoriesPage() {
   const dispatch = useAppDispatch();
   const {
     repositories,
+    loading: repoLoading,
+    error: repoError,
     githubRepositories,
     isGithubConnected,
     githubLoading,
   } = useAppSelector((state) => state.repo);
+
+  const {
+    dashboardSummary,
+    loading: analysisLoading,
+  } = useAppSelector((state) => state.analysis);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"github" | "url" | "upload">("github");
@@ -42,6 +51,13 @@ export default function RepositoriesPage() {
   const [discoveredBranches, setDiscoveredBranches] = useState<string[]>([]);
   const [isDiscoveringBranches, setIsDiscoveringBranches] = useState(false);
   const [branchDiscoveryError, setBranchDiscoveryError] = useState<string | null>(null);
+
+  // Initial Data Fetch on Mount
+  useEffect(() => {
+    dispatch(fetchRepositories());
+    dispatch(fetchDashboardSummary());
+    dispatch(fetchGithubRepositories());
+  }, [dispatch]);
 
   // Auto-discover branches when repoUrl changes
   useEffect(() => {
@@ -106,6 +122,8 @@ export default function RepositoriesPage() {
         setUploadName("");
         setUploadBranch("main");
         setUploadLanguage("Auto");
+        dispatch(fetchRepositories());
+        dispatch(fetchDashboardSummary());
       }
     } catch (err) {
       console.error("Failed to upload ZIP archive:", err);
@@ -117,19 +135,12 @@ export default function RepositoriesPage() {
   // GitHub import search state
   const [githubSearchQuery, setGithubSearchQuery] = useState("");
 
-  // Load connection state on page mount
-  useEffect(() => {
-    dispatch(fetchGithubRepositories());
-  }, [dispatch]);
-
-  // Load repositories on modal open
+  // Reload GitHub repositories when modal opens
   useEffect(() => {
     if (isAddModalOpen) {
       dispatch(fetchGithubRepositories());
     }
   }, [isAddModalOpen, dispatch]);
-
-
 
   const handleUrlSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,6 +172,8 @@ export default function RepositoriesPage() {
         setCustomName("");
         setUrlBranch("main");
         setUrlLanguage("Auto");
+        dispatch(fetchRepositories());
+        dispatch(fetchDashboardSummary());
       }
     } catch (err) {
       console.error("Failed to add remote repository:", err);
@@ -175,6 +188,8 @@ export default function RepositoriesPage() {
       const resultAction = await dispatch(importGithubRepository(githubRepoId));
       if (importGithubRepository.fulfilled.match(resultAction)) {
         setIsAddModalOpen(false);
+        dispatch(fetchRepositories());
+        dispatch(fetchDashboardSummary());
       }
     } catch (err) {
       console.error("Failed to import repository:", err);
@@ -202,6 +217,11 @@ export default function RepositoriesPage() {
       (gRepo.full_name && gRepo.full_name.toLowerCase().includes(githubSearchQuery.toLowerCase()));
     return !isAlreadyImported && matchesSearch;
   });
+
+  // Prefer enriched summary data with scan details if available, fallback to repo list
+  const displayedRepos = (dashboardSummary?.repositories && dashboardSummary.repositories.length > 0)
+    ? dashboardSummary.repositories
+    : repositories;
 
   return (
     <div className="flex flex-col min-h-screen bg-[#030306] cyber-grid-bg text-foreground">
@@ -268,7 +288,7 @@ export default function RepositoriesPage() {
                   className="border-zinc-800 text-zinc-400 hover:bg-cyber-pink/10 hover:border-cyber-pink/40 hover:text-cyber-pink flex items-center gap-1.5 py-2.5 font-mono"
                 >
                   <LogOut className="h-3.5 w-3.5" />
-                   DISCONNECT
+                  DISCONNECT
                 </Button>
               )}
               <Button
@@ -287,7 +307,11 @@ export default function RepositoriesPage() {
 
           {/* Repo Grid */}
           <section className="w-full">
-            <RepositoryList />
+            <RepositoryList
+              repositories={displayedRepos}
+              loading={(repoLoading || analysisLoading) && displayedRepos.length === 0}
+              error={repoError}
+            />
           </section>
 
           {/* Connect Repository Modal */}
@@ -427,8 +451,6 @@ export default function RepositoriesPage() {
                 )}
               </div>
             )}
-
-
 
             {/* TAB CONTENT: Remote Git URL */}
             {activeTab === "url" && (
