@@ -536,6 +536,16 @@ public class AnalysisServiceImpl implements AnalysisService {
                         .build());
             }
 
+            // Sort repositories: most recently analyzed first
+            repoSummaries.sort((r1, r2) -> {
+                if (r1.getLastAnalyzed() == null && r2.getLastAnalyzed() == null) {
+                    return Long.compare(r2.getId(), r1.getId());
+                }
+                if (r1.getLastAnalyzed() == null) return 1;
+                if (r2.getLastAnalyzed() == null) return -1;
+                return r2.getLastAnalyzed().compareTo(r1.getLastAnalyzed());
+            });
+
             // 5. Score Grade Calculation
             int avgScore = completedScansCount > 0 ? Math.round((float) totalSecurityScore / completedScansCount) : 0;
             String scoreGrade = "N/A";
@@ -548,11 +558,29 @@ public class AnalysisServiceImpl implements AnalysisService {
             }
 
             // 6. Recent Alerts (Top 4 critical/high issues from latest completed scans with repository details)
+            List<IssueResponse> recentAlerts = Collections.emptyList();
             if (!latestCompletedAnalysisIds.isEmpty()) {
                 Map<Long, Long> analysisToRepoId = new HashMap<>();
+                for (Analysis a : allAnalyses) {
+                    analysisToRepoId.put(a.getId(), a.getRepositoryId());
+                }
+
+                recentAlerts = issueRepository.findTopIssuesByAnalysisIds(latestCompletedAnalysisIds, PageRequest.of(0, 4))
                         .stream()
                         .map(issue -> {
                             Long rId = null;
+                            if (issue.getAnalysis() != null) {
+                                rId = issue.getAnalysis().getRepositoryId();
+                                if (rId == null) {
+                                    rId = analysisToRepoId.get(issue.getAnalysis().getId());
+                                }
+                            }
+                            RepositoryResponse r = rId != null ? repoMap.get(rId) : null;
+                            String rName = r != null ? r.getName() : (rId != null ? "Repo #" + rId : "Unknown Repo");
+                            return issueMapper.toIssueResponse(issue, rId, rName);
+                        })
+                        .toList();
+            }
 
             // 7. Recent Activities (Latest 5 scans)
             List<DashboardActivityResponse> recentActivities = allAnalyses.stream()
