@@ -6,6 +6,7 @@ const initialState: AnalysisState = {
   analyses: [],
   issues: [],
   currentAnalysis: null,
+  dashboardSummary: null,
   loading: false,
   error: null,
 };
@@ -43,6 +44,17 @@ export const fetchAnalysisIssues = createAsyncThunk(
   }
 );
 
+export const fetchDashboardSummary = createAsyncThunk(
+  "analysis/fetchDashboardSummary",
+  async (_, { rejectWithValue }) => {
+    try {
+      return await analysisApi.getDashboardSummary();
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "Failed to fetch dashboard summary");
+    }
+  }
+);
+
 export const analysisSlice = createSlice({
   name: "analysis",
   initialState,
@@ -51,6 +63,7 @@ export const analysisSlice = createSlice({
       state.analyses = [];
       state.issues = [];
       state.currentAnalysis = null;
+      state.dashboardSummary = null;
       state.error = null;
     },
   },
@@ -93,6 +106,18 @@ export const analysisSlice = createSlice({
         state.issues = action.payload;
       })
       .addCase(fetchAnalysisIssues.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(fetchDashboardSummary.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchDashboardSummary.fulfilled, (state, action) => {
+        state.loading = false;
+        state.dashboardSummary = action.payload;
+      })
+      .addCase(fetchDashboardSummary.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

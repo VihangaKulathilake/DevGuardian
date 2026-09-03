@@ -1,94 +1,47 @@
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import RepoCard from "./RepoCard";
 import Modal from "../ui/Modal";
 import Button from "../ui/Button";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
-import { fetchRepositories, removeRepository } from "@/features/repository/repositorySlice";
+import { removeRepository } from "@/features/repository/repositorySlice";
 import { triggerAnalysis } from "@/features/analysis/analysisSlice";
-import { analysisApi } from "@/features/analysis/analysisApi";
 import { AlertTriangle, Trash2 } from "lucide-react";
+import { RepositoryResponse } from "@/features/repository/repositoryTypes";
+import { DashboardRepoSummary } from "@/features/analysis/analysisTypes";
 
-export const RepositoryList: React.FC = () => {
+export interface RepoAnalysisDetail {
+  lastAnalyzed: string;
+  critical: number;
+  warning: number;
+  info: number;
+  status: string;
+}
+
+export interface RepositoryListProps {
+  repositories?: (RepositoryResponse | DashboardRepoSummary)[];
+  repoDetails?: Record<number, RepoAnalysisDetail>;
+  loading?: boolean;
+  error?: string | null;
+}
+
+export const RepositoryList: React.FC<RepositoryListProps> = ({
+  repositories: passedRepositories,
+  repoDetails = {},
+  loading: passedLoading,
+  error: passedError,
+}) => {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const { repositories, loading, error } = useAppSelector((state) => state.repo);
+  const reduxRepoState = useAppSelector((state) => state.repo);
+
+  const repositories = passedRepositories ?? reduxRepoState.repositories;
+  const loading = passedLoading ?? reduxRepoState.loading;
+  const error = passedError ?? reduxRepoState.error;
 
   const [deletingRepo, setDeletingRepo] = useState<{ id: number; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const [repoDetails, setRepoDetails] = useState<Record<number, {
-    lastAnalyzed: string;
-    critical: number;
-    warning: number;
-    info: number;
-    status: string;
-  }>>({});
-
-  useEffect(() => {
-    dispatch(fetchRepositories());
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (repositories.length === 0) return;
-
-    const fetchRepoDetails = async () => {
-      const details: typeof repoDetails = {};
-      
-      await Promise.all(repositories.map(async (repo) => {
-        try {
-          const analyses = await analysisApi.getRepositoryAnalyses(repo.id);
-          if (analyses.length > 0) {
-            const latest = analyses[0];
-            if (latest.status === "COMPLETED") {
-              const issues = await analysisApi.getAnalysisIssues(latest.id);
-              const critical = issues.filter(i => i.severity.toUpperCase() === "CRITICAL").length;
-              const warning = issues.filter(i => i.severity.toUpperCase() === "HIGH" || i.severity.toUpperCase() === "MEDIUM").length;
-              const info = issues.filter(i => i.severity.toUpperCase() === "LOW" || i.severity.toUpperCase() === "INFO").length;
-              
-              details[repo.id] = {
-                lastAnalyzed: new Date(latest.startedAt).toLocaleDateString(),
-                critical,
-                warning,
-                info,
-                status: latest.status
-              };
-            } else {
-              details[repo.id] = {
-                lastAnalyzed: latest.status === "RUNNING" ? "Scanning..." : "Failed scan",
-                critical: 0,
-                warning: 0,
-                info: 0,
-                status: latest.status
-              };
-            }
-          } else {
-            details[repo.id] = {
-              lastAnalyzed: "Never scanned",
-              critical: 0,
-              warning: 0,
-              info: 0,
-              status: "NONE"
-            };
-          }
-        } catch (e) {
-          console.error(`Failed to fetch details for repo ${repo.id}:`, e);
-          details[repo.id] = {
-            lastAnalyzed: "Error",
-            critical: 0,
-            warning: 0,
-            info: 0,
-            status: "ERROR"
-          };
-        }
-      }));
-
-      setRepoDetails(details);
-    };
-
-    fetchRepoDetails();
-  }, [repositories]);
 
   const handleRunAnalysis = async (repoId: number) => {
     try {
@@ -115,7 +68,7 @@ export const RepositoryList: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (loading && (!repositories || repositories.length === 0)) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[...Array(3)].map((_, i) => (
@@ -151,18 +104,24 @@ export const RepositoryList: React.FC = () => {
     <>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {repositories.map((repo) => {
+          const directSummary = repo as DashboardRepoSummary;
           const details = repoDetails[repo.id] || {
-            lastAnalyzed: "Loading...",
-            critical: 0,
-            warning: 0,
-            info: 0,
-            status: "LOADING"
+            lastAnalyzed: directSummary.lastAnalyzed
+              ? new Date(directSummary.lastAnalyzed).toLocaleDateString()
+              : loading
+              ? "Loading..."
+              : "Never scanned",
+            critical: directSummary.criticalIssues ?? 0,
+            warning: directSummary.warningIssues ?? 0,
+            info: directSummary.infoIssues ?? 0,
+            status: directSummary.status ?? (loading ? "LOADING" : "NONE"),
           };
+
           return (
             <RepoCard
               key={repo.id}
               repoName={repo.name}
-              visibility={repo.visibility.toLowerCase() as "public" | "private"}
+              visibility={((repo.visibility || "PUBLIC") as string).toLowerCase() as "public" | "private"}
               language={repo.language || "Unknown"}
               lastAnalyzed={details.lastAnalyzed}
               criticalIssues={details.critical}
@@ -183,9 +142,9 @@ export const RepositoryList: React.FC = () => {
         title={
           <div className="flex items-center gap-2 text-cyber-pink">
             <AlertTriangle className="h-5 w-5" />
-              <span className="font-orbitron font-extrabold uppercase tracking-wider text-xs">
-                Delete Repository
-              </span>
+            <span className="font-orbitron font-extrabold uppercase tracking-wider text-xs">
+              Delete Repository
+            </span>
           </div>
         }
         size="sm"
@@ -234,4 +193,3 @@ export const RepositoryList: React.FC = () => {
 };
 
 export default RepositoryList;
-

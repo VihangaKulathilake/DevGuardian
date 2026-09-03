@@ -1,5 +1,6 @@
 package com.devguardian.analysis.service.interfaces;
 
+import com.devguardian.analysis.dto.response.DashboardSummaryResponse;
 import com.devguardian.analysis.entity.Analysis;
 import com.devguardian.analysis.entity.Issue;
 
@@ -12,4 +13,5 @@ public interface AnalysisService {
     List<Analysis> getRepositoryAnalyses(Long repositoryId);
     List<Issue> getAnalysisIssues(Long analysisId);
     void executeAnalysis(Long analysisId);
+    DashboardSummaryResponse getDashboardSummary();
 }

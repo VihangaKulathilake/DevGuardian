@@ -15,6 +15,12 @@ public class IssueResponse {
     @Schema(description = "Unique issue identifier", example = "20001")
     private Long id;
 
+    @Schema(description = "ID of the analyzed repository", example = "1001")
+    private Long repositoryId;
+
+    @Schema(description = "Name of the analyzed repository", example = "devguardian-backend")
+    private String repositoryName;
+
     @Schema(description = "DevGuardian security rule code identifier", example = "SEC-001")
     private String ruleCode;
 

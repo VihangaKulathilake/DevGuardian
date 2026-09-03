@@ -7,15 +7,26 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class IssueMapper {
-    public IssueResponse toIssueResponse(Issue issue) {
 
+    public IssueResponse toIssueResponse(Issue issue) {
+        return toIssueResponse(issue, null, null);
+    }
+
+    public IssueResponse toIssueResponse(Issue issue, Long repositoryId, String repositoryName) {
         String rec = issue.getAiRecommendation();
         if (rec == null || rec.isBlank()) {
             rec = issue.getRecommendation();
         }
 
+        Long finalRepoId = repositoryId;
+        if (finalRepoId == null && issue.getAnalysis() != null) {
+            finalRepoId = issue.getAnalysis().getRepositoryId();
+        }
+
         return IssueResponse.builder()
                 .id(issue.getId())
+                .repositoryId(finalRepoId)
+                .repositoryName(repositoryName)
                 .ruleCode(issue.getRuleCode())
                 .category(issue.getCategory())
                 .severity(issue.getSeverity())

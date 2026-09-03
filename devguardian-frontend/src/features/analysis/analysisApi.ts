@@ -1,5 +1,5 @@
 import api from "@/api/axios";
-import { AnalysisResponse, IssueResponse } from "./analysisTypes";
+import { AnalysisResponse, DashboardSummaryResponse, IssueResponse } from "./analysisTypes";
 
 export const analysisApi = {
   async startAnalysis(repositoryId: number): Promise<AnalysisResponse> {
@@ -19,6 +19,11 @@ export const analysisApi = {
 
   async getAnalysisIssues(analysisId: number): Promise<IssueResponse[]> {
     const response = await api.get<IssueResponse[]>(`/api/analyses/${analysisId}/issues`);
+    return response.data;
+  },
+
+  async getDashboardSummary(): Promise<DashboardSummaryResponse> {
+    const response = await api.get<DashboardSummaryResponse>("/api/analyses/dashboard-summary");
     return response.data;
   },
 };

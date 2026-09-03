@@ -1,7 +1,7 @@
 import * as React from "react";
 import Card from "../ui/Card";
 import Badge from "../ui/Badge";
-import { AlertTriangle, FileCode, ShieldX } from "lucide-react";
+import { AlertTriangle, FileCode, ShieldX, GitBranch } from "lucide-react";
 
 export interface IssueCardProps {
   title: string;
@@ -11,6 +11,7 @@ export interface IssueCardProps {
   lineNo?: number;
   category: "security" | "quality";
   codeSnippet?: string;
+  repoName?: string;
 }
 
 export const IssueCard: React.FC<IssueCardProps> = ({
@@ -21,6 +22,7 @@ export const IssueCard: React.FC<IssueCardProps> = ({
   lineNo,
   category,
   codeSnippet,
+  repoName,
 }) => {
   const getSeverityVariant = (sev: string): "error" | "warning" | "info" | "neutral" => {
     switch (sev) {
@@ -37,7 +39,15 @@ export const IssueCard: React.FC<IssueCardProps> = ({
   };
 
   return (
-    <Card className="p-5 hover:border-destructive/30 transition-all duration-200">
+    <Card className="p-5 hover:border-destructive/30 transition-all duration-200 text-left">
+      {/* Relevant Repository Tag */}
+      {repoName && (
+        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm bg-cyber-cyan/10 border border-cyber-cyan/30 text-[10px] font-mono font-bold text-cyber-cyan mb-2.5 w-fit uppercase tracking-wider">
+          <GitBranch className="h-3 w-3 shrink-0" />
+          <span className="truncate">{repoName}</span>
+        </div>
+      )}
+
       <div className="flex items-start justify-between gap-4 mb-3">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 flex-wrap">

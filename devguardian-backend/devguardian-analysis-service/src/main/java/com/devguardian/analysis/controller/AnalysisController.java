@@ -1,6 +1,7 @@
 package com.devguardian.analysis.controller;
 
 import com.devguardian.analysis.dto.response.AnalysisResponse;
+import com.devguardian.analysis.dto.response.DashboardSummaryResponse;
 import com.devguardian.analysis.dto.response.IssueResponse;
 import com.devguardian.analysis.entity.Analysis;
 import com.devguardian.analysis.mapper.AnalysisMapper;
@@ -31,6 +32,19 @@ public class AnalysisController {
     private final AnalysisService analysisService;
     private final AnalysisMapper analysisMapper;
     private final IssueMapper issueMapper;
+
+    @Operation(
+            summary = "Get aggregated dashboard summary",
+            description = "Retrieves consolidated security scores, issue counts, repository statuses, and historical trends in a single fast query"
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Dashboard summary retrieved successfully"
+    )
+    @GetMapping("/dashboard-summary")
+    public DashboardSummaryResponse getDashboardSummary() {
+        return analysisService.getDashboardSummary();
+    }
 
     /*
      * Start repository analysis
