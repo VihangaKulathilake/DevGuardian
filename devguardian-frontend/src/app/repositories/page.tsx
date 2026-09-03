@@ -309,6 +309,7 @@ export default function RepositoriesPage() {
           <section className="w-full">
             <RepositoryList
               repositories={displayedRepos}
+              gridCols="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
               loading={(repoLoading || analysisLoading) && displayedRepos.length === 0}
               error={repoError}
             />

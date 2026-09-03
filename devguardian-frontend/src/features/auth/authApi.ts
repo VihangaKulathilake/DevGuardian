@@ -20,6 +20,15 @@ export const authApi = {
     return response.data;
   },
 
+  async loginWithGoogle(idToken: string): Promise<AuthResponse> {
+    const response = await api.post<AuthResponse>("/api/auth/google", { idToken });
+    if (response.data?.token) {
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data));
+    }
+    return response.data;
+  },
+
   logout(): void {
     localStorage.removeItem("token");
     localStorage.removeItem("user");

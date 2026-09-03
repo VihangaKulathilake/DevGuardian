@@ -10,6 +10,7 @@ import { triggerAnalysis } from "@/features/analysis/analysisSlice";
 import { AlertTriangle, Trash2 } from "lucide-react";
 import { RepositoryResponse } from "@/features/repository/repositoryTypes";
 import { DashboardRepoSummary } from "@/features/analysis/analysisTypes";
+import { cn } from "@/lib/utils";
 
 export interface RepoAnalysisDetail {
   lastAnalyzed: string;
@@ -24,6 +25,8 @@ export interface RepositoryListProps {
   repoDetails?: Record<number, RepoAnalysisDetail>;
   loading?: boolean;
   error?: string | null;
+  className?: string;
+  gridCols?: string;
 }
 
 export const RepositoryList: React.FC<RepositoryListProps> = ({
@@ -31,6 +34,8 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
   repoDetails = {},
   loading: passedLoading,
   error: passedError,
+  className,
+  gridCols = "grid-cols-1 sm:grid-cols-2",
 }) => {
   const dispatch = useAppDispatch();
   const router = useRouter();
@@ -70,8 +75,8 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
 
   if (loading && (!repositories || repositories.length === 0)) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {[...Array(3)].map((_, i) => (
+      <div className={cn("grid gap-4", gridCols, className)}>
+        {[...Array(4)].map((_, i) => (
           <div key={i} className="h-48 border border-border/50 bg-[#0d0d12]/40 animate-pulse p-6 flex flex-col justify-between cyber-card-clip">
             <div className="space-y-3">
               <div className="h-4 w-28 bg-zinc-800 rounded" />
@@ -102,7 +107,7 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
 
   return (
     <>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className={cn("grid gap-4", gridCols, className)}>
         {repositories.map((repo) => {
           const directSummary = repo as DashboardRepoSummary;
           const details = repoDetails[repo.id] || {

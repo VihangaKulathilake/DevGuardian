@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { ShieldCheck, Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from "lucide-react";
-import GoogleIcon from "@/components/icons/GoogleIcon";
+import GoogleAuthButton from "@/components/auth/GoogleAuthButton";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
 import { loginUser } from "@/features/auth/authSlice";
 
@@ -25,10 +25,6 @@ export default function LoginPage() {
     dispatch(loginUser({ email, password }));
   };
 
-  const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:8080/api/auth/google";
-  };
-
   return (
     <div className="w-full flex flex-col items-center">
       {/* Brand Header */}
@@ -46,14 +42,7 @@ export default function LoginPage() {
       </div>
 
       {/* Google Login Button */}
-      <button 
-        type="button"
-        onClick={handleGoogleLogin}
-        className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-zinc-700/70 bg-zinc-900/70 hover:bg-zinc-800/80 hover:border-zinc-600 text-zinc-200 text-sm font-medium transition-all duration-200 shadow-sm active:scale-[0.99] cursor-pointer"
-      >
-        <GoogleIcon className="h-4.5 w-4.5 shrink-0" />
-        <span>Continue with Google</span>
-      </button>
+      <GoogleAuthButton text="Continue with Google" />
 
       {/* Divider */}
       <div className="relative w-full my-6 text-center select-none">

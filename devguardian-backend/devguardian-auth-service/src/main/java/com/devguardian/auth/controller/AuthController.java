@@ -2,6 +2,7 @@ package com.devguardian.auth.controller;
 
 import com.devguardian.constants.ApiEndpoints;
 import com.devguardian.auth.dto.AuthResponse;
+import com.devguardian.auth.dto.GoogleAuthRequest;
 import com.devguardian.auth.dto.LoginRequest;
 import com.devguardian.auth.dto.RegisterRequest;
 import com.devguardian.auth.service.interfaces.AuthService;
@@ -9,6 +10,7 @@ import com.devguardian.config.StandardErrorResponses;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,7 +38,7 @@ public class AuthController {
     )
     @PostMapping(ApiEndpoints.REGISTER)
     public ResponseEntity<AuthResponse> register(
-            @RequestBody RegisterRequest request
+            @Valid @RequestBody RegisterRequest request
     ) {
         return ResponseEntity.ok(authService.register(request));
     }
@@ -52,8 +54,24 @@ public class AuthController {
     )
     @PostMapping(ApiEndpoints.LOGIN)
     public ResponseEntity<AuthResponse> login(
-            @RequestBody LoginRequest request
+            @Valid @RequestBody LoginRequest request
     ) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    // GOOGLE AUTH
+    @Operation(
+            summary = "Authenticate with Google OAuth ID token",
+            description = "Verifies Google ID token, registers or logs in user, and returns a JWT access token"
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Google authentication successful"
+    )
+    @PostMapping(ApiEndpoints.GOOGLE)
+    public ResponseEntity<AuthResponse> loginWithGoogle(
+            @Valid @RequestBody GoogleAuthRequest request
+    ) {
+        return ResponseEntity.ok(authService.loginWithGoogle(request));
     }
 }
