@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { authApi } from "./authApi";
+import { authApi, AsgardeoAuthPayload } from "./authApi";
 import { AuthState, LoginCredentials, RegisterData } from "./authTypes";
 
 const initialState: AuthState = {
@@ -39,6 +39,17 @@ export const loginWithGoogle = createAsyncThunk(
       return await authApi.loginWithGoogle(idToken);
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Google authentication failed");
+    }
+  }
+);
+
+export const loginWithAsgardeo = createAsyncThunk(
+  "auth/asgardeoLogin",
+  async (payload: AsgardeoAuthPayload, { rejectWithValue }) => {
+    try {
+      return await authApi.loginWithAsgardeo(payload);
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "Asgardeo authentication failed");
     }
   }
 );
@@ -150,6 +161,26 @@ export const authSlice = createSlice({
         };
       })
       .addCase(loginWithGoogle.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // loginWithAsgardeo
+      .addCase(loginWithAsgardeo.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loginWithAsgardeo.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = true;
+        state.token = action.payload.token;
+        state.user = {
+          userId: action.payload.userId,
+          email: action.payload.email,
+          name: action.payload.name,
+          role: action.payload.role,
+        };
+      })
+      .addCase(loginWithAsgardeo.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

@@ -37,7 +37,11 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
       }
     }
 
-    const isAuthRoute = pathname === "/" || pathname === "/login" || pathname === "/register";
+    const isAuthRoute =
+      pathname === "/" ||
+      pathname === "/login" ||
+      pathname === "/register" ||
+      pathname.startsWith("/auth/callback");
 
     if (!isTokenValid && !isAuthRoute) {
       // User is not logged in and trying to access a protected page

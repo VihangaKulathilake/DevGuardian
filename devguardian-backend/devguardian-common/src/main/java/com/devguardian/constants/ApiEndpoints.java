@@ -7,6 +7,7 @@ public class ApiEndpoints {
     public static final String REGISTER = "/register";
     public static final String LOGIN = "/login";
     public static final String GOOGLE = "/google";
+    public static final String ASGARDEO = "/asgardeo";
 
     // Private constructor which avoids object creation from the outside the class
     private ApiEndpoints() {

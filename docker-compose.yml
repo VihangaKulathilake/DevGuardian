@@ -107,6 +107,9 @@ services:
       - POSTGRES_DB_USERNAME=postgres
       - POSTGRES_DB_PASSWORD=password
       - JWT_SECRET=${JWT_SECRET:-yourjwtsecretkeystringmustbe32byteslong!!}
+      - ASGARDEO_CLIENT_ID=${ASGARDEO_CLIENT_ID:-q3hG34FWufohAl2f39sWw7ZsimYa}
+      - ASGARDEO_CLIENT_SECRET=${ASGARDEO_CLIENT_SECRET:-JLA7tXbgGKSpakVp6QZ_eeZFw73fdaftBdBpt7CD9Wwa}
+      - ASGARDEO_BASE_URL=${ASGARDEO_BASE_URL:-https://api.asgardeo.io/t/orge1hf1}
     networks:
       - devguardian-network
 

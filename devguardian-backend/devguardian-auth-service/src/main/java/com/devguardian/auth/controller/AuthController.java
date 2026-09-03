@@ -1,6 +1,7 @@
 package com.devguardian.auth.controller;
 
 import com.devguardian.constants.ApiEndpoints;
+import com.devguardian.auth.dto.AsgardeoAuthRequest;
 import com.devguardian.auth.dto.AuthResponse;
 import com.devguardian.auth.dto.GoogleAuthRequest;
 import com.devguardian.auth.dto.LoginRequest;
@@ -73,5 +74,21 @@ public class AuthController {
             @Valid @RequestBody GoogleAuthRequest request
     ) {
         return ResponseEntity.ok(authService.loginWithGoogle(request));
+    }
+
+    // ASGARDEO AUTH
+    @Operation(
+            summary = "Authenticate with Asgardeo OIDC / OAuth2",
+            description = "Exchanges Asgardeo authorization code or validates token, registers or logs in user, and returns a JWT access token"
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Asgardeo authentication successful"
+    )
+    @PostMapping(ApiEndpoints.ASGARDEO)
+    public ResponseEntity<AuthResponse> loginWithAsgardeo(
+            @Valid @RequestBody AsgardeoAuthRequest request
+    ) {
+        return ResponseEntity.ok(authService.loginWithAsgardeo(request));
     }
 }

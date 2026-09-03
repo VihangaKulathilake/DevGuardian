@@ -1,16 +1,13 @@
 package com.devguardian.auth.service.impl;
 
 import com.devguardian.constants.Messages;
-import com.devguardian.auth.dto.AuthResponse;
-import com.devguardian.auth.dto.GoogleAuthRequest;
-import com.devguardian.auth.dto.GoogleUserInfo;
-import com.devguardian.auth.dto.LoginRequest;
-import com.devguardian.auth.dto.RegisterRequest;
+import com.devguardian.auth.dto.*;
 import com.devguardian.auth.entity.User;
 import com.devguardian.auth.enums.ProviderType;
 import com.devguardian.auth.enums.Role;
 import com.devguardian.auth.repository.UserRepository;
 import com.devguardian.security.JwtService;
+import com.devguardian.auth.service.interfaces.AsgardeoOAuthService;
 import com.devguardian.auth.service.interfaces.AuthService;
 import com.devguardian.auth.service.interfaces.GoogleOAuthService;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +30,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final AuthMapper authMapper;
     private final GoogleOAuthService googleOAuthService;
+    private final AsgardeoOAuthService asgardeoOAuthService;
 
     @Override
     public AuthResponse register(RegisterRequest request) {
@@ -114,6 +112,59 @@ public class AuthServiceImpl implements AuthService {
             log.info("Existing user logged in via Google: {}", email);
             if (user.getProvider() == null) {
                 user.setProvider(ProviderType.GOOGLE);
+                user = userRepository.save(user);
+            }
+        }
+
+        // 2. Generate application JWT
+        String token = jwtService.generateToken(user.getId(), user.getEmail(), user.getRole().name());
+
+        AuthResponse response = authMapper.toResponse(user);
+        response.setToken(token);
+
+        return response;
+    }
+
+    @Override
+    public AuthResponse loginWithAsgardeo(AsgardeoAuthRequest request) {
+        log.info("Processing Asgardeo OIDC login request");
+
+        AsgardeoUserInfo asgardeoUser = asgardeoOAuthService.getUserInfo(request);
+        if (asgardeoUser == null || (asgardeoUser.getEmail() == null && asgardeoUser.getUsername() == null)) {
+            throw new BadCredentialsException("Failed to verify Asgardeo identity");
+        }
+
+        String email = asgardeoUser.getEmail();
+        if (email == null || email.isBlank()) {
+            email = asgardeoUser.getUsername();
+        }
+        email = email.toLowerCase().trim();
+
+        String name = asgardeoUser.getName();
+        if (name == null || name.isBlank()) {
+            if (asgardeoUser.getGivenName() != null) {
+                name = asgardeoUser.getGivenName() + (asgardeoUser.getFamilyName() != null ? " " + asgardeoUser.getFamilyName() : "");
+            } else {
+                name = email.split("@")[0];
+            }
+        }
+
+        // 1. Find existing user or create a new user account
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            log.info("Creating new Asgardeo user account for: {}", email);
+            user = User.builder()
+                    .email(email)
+                    .name(name)
+                    .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                    .role(Role.USER)
+                    .provider(ProviderType.ASGARDEO)
+                    .build();
+            user = userRepository.save(user);
+        } else {
+            log.info("Existing user logged in via Asgardeo: {}", email);
+            if (user.getProvider() == null) {
+                user.setProvider(ProviderType.ASGARDEO);
                 user = userRepository.save(user);
             }
         }

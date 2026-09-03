@@ -29,3 +29,8 @@ eureka:
 jwt:
   secret: ${JWT_SECRET}
   expiration: 86400000
+
+asgardeo:
+  client-id: ${ASGARDEO_CLIENT_ID:q3hG34FWufohAl2f39sWw7ZsimYa}
+  client-secret: ${ASGARDEO_CLIENT_SECRET:JLA7tXbgGKSpakVp6QZ_eeZFw73fdaftBdBpt7CD9Wwa}
+  base-url: ${ASGARDEO_BASE_URL:https://api.asgardeo.io/t/orge1hf1}

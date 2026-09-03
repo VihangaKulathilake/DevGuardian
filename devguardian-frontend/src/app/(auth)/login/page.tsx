@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { ShieldCheck, Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from "lucide-react";
 import GoogleAuthButton from "@/components/auth/GoogleAuthButton";
+import AsgardeoAuthButton from "@/components/auth/AsgardeoAuthButton";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
 import { loginUser } from "@/features/auth/authSlice";
 
@@ -41,8 +42,11 @@ export default function LoginPage() {
         </p>
       </div>
 
-      {/* Google Login Button */}
-      <GoogleAuthButton text="Continue with Google" />
+      {/* SSO & Social Authentication Buttons */}
+      <div className="w-full flex flex-col gap-2.5">
+        <GoogleAuthButton text="Continue with Google" />
+        <AsgardeoAuthButton text="Continue with Asgardeo" />
+      </div>
 
       {/* Divider */}
       <div className="relative w-full my-6 text-center select-none">

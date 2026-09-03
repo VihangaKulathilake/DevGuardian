@@ -2,6 +2,6 @@ package com.devguardian.auth.enums;
 
 public enum ProviderType {
     LOCAL,
-    GOOGLE
+    GOOGLE,
+    ASGARDEO
 }
-

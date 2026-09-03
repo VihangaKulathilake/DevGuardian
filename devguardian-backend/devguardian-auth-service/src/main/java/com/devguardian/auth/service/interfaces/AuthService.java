@@ -1,5 +1,6 @@
 package com.devguardian.auth.service.interfaces;
 
+import com.devguardian.auth.dto.AsgardeoAuthRequest;
 import com.devguardian.auth.dto.AuthResponse;
 import com.devguardian.auth.dto.GoogleAuthRequest;
 import com.devguardian.auth.dto.LoginRequest;
@@ -11,4 +12,6 @@ public interface AuthService {
     AuthResponse login(LoginRequest request);
 
     AuthResponse loginWithGoogle(GoogleAuthRequest request);
+
+    AuthResponse loginWithAsgardeo(AsgardeoAuthRequest request);
 }

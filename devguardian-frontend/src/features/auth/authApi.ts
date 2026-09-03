@@ -1,6 +1,13 @@
 import api from "@/api/axios";
 import { LoginCredentials, RegisterData, AuthResponse } from "./authTypes";
 
+export interface AsgardeoAuthPayload {
+  code?: string;
+  redirectUri?: string;
+  codeVerifier?: string;
+  idToken?: string;
+}
+
 export const authApi = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     const response = await api.post<AuthResponse>("/api/auth/login", credentials);
@@ -22,6 +29,15 @@ export const authApi = {
 
   async loginWithGoogle(idToken: string): Promise<AuthResponse> {
     const response = await api.post<AuthResponse>("/api/auth/google", { idToken });
+    if (response.data?.token) {
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data));
+    }
+    return response.data;
+  },
+
+  async loginWithAsgardeo(data: AsgardeoAuthPayload): Promise<AuthResponse> {
+    const response = await api.post<AuthResponse>("/api/auth/asgardeo", data);
     if (response.data?.token) {
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify(response.data));
