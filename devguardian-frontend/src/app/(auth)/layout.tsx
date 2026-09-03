@@ -6,39 +6,25 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#030306] text-foreground cyber-grid-bg scanlines-overlay relative overflow-hidden p-4">
-      {/* Decorative scan sweeper */}
-      <div className="laser-scan-line" />
+    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#05060b] text-foreground relative overflow-hidden p-4 sm:p-6 selection:bg-cyan-500/30 selection:text-cyan-200">
+      {/* Ambient background glow highlights */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-cyan-500/10 via-blue-500/5 to-transparent blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gradient-to-t from-cyan-500/5 to-transparent blur-3xl pointer-events-none" />
       
-      {/* Decal Dot Matrix background */}
-      <div className="absolute inset-0 cyber-grid-dot opacity-20 pointer-events-none" />
-      
-      {/* Side HUD Telemetry graphics (decorations) */}
-      <div className="absolute top-8 left-8 hidden lg:flex flex-col gap-1 font-mono text-[10px] text-cyber-cyan/40 select-none">
-        <span>[ DEVGUARDIAN v2.0 ]</span>
-        <span>[ SECURITY MONITORING: ACTIVE ]</span>
-        <span>[ AUTHENTICATION PORTAL ]</span>
-      </div>
-      
-      <div className="absolute bottom-8 right-8 hidden lg:flex flex-col gap-1 font-mono text-[10px] text-cyber-pink/40 select-none text-right">
-        <span>CLOUD-NATIVE PLATFORM</span>
-        <span>OWASP 2026 COMPLIANT</span>
-        <span>© 2026 DEVGUARDIAN. ALL RIGHTS RESERVED.</span>
-      </div>
+      {/* Subtle decorative grid background */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black_80%)] pointer-events-none" />
 
-      {/* Main glassmorphic container */}
-      <div className="relative z-20 w-full max-w-md bg-[#07070b]/90 border border-cyber-cyan/20 p-1 shadow-[0_0_30px_rgba(0,240,255,0.08)] cyber-card-clip">
-        {/* Glow corner lines */}
-        <div className="absolute top-0 left-0 w-full h-[1.5px] bg-gradient-to-r from-transparent via-cyber-cyan/50 to-transparent" />
-        <div className="absolute -bottom-[0.5px] left-0 w-full h-[1.5px] bg-gradient-to-r from-transparent via-cyber-pink/40 to-transparent" />
+      {/* Main glassmorphic card container */}
+      <div className="relative z-10 w-full max-w-[440px] bg-[#0c0e18]/90 backdrop-blur-2xl border border-zinc-800/80 rounded-2xl p-7 sm:p-9 shadow-[0_20px_50px_rgba(0,0,0,0.6),0_0_30px_rgba(0,240,255,0.04)]">
+        {/* Top edge glow accent */}
+        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
         
-        {/* Tech Corner notches */}
-        <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-cyber-cyan pointer-events-none opacity-60" />
-        <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-cyber-pink pointer-events-none opacity-60" />
+        {children}
+      </div>
 
-        <div className="px-6 py-8 relative z-10">
-          {children}
-        </div>
+      {/* Professional subtle footer */}
+      <div className="mt-8 text-center text-xs text-zinc-500 font-medium">
+        <span>&copy; {new Date().getFullYear()} DevGuardian. All rights reserved.</span>
       </div>
     </div>
   );

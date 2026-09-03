@@ -2,9 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ShieldCheck, GitFork } from "lucide-react";
-import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
+import { ShieldCheck, Mail, Lock, User, Eye, EyeOff, ArrowRight, AlertCircle } from "lucide-react";
+import GoogleIcon from "@/components/icons/GoogleIcon";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
 import { registerUser } from "@/features/auth/authSlice";
 
@@ -12,6 +11,7 @@ export default function RegisterPage() {
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [showPassword, setShowPassword] = React.useState(false);
   const dispatch = useAppDispatch();
   const { loading, error, isAuthenticated } = useAppSelector((state) => state.auth);
 
@@ -26,100 +26,143 @@ export default function RegisterPage() {
     dispatch(registerUser({ name, email, password }));
   };
 
+  const handleGoogleSignup = () => {
+    window.location.href = "http://localhost:8080/api/auth/google";
+  };
+
   return (
     <div className="w-full flex flex-col items-center">
-      {/* Header */}
-      <div className="flex flex-col items-center mb-6 text-center select-none">
-        <div className="h-12 w-12 rounded-none border border-cyber-pink bg-cyber-pink/10 flex items-center justify-center text-cyber-pink shadow-[0_0_15px_rgba(255,0,127,0.3)] mb-4 animate-pulse">
-          <ShieldCheck className="h-7 w-7" />
+      {/* Brand Header */}
+      <div className="flex flex-col items-center mb-6 text-center">
+        <div className="h-12 w-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-[0_0_20px_rgba(0,240,255,0.15)] mb-3.5">
+          <ShieldCheck className="h-6 w-6" />
         </div>
         
-        <h1 className="text-lg font-orbitron font-extrabold text-white tracking-widest uppercase flex items-center gap-2">
-          Create Account
-          <span className="h-2 w-2 rounded-full bg-cyber-pink animate-ping shrink-0" />
+        <h1 className="text-2xl font-bold text-white tracking-tight">
+          Create an account
         </h1>
-        <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mt-1">
-          Join DevGuardian
+        <p className="text-sm text-zinc-400 mt-1">
+          Start analyzing and securing your code with DevGuardian
         </p>
+      </div>
+
+      {/* Google Sign Up Button */}
+      <button 
+        type="button"
+        onClick={handleGoogleSignup}
+        className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-zinc-700/70 bg-zinc-900/70 hover:bg-zinc-800/80 hover:border-zinc-600 text-zinc-200 text-sm font-medium transition-all duration-200 shadow-sm active:scale-[0.99] cursor-pointer"
+      >
+        <GoogleIcon className="h-4.5 w-4.5 shrink-0" />
+        <span>Continue with Google</span>
+      </button>
+
+      {/* Divider */}
+      <div className="relative w-full my-6 text-center select-none">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-zinc-800" />
+        </div>
+        <span className="relative bg-[#0c0e18] px-3 text-xs text-zinc-500 font-medium">
+          or register with email
+        </span>
       </div>
 
       {/* Register Form */}
       <div className="w-full">
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {error && (
-            <div className="p-3 text-xs font-mono bg-cyber-pink/15 border border-cyber-pink/40 text-cyber-pink text-center tracking-wide uppercase">
-              // error: {error}
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/25 text-red-400 text-xs flex items-center gap-2.5">
+              <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
+              <span>{error}</span>
             </div>
           )}
           
-          <Input
-            label="Full Name"
-            type="text"
-            placeholder="John Doe"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            className="bg-[#0b0b14]/90 border-zinc-800 text-zinc-200 focus:border-cyber-cyan focus:ring-cyber-cyan/30"
-          />
+          {/* Name field */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-zinc-300">
+              Full name
+            </label>
+            <div className="relative">
+              <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Jane Doe"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-500/80 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+              />
+            </div>
+          </div>
 
-          <Input
-            label="Email Address"
-            type="email"
-            placeholder="you@company.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="bg-[#0b0b14]/90 border-zinc-800 text-zinc-200 focus:border-cyber-cyan focus:ring-cyber-cyan/30"
-          />
+          {/* Email field */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-zinc-300">
+              Email address
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 pointer-events-none" />
+              <input
+                type="email"
+                placeholder="you@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-500/80 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+              />
+            </div>
+          </div>
           
-          <Input
-            label="Password"
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="bg-[#0b0b14]/90 border-zinc-800 text-zinc-200 focus:border-cyber-cyan focus:ring-cyber-cyan/30"
-          />
+          {/* Password field */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-zinc-300">
+              Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 pointer-events-none" />
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="At least 8 characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-500/80 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
 
-          <p className="text-[9px] font-mono text-zinc-500 leading-relaxed uppercase tracking-wider mt-1 select-none">
-            // BY CREATING AN ACCOUNT, YOU AGREE TO OUR TERMS OF SERVICE AND PRIVACY POLICY.
+          <p className="text-xs text-zinc-500 leading-relaxed mt-0.5 select-none">
+            By creating an account, you agree to our Terms of Service and Privacy Policy.
           </p>
 
-          <Button 
+          {/* Submit Button */}
+          <button 
             type="submit" 
-            loading={loading} 
-            variant="cyber"
-            className="w-full mt-3 py-3 shadow-[0_0_15px_rgba(143,0,255,0.4)] relative overflow-hidden group"
+            disabled={loading}
+            className="w-full mt-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-500 hover:from-cyan-300 hover:to-cyan-400 text-black font-semibold text-sm transition-all duration-200 shadow-[0_0_20px_rgba(0,240,255,0.25)] hover:shadow-[0_0_25px_rgba(0,240,255,0.4)] active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 cursor-pointer"
           >
-            <span className="relative z-10">Create Account</span>
-          </Button>
+            {loading ? (
+              <div className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <>
+                <span>Create account</span>
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </button>
         </form>
 
-        {/* Separator */}
-        <div className="relative my-7 text-center select-none font-mono">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-zinc-800" />
-          </div>
-          <span className="relative bg-[#07070b] px-3.5 text-[9px] font-bold text-zinc-500 uppercase tracking-widest">
-            OR CONTINUE WITH
-          </span>
-        </div>
-
-        {/* GitHub Sign up */}
-        <Button 
-          variant="secondary" 
-          className="w-full flex items-center justify-center gap-2 py-3 border-zinc-800/80 hover:border-cyber-cyan hover:shadow-[0_0_10px_rgba(0,240,255,0.2)] text-zinc-300 hover:text-cyber-cyan font-mono"
-        >
-          <GitFork className="h-4.5 w-4.5 shrink-0" />
-          Continue with GitHub
-        </Button>
-
-        {/* Nav to login */}
-        <p className="text-center text-xs font-mono text-zinc-500 mt-8 select-none">
+        {/* Navigation to login */}
+        <p className="text-center text-sm text-zinc-400 mt-6 select-none">
           Already have an account?{" "}
-          <Link href="/login" className="text-cyber-cyan hover:text-cyber-cyan/80 font-bold uppercase tracking-wider transition-colors ml-1.5">
-            Sign In
+          <Link href="/login" className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors ml-1">
+            Sign in
           </Link>
         </p>
       </div>
